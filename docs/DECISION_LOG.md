@@ -193,6 +193,14 @@ Agents: read this before starting work. If a task conflicts with a decision here
 - **Why:** MatchBootstrap must build `CombatMatch` and `OpponentBrain`, but Core may not reference Combat or AI (ARCHITECTURE conflict 7). No gameplay effect.
 - **Affects:** docs/ARCHITECTURE.md (section 2 assembly table, 4.4, conflict 7).
 
+## D-023: Recovering and Knocked Out animations
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** Recovering gets its own animation, modeled on WrestleFest's: the wrestler clutches their ribs while standing and walks slowly. Knocked Out reuses the Knocked Down animation; the wrestler just doesn't get up.
+- **Why:** The Style Guide had no Recovering example, and COMBAT_SPEC already describes Knocked Out as the Knocked Down animation without getting up.
+- **Affects:** docs/STYLE_GUIDE.md (Sprite Sheet & Animation Examples), Barry and Peaux animation lists.
+
 ---
 
 ## Open Questions

@@ -118,6 +118,10 @@ Sprite Examples are from the Hulk Hogan character in WWF Wrestlefest. These are 
 - Bodyslammed(Grapple is triggered by Opponent)
     - ![](images/style-guide-30.png)
     - ![](images/style-guide-31.gif)
+- Recovering(Clutching ribs while standing and walking slowly, D-023)
+    - Example image to come from the designer.
+- Knocked Out
+    - Reuses the Knocked Down animation; the wrestler does not get up (D-023).
 
 ## Music & Sounds
 - Music Style

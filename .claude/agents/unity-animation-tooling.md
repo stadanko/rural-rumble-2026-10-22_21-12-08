@@ -32,6 +32,7 @@ The WrestleFest sprites in the Style Guide are reference only. Never import them
 - **Placeholders are fine.** Until approved art exists, build the Animator and prefabs with placeholder sprites, and mark them clearly as placeholders.
 - **Pixel art.** Point filtering, no compression artifacts, consistent pixels-per-unit across both wrestlers. Import settings and scale are in `docs/ARCHITECTURE.md` 3.1 (60 PPU, pivot Bottom Center).
 - **Sheet cell sizes differ per animation, on purpose.** Each sheet's cells fit that animation's poses (e.g. Barry's run cells are 216 px tall because he crouches; walk cells are 239 px). The character is drawn at the same scale in every sheet, with feet on the bottom row of each cell. Slice each sheet by its own cell size, keep pivots at Bottom Center, and never rescale a sheet to match another's height. The cell size is in each sheet's `docs/ASSET_REGISTRY.csv` description.
+- **All wrestler art faces screen-left** (`WrestlerView` uses `artFacesLeft` and flips it when facing right). Before building clips from a new sheet, check that every frame faces left, back views included. If one doesn't, send it back to the Art Wrangler rather than adding a per-clip flip.
 
 ## Unity tools
 

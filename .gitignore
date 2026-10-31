@@ -112,3 +112,9 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Unity AI generation history (large; regenerable provenance lives in docs/ASSET_REGISTRY.csv)
+/GeneratedAssets/
+
+# Art/audio candidates awaiting designer review (D-009, D-015); provenance is in docs/ASSET_REGISTRY.csv
+/Staging/

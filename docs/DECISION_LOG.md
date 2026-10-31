@@ -1,0 +1,174 @@
+# Rural Rumble Decision Log
+
+Accepted design decisions. When a decision here changes a requirement, the affected documents are updated to match, and this log records why.
+
+Agents: read this before starting work. If a task conflicts with a decision here, stop and flag it rather than overriding it. Add new entries only for decisions the designer has approved.
+
+| Field | Meaning |
+|---|---|
+| Decided by | Who approved it. Agent proposals are not decisions until the designer approves them. |
+| Affects | Documents or systems that were changed or must follow the decision. |
+
+---
+
+## D-001: Movement is eight-directional with two-directional running
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** Wrestlers walk in eight directions and run in two (left or right). The GDD's definition is authoritative.
+- **Why:** CLAUDE.md said "four-directional movement", which conflicted with the GDD, CONTROLS.md, and COMBAT_SPEC.md.
+- **Affects:** CLAUDE.md (MVP Scope corrected).
+
+## D-002: Keyboard controls
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** Keyboard mapping: Move = WASD, Lock Up/Grapple (A) = Left Shift, Run/Whip (B) = Space, Strike (X) = Right Shift.
+- **Why:** CLAUDE.md requires keyboard input, but CONTROLS.md only mapped the controller.
+- **Affects:** docs/CONTROLS.md.
+- **Open question:** See Q-001 (Sticky Keys).
+
+## D-003: No game mode select in the MVP
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** Screen flow is Start Screen → Character Select → Match → Victory Screen. There is no Single Match / game mode selection screen in the MVP. The Victory Screen covers both outcomes ("Congratulations!" or "Game Over!").
+- **Why:** The GDD listed a Single Match selection step that STYLE_GUIDE.md and CLAUDE.md did not.
+- **Affects:** CLAUDE.md (MVP Scope), docs/GDD.md (Core Gameplay, MVP Scope).
+
+## D-004: Thresholds are measured in health, not damage
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** State thresholds refer to a wrestler's remaining health. "Damage" means only the points an attack removes. The unspecified "certain threshold" for knockdowns is the Recovering threshold (30 health), matching the Knocked Down conditions.
+- **Why:** COMBAT_SPEC.md said "below 30 points of damage" and "if damage is below a certain threshold" where it meant health.
+- **Affects:** docs/COMBAT_SPEC.md.
+
+## D-005: Combat tuning values are editable in the Unity editor
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** All combat tuning values live in one shared tuning asset, editable in the Inspector during Play Mode, so they can be tuned without code changes. Combo window = 0.5 s and lock-up timer = 2.0 s are set by the designer. Damage, recovery, and knockdown values are starting points modeled on classic arcade wrestling games, expected to change during playtesting.
+- **Why:** COMBAT_SPEC.md asked for adjustable values but gave no defaults, which would have forced agents to invent them.
+- **Affects:** docs/COMBAT_SPEC.md (Tuning Values section holds the current defaults).
+
+## D-006: Recovery is capped
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** Health recovered while standing still in Recovering stops at the recovery cap (default 30). The cap is its own tunable value, separate from the Recovering threshold.
+- **Why:** Without a cap, a wrestler could stand still back to full health, undercutting the momentum-swing design pillar.
+- **Affects:** docs/COMBAT_SPEC.md (Tuning Values).
+
+## D-007: Initial agent crew
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** Build the five core agents first: Systems Architect & Integration, Combat State & AI, Unity Animation & Tooling, UI & Match Flow, and QA & Testing. Art Wrangler, Sound Wrangler, Juice Agent, and Provenance Clerk are added later.
+- **Why:** These five cover the code needed for a playable match. Asset and polish agents depend on that foundation.
+- **Affects:** .claude/agents/.
+
+## D-008: Art sourcing policy
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** Art may come from OpenGameArt.org, itch.io free assets, Kenney.nl, and Craftpix's free section. Accepted licenses: CC0 and CC-BY. When nothing suitable is found, AI-generated art is allowed as a marked placeholder that the designer must review. Ripped commercial game art is never allowed. The Art Wrangler is created now (closes Q-003).
+- **Why:** CLAUDE.md requires "permitted sources" but no document listed them.
+- **Affects:** .claude/agents/art-wrangler.md, docs/ASSET_REGISTRY.csv (created with its column set).
+- **Open question:** See Q-005 (Craftpix license).
+
+## D-009: Art staging and folder layout
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** Approves the two Architect proposals: unverified assets go in `Staging/` at the project root, outside `Assets/`; UI sprites live in `Assets/Art/UI/` (Art Wrangler adds files, UI & Match Flow owns import settings).
+- **Why:** Keeps unverified art out of Unity imports and gives all art one drop location and provenance trail.
+- **Affects:** docs/ARCHITECTURE.md (folder ownership).
+
+## D-010: Custom wrestler sprites generated from concept art
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** The Art Wrangler may generate wrestler sprites with Unity's AI asset generation, using the designer's concept art (style-guide-01/02) as reference images. The concept art is mixed origin: designer hand sketches finished with ChatGPT. The WrestleFest sprites are used only as a written spec for poses, frame counts, and timing, never as generator input. Generated art contains no real brand logos (Barry's boots are generic work boots, no Carhartt logo). Generation works in `Assets/Art/_Generated/`, which nothing in the game references; approved art moves to its real `Assets/Art/` folder.
+- **Why:** The two wrestlers are original characters, so matching free sprite sets are unlikely. The generator needs its inputs inside `Assets/`, which D-009's staging rule didn't allow.
+- **Affects:** .claude/agents/art-wrangler.md, docs/ARCHITECTURE.md (folder ownership), docs/ASSET_REGISTRY.csv (concept art rows).
+
+## D-011: Craftpix license accepted
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** Craftpix's free-asset license is accepted alongside CC0 and CC-BY. Closes Q-005.
+- **Why:** Craftpix uses its own license rather than a Creative Commons one, which D-008 didn't cover.
+- **Affects:** .claude/agents/art-wrangler.md.
+
+## D-012: Barry's tattoo side and palette flexibility
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** Barry's heart tattoo is on his left arm, matching the concept art. The color palette guides the overall look, but not every color must come from it; skin tones are the main exception.
+- **Why:** The Style Guide said right arm, but the concept art shows it on his left. Snapping skin to the 14-color palette made it flat yellow-orange.
+- **Affects:** docs/STYLE_GUIDE.md (Barry characteristics, Color Palette), .claude/agents/art-wrangler.md.
+
+## D-013: Native resolution and sprite scale
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** The game renders at a native 960×540, scaled by whole numbers to the display (×2 at 1080p, ×3 at 1440p, ×4 at 4K). Barry's standing sprite is 240 px tall (about 480 px on a 1080p screen). Peaux's is 215 px. Sprites import at 60 pixels per unit, so the 960×540 screen is 16×9 world units.
+- **Why:** The game targets 1080p monitors, and the designer wants more visible sprite detail than the 112 px and 160 px options gave.
+- **Affects:** docs/STYLE_GUIDE.md (Sprite Scale), docs/ARCHITECTURE.md (3.1 Rendering scale), .claude/agents/art-wrangler.md, ProjectSettings (1920×1080 default window). The camera setup is superseded by D-017 (smooth-zooming `MatchCamera` instead of `PixelPerfectCamera`); native resolution, sprite heights and PPU still stand.
+
+## D-014: Barry has no tattoo
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** The heart tattoo is removed from Barry's design entirely. This replaces the tattoo part of D-012; D-012's palette rule still stands.
+- **Why:** Mirroring the sprite to face right would move the tattoo to the other arm. Removing it avoids drawing separate right-facing art.
+- **Affects:** docs/STYLE_GUIDE.md (Barry characteristics), .claude/agents/art-wrangler.md. The concept art (style-guide-02) still shows the heart; ignore it.
+
+## D-015: Staging is not committed
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** `Staging/` is in `.gitignore`. Candidate art and audio stay local until approved; approved files are committed from `Assets/`. Provenance for every candidate is still recorded in `docs/ASSET_REGISTRY.csv`, which is committed.
+- **Why:** Keeps unreviewed candidates and mockups out of the repository.
+- **Affects:** .gitignore, .claude/agents/art-wrangler.md.
+
+## D-016: Arena look and HUD style
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** The arena uses the look of `arena_04_golden_a`: Arena 4's pixel style and layout (trailer along the back, truck left, pool right) in late-afternoon golden-hour light. The HUD uses the "Clean Retro" style: diamond-framed portraits, chunky health bars with a white damage trail showing the last hit, names above the bars, and a large plain timer at top center.
+- **Why:** Chosen from the arena and HUD mockup rounds (`Staging/Art/arena_mockups_round2/`).
+- **Affects:** docs/STYLE_GUIDE.md (Arena, UI).
+
+## D-017: Scrolling, zooming match camera
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:**
+  - The arena is wider than the screen. At the default zoom, 60% of the arena's width is on screen; the camera scrolls left and right to follow the wrestlers. The arena's full depth (top to bottom) fits on screen at default zoom.
+  - When the wrestlers move apart and reach the screen edges, the camera zooms out smoothly to show more of the arena, up to the whole arena. As they come back together it zooms in until it returns to the default view.
+  - The default visible fraction (0.6), the maximum zoom-out (whole arena), and the zoom behavior are Inspector-editable values.
+  - Zoom is smooth. The default view stays pixel-perfect (×2 at 1080p); while zoomed out, pixels may render at slightly uneven sizes.
+- **Why:** Gives the arena room to move around in, like WrestleFest's scrolling ring, while keeping both wrestlers in view.
+- **Affects:** docs/ARCHITECTURE.md 3.1 (replaces the PixelPerfectCamera setup from D-013), docs/STYLE_GUIDE.md (Arena). Arena art must cover the fully zoomed-out view: 1600×900 native pixels (see ARCHITECTURE 3.1).
+
+## D-018: Production arena and layout
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** The arena uses backdrop B (bigger trailer, satellite dish) with the truck (back-left) and pool (back-right) as separate obstacle sprites, in `Assets/Art/Arena/`. The layout in ARCHITECTURE 3.1 is approved: default view rows 300–840, walkable feet rows 580–820, trailer as the back wall, truck and pool depth-sorted with the wrestlers. The backdrop is slightly soft from being cropped and scaled; a sharper regeneration can come later.
+- **Why:** Chosen from the production arena mockups (`Staging/Art/arena_prod_mockups/`).
+- **Affects:** docs/ARCHITECTURE.md 3.1, docs/ASSET_REGISTRY.csv.
+
+---
+
+## Open Questions
+
+Not yet decided. Agents must not resolve these on their own.
+
+- **Q-001: Sticky Keys.** Lock Up/Grapple and Strike both use Shift keys. Pressing Shift five times opens the Windows Sticky Keys prompt, and the knockdown mash mechanic asks players to press these buttons repeatedly. Consider moving them off Shift.
+- **Q-002: Menu controls.** CONTROLS.md does not define confirm/back buttons for the Start and Character Select screens on controller or keyboard.
+- **Q-003: When to start the Art Wrangler.** Resolved by D-008.
+- **Q-004: Master copies of design documents.** The `.docx` files in docs/ are older than the `.md` versions. Recommended: treat the `.md` files as the source of truth.
+- **Q-005: Craftpix license.** Resolved by D-011.

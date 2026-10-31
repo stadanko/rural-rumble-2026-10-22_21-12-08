@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: RuralRumble.Core::RuralRumble.Core.WrestlerDefinition
   displayName: Peaux
   portrait: {fileID: 0}
-  prefab: {fileID: 5517463594095365211, guid: 2a82fdd1d377057439f663eb5468a5ed, type: 3}
+  prefab: {fileID: 41181134374381325, guid: b0dca5fc255f29346abc4ec4a060eddc, type: 3}

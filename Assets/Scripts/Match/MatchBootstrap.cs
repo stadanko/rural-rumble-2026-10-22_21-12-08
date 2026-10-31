@@ -30,6 +30,9 @@ namespace RuralRumble.Match
         [SerializeField] private CombatMatchRunner combatRunner;
         [SerializeField] private MatchCamera matchCamera;
 
+        [Tooltip("Match opened directly (no GameSession): play roster entry 1 vs 0 instead of 0 vs 1. Testing aid only.")]
+        [SerializeField] private bool directPlaySwapWrestlers;
+
         [Header("Spawn feet points (world units)")]
         [SerializeField] private Vector2 playerSpawn = new Vector2(9.0f, -11.6667f);
         [SerializeField] private Vector2 cpuSpawn = new Vector2(17.6667f, -11.6667f);
@@ -115,8 +118,9 @@ namespace RuralRumble.Match
                 Debug.LogError("MatchBootstrap: no GameSession setup and the roster has fewer than two wrestlers.", this);
                 return false;
             }
-            Debug.Log("MatchBootstrap: no GameSession setup (Match opened directly); using roster entries 0 vs 1.", this);
-            setup = new MatchSetup(roster.Wrestlers[0], roster.Wrestlers[1]);
+            int player = directPlaySwapWrestlers ? 1 : 0;
+            Debug.Log($"MatchBootstrap: no GameSession setup (Match opened directly); using roster entries {player} vs {1 - player}.", this);
+            setup = new MatchSetup(roster.Wrestlers[player], roster.Wrestlers[1 - player]);
             return true;
         }
 

@@ -25,3 +25,24 @@ MonoBehaviour:
   - Move: 4
     Clip: {fileID: 7400000, guid: a853ca7eadb6a144d9c547cda3ba041e, type: 2}
     ContactTime: 0.20833333
+  - Move: 1
+    Clip: {fileID: 7400000, guid: 584aa403a47989a48906b9757b6b85b6, type: 2}
+    ContactTime: 0.20833333
+  - Move: 2
+    Clip: {fileID: 7400000, guid: c423be3db4893cc43961cc32c0060245, type: 2}
+    ContactTime: 0.20833333
+  - Move: 3
+    Clip: {fileID: 7400000, guid: b715c3b6391e03847819d53418f68ddb, type: 2}
+    ContactTime: 0.125
+  - Move: 4
+    Clip: {fileID: 7400000, guid: 8e2449524529435469c9f78981c299e1, type: 2}
+    ContactTime: 0.20833333
+  - Move: 1
+    Clip: {fileID: 7400000, guid: d8a24d56215266047b4803b7954d5440, type: 2}
+    ContactTime: 0.20833333
+  - Move: 2
+    Clip: {fileID: 7400000, guid: 7fe921662206f434589259549d9287dc, type: 2}
+    ContactTime: 0.20833333
+  - Move: 3
+    Clip: {fileID: 7400000, guid: 56a4c55ca1504ae4f9fe11bc3c155951, type: 2}
+    ContactTime: 0.125

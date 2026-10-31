@@ -15,7 +15,7 @@ namespace RuralRumble.EditorTooling
     /// and references survive. Standing, Walking, Running, the three Striking clips (Strike1-3), and PLACEHOLDER stand-ins
     /// for Stomp, Struck, Knocked Down / Knocked Out and Recovering (stand + walk) built from the stand/walk sprites.
     ///
-    /// Menu: Rural Rumble/Tooling/Build Barry Animations + Prefab.
+    /// Menu: Rural Rumble/Tooling/Build Barry Animations + Prefab, Rural Rumble/Tooling/Build Peaux Animations + Prefab.
     /// A wrestler with no run or strike art gets PLACEHOLDER stand-ins for those too (WriteMissingArtStandIns).
     /// </summary>
     public static class WrestlerAnimationBuilder
@@ -144,6 +144,81 @@ namespace RuralRumble.EditorTooling
                 },
             };
             return Build(spec, writePrefab);
+        }
+
+        [MenuItem("Rural Rumble/Tooling/Build Peaux Animations + Prefab")]
+        public static void BuildPeauxMenu() => BuildPeaux();
+
+        /// <summary>
+        /// Peaux (approved 2026-10-31: gen-peaux-stand-front, gen-peaux-walk-front-8, gen-peaux-stand-back-a,
+        /// gen-peaux-walk-back-8, gen-peaux-run-6, gen-peaux-strike1-3, gen-peaux-strike2-3, gen-peaux-strike3-2).
+        /// Stomp and the other combat-core slots are PLACEHOLDER stand-ins built from those sprites. The earlier
+        /// Peaux_StandBack / WalkBack / Run / Strike1-3 _PLACEHOLDER clips are no longer referenced by the override
+        /// (left for the designer to delete).
+        /// </summary>
+        /// <param name="writePrefab">False rebuilds clips and the override only, leaving the prefab untouched.</param>
+        public static string BuildPeaux(bool writePrefab = true)
+        {
+            const string art = "Assets/Art/Wrestlers/Peaux/";
+            var spec = new WrestlerArtSpec
+            {
+                Name = "Peaux",
+                ArtFacesLeft = true,
+                StandFront = LoadSprites(art + "peaux_stand_front.png").Single(),
+                StandBack = LoadSprites(art + "peaux_stand_back.png").Single(),
+                // Source video frames 25,28,31,34,37,40,43,46, loop 25..49 (ASSET_REGISTRY gen-peaux-walk-front-8):
+                // a key every 3 source frames, 24-frame loop = the even walk timing.
+                WalkFront = LoadSprites(art + "peaux_walk_front.png"),
+                WalkKeyFrames = EvenWalkKeyFrames,
+                WalkLoopFrames = EvenWalkLoopFrames,
+                // Source video frames 25,28,32,35,39,42,46,49, loop 25..53 (ASSET_REGISTRY gen-peaux-walk-back-8:
+                // offsets 0,3,7,10,14,17,21,24, 28-frame period), retimed evenly like Barry's back walk.
+                WalkBack = LoadSprites(art + "peaux_walk_back.png"),
+                WalkBackKeyFrames = EvenWalkKeyFrames,
+                WalkBackLoopFrames = EvenWalkLoopFrames,
+                Run = LoadSprites(art + "peaux_run.png"),
+                // Video frames 60-70 every 2nd, 12-frame loop (ASSET_REGISTRY gen-peaux-run-6): 2 frames per sprite,
+                // 0.5 s. Barry's run keeps a legacy 13-frame loop (see BuildBarry); Peaux uses the source period.
+                RunKeyFrames = new[] { 0, 2, 4, 6, 8, 10 },
+                RunLoopFrames = 12,
+                // Same frame roles and timing as Barry's strikes (designer timing 130/100/130 ms and 130/230 ms,
+                // rounded to 24 fps; D-024 contact 0.208 / 0.208 / 0.125 s). gen-peaux-strike1-3/strike2-3/strike3-2.
+                Strike1 = new MoveClipSpec
+                {
+                    Sprites = LoadSprites(art + "peaux_strike1.png"),
+                    KeyFrames = new[] { 0, 3, 5 }, LengthFrames = 8, ContactIndex = 2,
+                },
+                Strike2 = new MoveClipSpec
+                {
+                    Sprites = LoadSprites(art + "peaux_strike2.png"),
+                    KeyFrames = new[] { 0, 3, 5 }, LengthFrames = 8, ContactIndex = 2,
+                },
+                Strike3 = new MoveClipSpec
+                {
+                    Sprites = LoadSprites(art + "peaux_strike3.png"),
+                    KeyFrames = new[] { 0, 3 }, LengthFrames = 9, ContactIndex = 1,
+                },
+            };
+            return Build(spec, writePrefab);
+        }
+
+        /// <summary>Imports Peaux's approved sheets with the wrestler settings: stand front 102x215 and back 92x214
+        /// (one sprite each), walk front 8 x 114x219, walk back 8 x 108x222, run 6 x 158x207, strikes 3 x 222x212,
+        /// 3 x 212x223 and 2 x 150x214.</summary>
+        public static string ImportPeauxSheets()
+        {
+            const string art = "Assets/Art/Wrestlers/Peaux/";
+            return string.Join("\n", new[]
+            {
+                ImportSheet(art + "peaux_stand_front.png", 102, 215),
+                ImportSheet(art + "peaux_walk_front.png", 114, 219),
+                ImportSheet(art + "peaux_stand_back.png", 92, 214),
+                ImportSheet(art + "peaux_walk_back.png", 108, 222),
+                ImportSheet(art + "peaux_run.png", 158, 207),
+                ImportSheet(art + "peaux_strike1.png", 222, 212),
+                ImportSheet(art + "peaux_strike2.png", 212, 223),
+                ImportSheet(art + "peaux_strike3.png", 150, 214),
+            });
         }
 
         /// <summary>

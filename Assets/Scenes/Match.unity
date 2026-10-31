@@ -422,6 +422,7 @@ MonoBehaviour:
   roster: {fileID: 11400000, guid: 46a42c00a5c94e247817c81cb3a4d538, type: 2}
   combatRunner: {fileID: 28872175}
   matchCamera: {fileID: 2090353083}
+  directPlaySwapWrestlers: 1
   playerSpawn: {x: 9, y: -11.6667}
   cpuSpawn: {x: 17.6667, y: -11.6667}
 --- !u!4 &982713671

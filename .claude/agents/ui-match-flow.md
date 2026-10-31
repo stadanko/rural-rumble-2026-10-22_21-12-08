@@ -49,7 +49,7 @@ Health is shown only as bars, never as numbers (COMBAT_SPEC.md).
 
 ## Gaps
 
-Menu confirm and back buttons are not yet defined (DECISION_LOG.md Q-002). Do not choose them yourself; report that you need them. Use a placeholder binding only if the designer approves one.
+Menu confirm and back buttons are defined in CONTROLS.md (Menu Controls, D-019). If you need a binding CONTROLS.md doesn't define, don't choose it yourself; report that you need it. Use a placeholder binding only if the designer approves one.
 
 ## Verify
 

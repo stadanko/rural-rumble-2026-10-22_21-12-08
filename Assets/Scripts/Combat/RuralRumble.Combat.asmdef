@@ -1,0 +1,16 @@
+{
+    "name": "RuralRumble.Combat",
+    "rootNamespace": "RuralRumble.Combat",
+    "references": [
+        "RuralRumble.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

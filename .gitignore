@@ -118,3 +118,7 @@ InitTestScene*.unity*
 
 # Art/audio candidates awaiting designer review (D-009, D-015); provenance is in docs/ASSET_REGISTRY.csv
 /Staging/
+
+# AI generation working folder (D-010): drafts only, never referenced by the game; provenance is in docs/ASSET_REGISTRY.csv
+/Assets/Art/_Generated/
+/Assets/Art/_Generated.meta

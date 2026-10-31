@@ -26,7 +26,7 @@ Agents: read this before starting work. If a task conflicts with a decision here
 - **Decision:** Keyboard mapping: Move = WASD, Lock Up/Grapple (A) = Left Shift, Run/Whip (B) = Space, Strike (X) = Right Shift.
 - **Why:** CLAUDE.md requires keyboard input, but CONTROLS.md only mapped the controller.
 - **Affects:** docs/CONTROLS.md.
-- **Open question:** See Q-001 (Sticky Keys).
+- **Superseded:** the Shift bindings are replaced by D-019.
 
 ## D-003: No game mode select in the MVP
 
@@ -161,14 +161,46 @@ Agents: read this before starting work. If a task conflicts with a decision here
 - **Why:** Chosen from the production arena mockups (`Staging/Art/arena_prod_mockups/`).
 - **Affects:** docs/ARCHITECTURE.md 3.1, docs/ASSET_REGISTRY.csv.
 
+## D-019: Keyboard layout and menu controls
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** Keyboard: Move = WASD, Strike (X) = J, Lock Up/Grapple (A) = K, Run/Whip (B) = Space. No Shift keys. Menus: move the selection with the stick, D-pad, WASD or arrows; confirm with A or Start (Enter or Space on keyboard); go back with B (Esc on keyboard). Replaces D-002's Shift bindings; closes Q-001 and Q-002.
+- **Why:** Mashing Shift during knockdowns would open the Windows Sticky Keys prompt. Menu buttons were undefined.
+- **Affects:** docs/CONTROLS.md, docs/ARCHITECTURE.md (4.1), .claude/agents/ui-match-flow.md.
+
+## D-020: Running is press-once
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** One press of Run starts a run in the facing direction (left or right). It continues until the wrestler hits an obstacle or the arena edge, gets hit, or performs another action. Facing up or down, the run goes toward the last left/right facing.
+- **Why:** ARCHITECTURE gap #5; matches WrestleFest.
+- **Affects:** docs/CONTROLS.md, docs/COMBAT_SPEC.md (Running), docs/ARCHITECTURE.md (gaps).
+
+## D-021: Architecture proposals approved
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** Approves the Architect's proposals in ARCHITECTURE.md, reviewed one by one: one scene per screen loaded singly; the `Wrestler` input map (`Move`, `LockUpGrapple`, `RunWhip`, `Strike`); presentation-only wrestler prefabs; a shared Animator graph with per-wrestler clips (each wrestler keeps its own animations; wrestler-exclusive moves are post-MVP); combat-driven attack timing; code-based hit boxes; per-frame combat tick with a capped step; UI Toolkit for screens and HUD; a static `GameSession` for the selected wrestlers; Juice Agent plays SFX and music. The CPU always gets the wrestler the player didn't pick. `SampleScene.unity` is to be deleted (the designer authorized this) when the new scenes are created.
+- **Why:** Unblocks the first code work.
+- **Affects:** docs/ARCHITECTURE.md (all former "Proposed" items, gaps 11–13).
+
+## D-022: Match assembly for MatchBootstrap
+
+- **Date:** 2026-10-30
+- **Decided by:** Designer
+- **Decision:** `MatchBootstrap` moves out of `RuralRumble.Core` into a new Systems Architect-owned `RuralRumble.Match` assembly (`Assets/Scripts/Match/`) that references Core, Combat, AI and Presentation.
+- **Why:** MatchBootstrap must build `CombatMatch` and `OpponentBrain`, but Core may not reference Combat or AI (ARCHITECTURE conflict 7). No gameplay effect.
+- **Affects:** docs/ARCHITECTURE.md (section 2 assembly table, 4.4, conflict 7).
+
 ---
 
 ## Open Questions
 
 Not yet decided. Agents must not resolve these on their own.
 
-- **Q-001: Sticky Keys.** Lock Up/Grapple and Strike both use Shift keys. Pressing Shift five times opens the Windows Sticky Keys prompt, and the knockdown mash mechanic asks players to press these buttons repeatedly. Consider moving them off Shift.
-- **Q-002: Menu controls.** CONTROLS.md does not define confirm/back buttons for the Start and Character Select screens on controller or keyboard.
+- **Q-001: Sticky Keys.** Resolved by D-019.
+- **Q-002: Menu controls.** Resolved by D-019.
 - **Q-003: When to start the Art Wrangler.** Resolved by D-008.
 - **Q-004: Master copies of design documents.** The `.docx` files in docs/ are older than the `.md` versions. Recommended: treat the `.md` files as the source of truth.
 - **Q-005: Craftpix license.** Resolved by D-011.

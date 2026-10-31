@@ -1,0 +1,25 @@
+{
+    "name": "RuralRumble.Tests.PlayMode",
+    "rootNamespace": "RuralRumble.Tests.PlayMode",
+    "references": [
+        "RuralRumble.Core",
+        "RuralRumble.Combat",
+        "RuralRumble.Presentation",
+        "RuralRumble.Match",
+        "Unity.InputSystem",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

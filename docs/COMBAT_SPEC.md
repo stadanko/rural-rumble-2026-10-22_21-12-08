@@ -5,7 +5,7 @@
 - Note: Wrestler and Opponent are used to describe the entity performing the move and the entity that is the victim of the move. These terms are interchangeable between the Player and AI Opponent, as either can be a Wrestler or Opponent in these definitions.
 - **Standing** - Wrestler is standing in the arena and not moving.
 - **Walking** - Wrestler is walking in one of eight directions around the arena.
-- **Running** - Wrestler is running in one of two directions(left or right) around the arena.
+- **Running** - Wrestler is running in one of two directions(left or right) around the arena. One press of Run starts it; it continues until the wrestler hits an obstacle or the arena edge, gets hit, or performs another action (D-020).
 - **Striking** - Wrestler is striking or attempting to strike an opponent.
 - **Struck** - Wrestler is being struck by an Opponent.
 - **Lock Up** - Wrestler is triggering or attempting to trigger the Lock Up animation.

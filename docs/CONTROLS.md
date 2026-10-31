@@ -28,6 +28,15 @@ Xbox Style Controller Layout
         - X pressed a third time within combo time window of second press = Strike 3
 Xbox Controller to Keyboard Mapping
 - Left Stick/D-Pad = WASD
-- A Button = Left Shift
+- A Button = K
 - B Button = Space Bar
-- X Button = Right Shift
+- X Button = J
+
+Running (D-020)
+- One press of B starts a run in the direction the wrestler faces (left or right). The run continues until the wrestler hits an obstacle or the arena edge, gets hit, or performs another action.
+- If the wrestler is facing up or down, the run goes toward their last left/right facing.
+
+Menu Controls (D-019)
+- Move selection: Left Stick / D-Pad, or WASD / arrow keys
+- Confirm: A or Start on the controller; Enter or Space on the keyboard
+- Back: B on the controller; Esc on the keyboard

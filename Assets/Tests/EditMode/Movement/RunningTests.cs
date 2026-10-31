@@ -6,8 +6,8 @@ namespace RuralRumble.Tests.EditMode
 {
     /// <summary>
     /// D-020 / COMBAT_SPEC Running / CONTROLS.md Running: one press of Run (B / Space) starts a run in the
-    /// facing left/right direction; it continues until an obstacle or the arena edge (hits and other
-    /// actions are outside the movement slice). Facing up or down runs toward the last left/right
+    /// facing left/right direction; it continues until an obstacle or the arena edge (hits, strikes and
+    /// Run-cancel are covered in Combat/RunRulesTests). Facing up or down runs toward the last left/right
     /// facing. Running is left or right only (COMBAT_SPEC: "one of two directions").
     /// </summary>
     public class RunningTests
@@ -119,24 +119,29 @@ namespace RuralRumble.Tests.EditMode
             Assert.AreEqual(SliceArena.BandXMin + h.Tuning.feetHalfWidth, h.Player.Position.x, Tol);
         }
 
-        // D-020: the run stops at an obstacle.
+        // D-020: the run stops at an obstacle. D-027: the truck and pool put the runner in Struck with
+        // obstacle collision damage; after Struck the runner stands. (Updated in combat-core step 2.)
         [Test]
-        public void Run_StopsAtTruck_ReturnsToStanding()
+        public void Run_StopsAtTruck_StruckThenStanding()
         {
             using var h = new MatchHarness(new Vector2(14f, SliceArena.ObstacleLaneY), cpuStart: new Vector2(1f, -13f));
             h.PlayerInput.PressRunOnce();
             h.TickSeconds(2f, afterEachTick: _ => h.AssertPlayerOutsideObstacles("running into truck"));
+            Assert.IsTrue(h.StateChanges.Contains((WrestlerId.Player, CombatState.Running, CombatState.Struck)));
+            Assert.AreEqual(h.Tuning.maxHealth - h.Tuning.obstacleCollisionDamage, h.Player.Health, 1e-4f);
             Assert.AreEqual(CombatState.Standing, h.Player.State);
             float face = SliceArena.Truck.XMax + h.Tuning.feetHalfWidth;
             Assert.That(h.Player.Position.x, Is.InRange(face, face + 0.01f));
         }
 
         [Test]
-        public void Run_StopsAtPool_ReturnsToStanding()
+        public void Run_StopsAtPool_StruckThenStanding()
         {
             using var h = new MatchHarness(new Vector2(10f, SliceArena.ObstacleLaneY));
             h.PlayerInput.PressRunOnce();
             h.TickSeconds(2f, afterEachTick: _ => h.AssertPlayerOutsideObstacles("running into pool"));
+            Assert.IsTrue(h.StateChanges.Contains((WrestlerId.Player, CombatState.Running, CombatState.Struck)));
+            Assert.AreEqual(h.Tuning.maxHealth - h.Tuning.obstacleCollisionDamage, h.Player.Health, 1e-4f);
             Assert.AreEqual(CombatState.Standing, h.Player.State);
             float face = SliceArena.Pool.XMin - h.Tuning.feetHalfWidth;
             Assert.That(h.Player.Position.x, Is.InRange(face - 0.01f, face));

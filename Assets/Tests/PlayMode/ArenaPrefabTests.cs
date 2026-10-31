@@ -39,7 +39,7 @@ namespace RuralRumble.Tests.PlayMode
         /// <summary>Values typed in from the ARCHITECTURE 3.1 table (world units).</summary>
         public static void AssertMatchesTable(ArenaGeometry g)
         {
-            AssertRect("walkable band", g.Bounds, 0f, -13.6667f, 26.6667f, -9.6667f);
+            AssertRect("walkable band", g.Bounds, 1.5f, -13.6667f, 25.1667f, -9.6667f); // D-027 narrowed band (ARCHITECTURE 3.1)
             Assert.AreEqual(2, g.Obstacles.Count);
             ArenaRect truck = g.Obstacles.OrderBy(o => o.XMin).First();
             ArenaRect pool = g.Obstacles.OrderBy(o => o.XMin).Last();

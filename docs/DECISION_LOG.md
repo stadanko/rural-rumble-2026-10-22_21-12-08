@@ -201,6 +201,94 @@ Agents: read this before starting work. If a task conflicts with a decision here
 - **Why:** The Style Guide had no Recovering example, and COMBAT_SPEC already describes Knocked Out as the Knocked Down animation without getting up.
 - **Affects:** docs/STYLE_GUIDE.md (Sprite Sheet & Animation Examples), Barry and Peaux animation lists.
 
+## D-024: Strikes and Struck
+
+- **Date:** 2026-10-31
+- **Decided by:** Designer
+- **Decision:**
+  - A strike can land on a wrestler in the Struck state, so the 1-2-3 combo connects. Each hit restarts Struck; Strike 3 knocks down.
+  - Struck lasts 0.4 s (tunable).
+  - Strike timing starting values match the approved art: wind-up = time to the contact frame (Strike 1 and 2: 0.21 s, Strike 3: 0.125 s), hit window 0.1 s, recovery 0.15 s (Strike 3: 0.25 s). All tunable.
+  - Wrestlers can't move while striking. Striking ends a run (D-020: another action).
+- **Why:** COMBAT_SPEC's list of states a strike can land on omitted Struck, which would stop combos from connecting. The other values were unspecified (ARCHITECTURE gaps 1 and 6).
+- **Affects:** docs/COMBAT_SPEC.md (Striking/Combo Rules, Tuning Values), docs/ARCHITECTURE.md section 8.
+
+## D-025: Knockdowns and the ground stomp
+
+- **Date:** 2026-10-31
+- **Decided by:** Designer
+- **Decision:**
+  - Knockdown length scales linearly with health lost, from minimum knockdown time at full health to maximum near 0.
+  - The CPU mashes to shorten knockdowns at a tunable rate, under the same rule as the player.
+  - A downed wrestler can be hit, but only by a new **Stomp** move: pressing Strike while standing over a Knocked Down opponent stomps instead of punching. A stomp deals damage only (tunable, starting at 3), doesn't change the knockdown timer, and can knock out. There is no limit on stomps per knockdown.
+  - No invulnerability after getting up.
+  - Stomp cooldown: after a stomp animation ends, the same wrestler can't stomp again for 1.0 s (tunable in the Inspector), so stomps can't be chained rapidly.
+- **Why:** ARCHITECTURE gaps 7 and 8; hitting a downed wrestler was not in the spec.
+- **Affects:** docs/COMBAT_SPEC.md, docs/CONTROLS.md (Strike), docs/STYLE_GUIDE.md (new Stomp animation for each wrestler), docs/ARCHITECTURE.md (`MoveId` gains `Stomp`).
+
+## D-026: Match start and end
+
+- **Date:** 2026-10-31
+- **Decided by:** Designer
+- **Decision:**
+  - The "{Player} vs {CPU}" banner shows for about 2 s while both wrestlers stand still. Control and the timer start when it ends.
+  - The timer counts up from 0:00 and displays as m:ss. There is no time limit.
+  - On a knockout, everything freezes for about 1.5 s, then the Victory screen loads.
+  - The Victory screen has one option: any button returns to the Start Screen.
+- **Why:** ARCHITECTURE gaps 2 and 3.
+- **Affects:** UI & Match Flow work, docs/ARCHITECTURE.md section 8.
+
+## D-027: Movement and arena rules from the movement playtest
+
+- **Date:** 2026-10-31
+- **Decided by:** Designer
+- **Decision:**
+  - The walkable area is narrowed at the left and right ends so a wrestler's whole sprite stays on the arena art. The camera is unchanged.
+  - Wrestlers block each other: their feet can't overlap.
+  - A run that hits the truck or pool puts the runner in Struck and deals obstacle collision damage. The trailer/fence line and the arena ends just end the run, without damage.
+  - A player who started their own run can cancel it by pressing Run again. A run caused by an Irish Whip can't be cancelled this way (see D-028).
+  - ~~Walking is the same speed in every direction.~~ Superseded by D-029: three tunable walk speeds.
+- **Why:** Issues found in the movement-slice playtest; ARCHITECTURE gap 10.
+- **Affects:** docs/CONTROLS.md (Running), docs/COMBAT_SPEC.md (Running), docs/ARCHITECTURE.md section 8, arena prefab bounds.
+
+## D-028: Lock-ups and Irish Whips
+
+- **Date:** 2026-10-31
+- **Decided by:** Designer
+- **Decision:**
+  - A lock-up can target an opponent who is Standing, Walking, Recovering, or Striking before the strike lands (COMBAT_SPEC's list). CONTROLS.md's "standing opponent" wording is corrected to match.
+  - If both wrestlers attempt a lock-up in range on the same tick, the winner is chosen 50/50 at random.
+  - A whipped wrestler has no control at all during the first 3 s of the whip run (tunable): no strikes, lock-ups or cancelling. After that they can cancel the run by pressing Run.
+  - The whipping wrestler returns to normal control as soon as their Irish Whip animation finishes; what they do next is up to the player or CPU.
+  - A strike on a whipped wrestler deals that strike's normal damage, not Irish Whip impact damage.
+- **Why:** ARCHITECTURE conflict 1 and gaps 4 and 9.
+- **Affects:** docs/CONTROLS.md, docs/COMBAT_SPEC.md (Lock Up/Grappling/Irish Whip Rules), docs/ARCHITECTURE.md section 8.
+
+## D-029: Running, walk speeds, and knockdown check
+
+- **Date:** 2026-10-31
+- **Decided by:** Designer
+- **Decision:**
+  - While running, Strike is allowed: it ends the run and throws Strike 1 on the spot. Lock Up is not allowed while running. Run cancels your own run (D-027).
+  - Walk speeds stay as playtested (3.0 sideways, 2.0 toward/away from the camera, about 3.6 on diagonals), but are three separate Inspector values: horizontal, vertical, and diagonal walk speed. This replaces D-027's "same speed in every direction".
+  - A running wrestler who runs into the opponent knocks both of them down. Each gets their normal knockdown (length from their own health). No damage is specified, so run-collision damage is a tunable value starting at 0.
+  - The "below 30 health" knockdown check for a strike is made after the hit's damage is applied.
+- **Why:** ARCHITECTURE conflicts 8 and 9 and gaps 14 and 15, found when preparing the combat-core contracts.
+- **Affects:** docs/COMBAT_SPEC.md, docs/CONTROLS.md, docs/ARCHITECTURE.md (sections 4.1, 4.2, 5, 8), CombatTuning.
+
+## D-030: Double knockouts, crashes, and downed wrestlers
+
+- **Date:** 2026-10-31
+- **Decided by:** Designer
+- **Decision:**
+  - If both wrestlers reach 0 health on the same tick, the match is a **draw**. The Victory screen needs a draw message (UI step).
+  - A wrestler who runs into the truck or pool and is below 30 health after the obstacle damage is knocked down, the same as a strike or whip impact.
+  - A running wrestler passes over an opponent who is lying on the ground (Knocked Down or Knocked Out). Downed wrestlers don't block runs.
+  - The CPU keeps a tunable chance (starting at 30%) to strike back while Recovering if the player is in range.
+  - Defaults from the combat build stay: the combo window is measured from the previous strike's press; strikes whose hit windows open on the same tick both land; Strike during the stomp cooldown over a downed opponent does nothing; run-collision damage applies to both wrestlers; "standing still" for regeneration means no move input.
+- **Why:** Gaps found while building the combat rules (combat-core slice step 2).
+- **Affects:** docs/COMBAT_SPEC.md, docs/ARCHITECTURE.md (`MatchResult` gains a draw), UI Victory screen.
+
 ---
 
 ## Open Questions

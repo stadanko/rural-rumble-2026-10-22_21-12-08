@@ -24,6 +24,31 @@ namespace RuralRumble.Tests.EditMode
         public void PressRunOnce() =>
             Enqueue(new WrestlerIntent(HeldMove, ButtonState.None, new ButtonState(true, true), ButtonState.None));
 
+        /// <summary>Queues one tick where Strike (X / J) goes down, with the held stick.</summary>
+        public void PressStrikeOnce() =>
+            Enqueue(new WrestlerIntent(HeldMove, ButtonState.None, ButtonState.None, new ButtonState(true, true)));
+
+        /// <summary>Queues one tick where Lock Up/Grapple (A / K) goes down, with the held stick.</summary>
+        public void PressGrappleOnce() =>
+            Enqueue(new WrestlerIntent(HeldMove, new ButtonState(true, true), ButtonState.None, ButtonState.None));
+
+        /// <summary>Queues one tick with nothing pressed and the held stick.</summary>
+        public void Wait() =>
+            Enqueue(new WrestlerIntent(HeldMove, ButtonState.None, ButtonState.None, ButtonState.None));
+
+        /// <summary>Queues <paramref name="ticks"/> intents: Strike pressed on the listed tick indices, idle otherwise.</summary>
+        public void StrikeOnTicks(int ticks, params int[] pressTicks)
+        {
+            var set = new HashSet<int>(pressTicks);
+            for (int i = 0; i < ticks; i++)
+            {
+                if (set.Contains(i)) PressStrikeOnce();
+                else Wait();
+            }
+        }
+
+        public int QueuedCount => queued.Count;
+
         public void Release() => HeldMove = Vector2.zero;
 
         public WrestlerIntent Read()

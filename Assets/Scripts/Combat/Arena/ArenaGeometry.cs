@@ -137,6 +137,19 @@ namespace RuralRumble.Combat
             return new ArenaMoveResult(new Vector2(x1, y1), blockedX, blockedY, hitObstacleX, hitObstacleY);
         }
 
+        /// <summary>True when the feet box overlaps the interior of any obstacle (touching a face is fine).</summary>
+        public bool OverlapsObstacle(Vector2 feet, Vector2 halfExtents)
+        {
+            for (int i = 0; i < obstacles.Count; i++)
+            {
+                ArenaRect o = obstacles[i];
+                if (feet.x + halfExtents.x > o.XMin + Tolerance && feet.x - halfExtents.x < o.XMax - Tolerance
+                    && feet.y + halfExtents.y > o.YMin + Tolerance && feet.y - halfExtents.y < o.YMax - Tolerance)
+                    return true;
+            }
+            return false;
+        }
+
         private static bool OverlapsClosed(float aMin, float aMax, float bMin, float bMax) =>
             aMax >= bMin - Tolerance && aMin <= bMax + Tolerance;
 

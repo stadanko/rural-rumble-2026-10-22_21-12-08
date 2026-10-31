@@ -29,10 +29,13 @@ namespace RuralRumble.Tests.EditMode
         [Test]
         public void IdleCpu_NeverMovesOrChangesState_WhilePlayerActs()
         {
-            var cpuStart = new Vector2(17.6667f, -11.6667f);
+            // CPU off the player's depth line: since D-027 wrestlers block each other, and a run into the
+            // opponent knocks both down (D-029). (Updated in combat-core step 2; the movement slice let the
+            // player walk through the CPU.)
+            var cpuStart = new Vector2(17.6667f, -13.5f);
             using var h = new MatchHarness(new Vector2(9f, -11.6667f), cpuStart: cpuStart);
             Vector2 cpuFacing = h.Cpu.Facing;
-            // Player walks through the CPU's spot and runs across the arena (wrestlers pass through each other).
+            // Player walks past the CPU and runs across the arena.
             h.PlayerInput.HeldMove = Vector2.right; h.TickSeconds(3f);
             h.PlayerInput.Release(); h.PlayerInput.PressRunOnce(); h.TickSeconds(3f);
             h.PlayerInput.HeldMove = new Vector2(-1f, 1f); h.TickSeconds(3f);

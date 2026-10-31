@@ -51,13 +51,15 @@ Runtime code is split so EditMode tests reference combat rules without scenes.
 | `RuralRumble.UI` | `Assets/Scripts/UI/` | `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.Match`, `Unity.InputSystem` | Screens, HUD, match flow. The HUD reaches the match through `MatchBootstrap.Current` (4.3), so UI references `RuralRumble.Match`; Match never references UI. |
 | `RuralRumble.Juice` (future) | `Assets/Scripts/Juice/` | `RuralRumble.Core`, `RuralRumble.Combat` | Feedback only. |
 | `RuralRumble.Editor.Build` | `Assets/Editor/Build/` | runtime assemblies as needed | Editor platform only. |
-| `RuralRumble.Editor.Tooling` | `Assets/Editor/Tooling/` | `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.Presentation` | Editor platform only. |
+| `RuralRumble.Editor.Tooling` | `Assets/Editor/Tooling/` | `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.Presentation`, `Unity.2D.Sprite.Editor` | Editor platform only. Namespace `RuralRumble.EditorTooling` (a `.Editor` namespace segment would shadow `UnityEditor` lookups). `Unity.2D.Sprite.Editor` (2D Sprite package, already installed) gives the builder the sprite data provider API. |
 | `RuralRumble.Tests.EditMode` | `Assets/Tests/EditMode/` | `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.AI`, `UnityEngine.TestRunner`, `UnityEditor.TestRunner`; `nunit.framework.dll` | Editor platform only; define constraint `UNITY_INCLUDE_TESTS`. |
 | `RuralRumble.Tests.PlayMode` | `Assets/Tests/PlayMode/` | all runtime assemblies, `UnityEngine.TestRunner`; `nunit.framework.dll` | Any platform; define constraint `UNITY_INCLUDE_TESTS`. |
 
 Dependency direction: Core ← Combat ← (AI, Presentation, UI, Juice). Combat never references Presentation, UI, AI, or Juice. Nothing references Tests.
 
-Created so far (movement slice): `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.Presentation`, `RuralRumble.Match` (Core, Combat, Presentation; the `RuralRumble.AI` reference is added when the AI assembly is created with `OpponentBrain`), `RuralRumble.Editor.Tooling`, `RuralRumble.Tests.EditMode` (references Core and Combat; AI is added when that assembly exists), `RuralRumble.Tests.PlayMode` (Core, Combat, Presentation, Match). The others are created when first needed. An asmdef with no scripts compiles to nothing; that is expected until the owner adds code.
+Created so far: `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.Presentation`, `RuralRumble.Match` (Core, Combat, AI, Presentation), `RuralRumble.Tests.EditMode` (Core, Combat, AI), `RuralRumble.Tests.PlayMode` (Core, Combat, AI, Presentation, Match) from the movement slice; `RuralRumble.AI` (Core, Combat; holds a placeholder `AIAssembly.cs` until Combat State & AI adds `OpponentBrain`) and `RuralRumble.Editor.Tooling` (before this, `WrestlerAnimationBuilder` compiled into `Assembly-CSharp-Editor`) in combat-core step 1. `RuralRumble.UI`, `RuralRumble.Juice` and `RuralRumble.Editor.Build` are created when first needed.
+
+**Scripts outside an asmdef.** `Assets/Animation/` holds assets only (clips, controllers, `MoveAnimationTable.asset`). Scripts there would compile into `Assembly-CSharp`, which no asmdef can reference, so runtime presentation types live in `Assets/Scripts/Presentation/` even when their assets live in `Assets/Animation/`. `MoveAnimationTable.cs` is in `Assets/Scripts/Presentation/` for this reason (confirmed, combat-core step 1).
 
 ## 3. Scenes and flow
 
@@ -88,17 +90,19 @@ Screen flow (D-003): **Start → CharacterSelect → Match → Victory**. No mod
 - **Arena dimensions:** the default view (960 px) is 60% of the arena width, so the arena is **1600 native px wide** (26.7 units). The walkable floor's full depth fits within the default 540-px-tall view. At full zoom-out the screen shows 1600×900, so the arena art is **1600×900 native px** (26.7×15 units): the extra height is sky and treeline above and foreground below, seen only when zoomed out.
 - **Arena layout (native px, origin top-left of the 1600×900 canvas). Approved (D-018).** Art: `Assets/Art/Arena/arena_backdrop.png` (pivot top-left), `arena_truck.png` and `arena_pool.png` (pivot bottom-left, so a sprite's pivot sits at its left x and base row). 60 PPU: canvas x px ÷ 60 = world x; canvas row ÷ 60 = world y downward from the backdrop's top edge.
   - Default view vertical band: rows 300–840 (camera at default zoom is framed here).
-  - Walkable feet range: rows 580 (back, in front of the trailer) to 820 (front); full width minus obstacles.
+  - Walkable feet range: rows 580 (back, in front of the trailer) to 820 (front); full width minus obstacles, narrowed at the left and right ends so a wrestler's whole sprite stays on the arena art (D-027; values in the table below). The camera is unchanged.
   - Layers, back to front: `backdrop` (sky, pines, trailer, floor; one image), then depth-sorted by base row (Sprite Sort Point = Pivot): truck (left x −40, base row 650, 502×300), pool (right edge, base row 640, 560×367), wrestlers. Anything with a base row below a wrestler's feet draws in front of that wrestler.
-  - Obstacles: the trailer is the back wall (invisible collider along row 580). The truck and pool get colliders at their footprints; Combat decides their injury rules (STYLE_GUIDE Arena).
+  - Obstacles: the trailer is the back wall (invisible collider along row 580). The truck and pool get colliders at their footprints. A run into the truck or pool puts the runner in Struck with obstacle collision damage, or Knocked Down if that leaves them below 30 health (D-030); the back wall and the arena ends only end the run (D-027). `ArenaObstacleMarker.MarkerRole.Obstacle` = damaging object; the `WalkableArea` edges = plain bounds.
 - **World frame (built).** `Assets/Prefabs/Arena/Arena.prefab` sits at the world origin; the backdrop's top-left corner is (0, 0). Canvas (x px, row px) → world (x / 60, −row / 60), so world y is negative and grows toward the back. `Arena` children: `Backdrop` (order in layer −100, always behind), `Truck` at (−0.6667, −10.8333), `Pool` at (18.3333, −10.6667), both order 0 with Sprite Sort Point = Pivot. Wrestlers use order 0, Sort Point = Pivot (feet).
 - **Arena rectangles (world units, for `ArenaObstacleMarker`s).** Footprint depths for the truck and pool are the Architect's reading of the art (back wall to the sprite's base row); Combat may adjust them, and playtesting should confirm them.
 
   | Rect | Canvas | World x | World y |
   |---|---|---|---|
   | Arena art | x 0–1600, rows 0–900 | 0 – 26.6667 | −15 – 0 |
-  | Walkable feet band | full width, rows 580–820 | 0 – 26.6667 | −13.6667 – −9.6667 |
-  | Back wall (trailer) | row 580, full width | 0 – 26.6667 | y = −9.6667 (line) |
+  | Walkable feet band (D-027, built in combat-core step 4) | x 90–1510, rows 580–820 | 1.5 – 25.1667 | −13.6667 – −9.6667 |
+
+  D-027 narrowing (the movement slice used the full width 0 – 26.6667). `WalkableBand` marker: offset (1.5, −13.6667), size (23.6667, 4). With `feetHalfWidth` 0.5 the feet point stops 2.0 units (120 px) from each art edge. That keeps the widest body poses on the art: a lying (Knocked Down / Knocked Out) body spans about ±2 units around the feet point (Animation & Tooling), stand/walk frames reach 74 px from the pivot and run frames 88 px. Only the extended arm of Strike 1 (146 px from the pivot) can still pass the edge, by about 26 px, when punching toward it; accepted as a playtest item. If `feetHalfWidth` changes, re-derive the band (band inset = 2.0 − `feetHalfWidth`).
+  | Back wall (trailer) | row 580, full width | 0 – 26.6667 | y = −9.6667 (line); not a damaging obstacle (D-027) |
   | Truck footprint | x −40–462, rows 580–650 | −0.6667 – 7.7000 (0 – 7.7 inside the arena) | −10.8333 – −9.6667 |
   | Pool footprint | x 1100–1660, rows 580–640 | 18.3333 – 27.6667 (18.3333 – 26.6667 inside) | −10.6667 – −9.6667 |
 - **Camera rig (built).** `Match.unity` root `MatchCamera` (component `MatchCamera`, moves) with child `Main Camera` (orthographic `Camera`, `UniversalAdditionalCameraData`, `AudioListener`). Juice shakes the child's local position. The default orthographic size is derived from `defaultVisibleWidthFraction` and the camera aspect (exactly 4.5 at 16:9); the maximum from `maxVisibleWidthFraction` (7.5 at 16:9, the whole 1600×900 arena). Vertical framing is centered on canvas row 570 (rows 300–840) at default zoom and is clamped to the arena art while zoomed out. Position is snapped to 1/60 unit only while the size equals the default. `MatchCamera.SetTargets(Transform, Transform)` takes the two wrestler roots; `CombatMatchRunner` writes those roots from `IWrestlerView.Position`, so the camera follows the same positions without referencing Combat.
@@ -123,9 +127,13 @@ public readonly struct WrestlerIntent {
 public readonly struct ButtonState { bool Pressed; /* went down since last Read */ bool Held; }
 ```
 
-- Intents are buttons, not actions. Combat decides what a press means in the current state (A = lock up or grapple, B = run or whip, Strike/Grapple presses while Knocked Down = mash). This keeps CONTROLS.md logic in one place.
+- Intents are buttons, not actions. Combat decides what a press means in the current state (A = lock up or grapple; B = run, whip, or cancel a run the wrestler started themselves (D-027); Strike = combo strike, or Stomp when standing over a Knocked Down opponent (D-025); Strike/Grapple presses while Knocked Down = mash). This keeps CONTROLS.md logic in one place.
+- **Run origin (D-027, D-028).** Combat records whether a run came from the wrestler's own Run press or from an Irish Whip. B cancels only an own run. A whipped run ignores all buttons for the whip no-control time, then B may cancel it (lock-up slice). The origin is internal combat state, not part of `IWrestlerView`.
+- **CPU mashing (D-025).** While its own view is Knocked Down, `OpponentBrain` produces Strike presses at `CombatTuning` CPU mash rate. Combat applies them exactly like the player's presses; there is no CPU-only shortcut in Combat.
 - `PlayerInputSource : MonoBehaviour, IWrestlerInput` (Core) reads the Input Actions asset. Combat never touches devices or `UnityEngine.InputSystem`.
 - `OpponentBrain : IWrestlerInput` (AI, plain C#) produces the CPU's intents from read-only views (`IWrestlerView` of itself and the player) and `CombatTuning`. It evaluates on its decision interval, not every frame (GDD), and holds its last intent between evaluations. It cannot call combat methods directly.
+  - **Time for the brain.** `Read()` takes no `dt` and AI must not read `Time`, so the brain gets a clock: `OpponentBrain(IWrestlerView self, IWrestlerView opponent, CombatTuning tuning, Func<float> clock)`, where `clock` returns combat seconds (`() => match.ElapsedSeconds` in the game, a test-controlled value in tests). The brain measures its decision interval and mash rate from clock differences between `Read()` calls. `ElapsedSeconds` advances inside `Tick`, after both `Read()`s, so the brain sees the previous tick's time; that one-tick lag is acceptable. The clock stops when the match ends. Exact constructor shape is Combat's call as long as it stays free of `Time` and MonoBehaviours.
+  - `Read()` must be pure apart from the brain's own state (no combat calls), and `Pressed` must be true for only one `Read()` per press, like the player's adapter.
 - Tests use a `ScriptedInput : IWrestlerInput` that returns queued intents.
 - Input Actions asset: the template `Player` map is replaced by a `Wrestler` map with actions `Move`, `LockUpGrapple`, `RunWhip`, `Strike`, bound per CONTROLS.md and D-002 (keyboard per D-019). The template `UI` map is kept for menus; menu confirm/back per D-019. **Approved (D-021).**
 
@@ -138,7 +146,7 @@ Combat publishes; presentation, UI, and Juice subscribe. None of them change com
 public interface IWrestlerView {
     WrestlerId Id;            // Player or Cpu (Core enum)
     CombatState State;        // exactly the 12 COMBAT_SPEC states
-    MoveId CurrentMove;       // None, Strike1, Strike2, Strike3, LockUp, Bodyslam, IrishWhip, BreakLockUp
+    MoveId CurrentMove;       // None, Strike1, Strike2, Strike3, Stomp (D-025), LockUp, Bodyslam, IrishWhip, BreakLockUp
     MovePhase Phase;          // None, Startup, Active, Recovery
     float Health; float MaxHealth;
     Vector2 Position;         // arena plane: x = left/right, y = depth
@@ -147,19 +155,35 @@ public interface IWrestlerView {
 }
 
 // Combat, plain C#. One instance per match; all events fire inside CombatMatch.Tick.
+// Raise methods are internal to RuralRumble.Combat.
 public sealed class CombatEvents {
-    event Action<WrestlerId, CombatState /*from*/, CombatState /*to*/> StateChanged;
+    event Action<WrestlerId, CombatState /*from*/, CombatState /*to*/> StateChanged; // not raised for a same-state restart
     event Action<WrestlerId, Vector2> FacingChanged;  // new 8-way Facing (movement slice); read HorizontalFacing for the flip
-    event Action<WrestlerId, MoveId, MoveTiming> MoveStarted;
-    event Action<WrestlerId, MoveId, MovePhase> MovePhaseChanged;
-    event Action<PairedMoveInfo> PairedMoveStarted;   // lock-up, bodyslam, Irish Whip, break
-    event Action<HitInfo> HitLanded;                  // attacker, defender, move, damage, contact point
-    event Action<WrestlerId, Vector2> ObstacleHit;    // running/whipped wrestler hits an arena object
-    event Action<WrestlerId, float> HealthChanged;    // new health
-    event Action<WrestlerId, float> KnockedDown;      // knockdown duration
-    event Action<MatchResult> MatchEnded;             // winner, loser, elapsed seconds
+    event Action<WrestlerId, MoveId, MoveTiming> MoveStarted;      // move enters Startup; timing read from tuning now
+    event Action<WrestlerId, MoveId, MovePhase> MovePhaseChanged;  // Startup -> Active -> Recovery -> None; an interrupted move goes to None
+    event Action<PairedMoveInfo> PairedMoveStarted;   // lock-up, bodyslam, Irish Whip, break (lock-up slice; not declared yet)
+    event Action<HitInfo> HitLanded;                  // attacker, defender, move, damage, contact point; every hit, incl. Struck restarts
+    event Action<WrestlerId, Vector2> ObstacleHit;    // running/whipped wrestler hits the truck or pool (contact point); not the back wall or ends
+    event Action<WrestlerId, float> HealthChanged;    // new health (damage and Recovering regen)
+    event Action<WrestlerId, float> KnockedDown;      // knockdown duration at the moment of the knockdown, before mashing
+    event Action<MatchResult> MatchEnded;             // winner, loser, elapsed seconds; raised once
 }
+
+// Combat. Serializable so CombatTuning holds one per move (Inspector-editable, D-005).
+[Serializable] public struct MoveTiming { public float Startup, Active, Recovery; float Total; }
+// Combat.
+public readonly struct HitInfo { WrestlerId Attacker, Defender; MoveId Move; float Damage; Vector2 ContactPoint; }
 ```
+
+`MoveId` values are explicit (`None = 0` … `Strike3 = 3`, `Stomp = 4`, `LockUp = 5`, `Bodyslam = 6`, `IrishWhip = 7`, `BreakLockUp = 8`) because they are serialized in the Animator's `Move` parameter and in `MoveAnimationTable`. Append new values; never renumber.
+
+**Combat-core slice rules that shape the seams (D-024, D-025, D-027):**
+- **Struck restarts on every hit** (D-024). Because the state does not change, `StateChanged` does not fire; presentation restarts the Struck clip when `HitLanded` names its wrestler as defender. Strike 3 sends the defender to Knocked Down.
+- **Strikes can land on Struck** (combos connect) **and on Knocked Down, Stomp only** (D-025). A Stomp is a normal move: `CurrentMove = Stomp`, attacker state Striking, `MoveStarted`/`MovePhaseChanged`/`HitLanded` as for strikes. It deals damage only, does not change the knockdown timer, and can knock out. The Stomp cooldown starts when the stomp's Recovery ends; it is internal combat state (no event, not in `IWrestlerView`). Whether Strike means Stomp is decided by Combat at the press (stomp range is a tuning value).
+- **No movement while Striking** (D-024). Strike is allowed while running: it ends the run and throws Strike 1 on the spot. Lock Up is not allowed while running (D-029).
+- **Knocked Down** length is linear in health lost (D-025). Mashing shortens the remaining time; `KnockedDown` carries only the starting duration. No invulnerability after getting up.
+- **Knocked Out** (health 0) raises `MatchEnded` once (both wrestlers at 0 on the same tick = draw, D-030), then the match freezes: `CombatMatch.Tick` changes nothing, `ElapsedSeconds` stops, and Combat exposes `CombatMatch.IsOver` (bool) and `CombatMatch.Result` (`MatchResult`, valid when `IsOver`). The runner keeps calling `Tick`. The ~1.5 s hold and the Victory load are UI's (D-026, step 7).
+- **Recovering** walks slowly, cannot run, and regenerates health only while standing still, up to the recovery cap. Presentation picks the Recovering stand or walk pose from whether `Position` changed since its last frame (visual choice only, no rule).
 
 `CombatState` values: Standing, Walking, Running, Striking, Struck, LockUp, LockedUp, Grappling, Grappled, KnockedDown, Recovering, KnockedOut. Do not add states without a COMBAT_SPEC change.
 
@@ -169,12 +193,17 @@ Both wrestlers share one Animator controller; each wrestler gets an `AnimatorOve
 
 **Attack timing.** Combat is the authority for when a hit can land.
 - Every move has a `MoveTiming { float Startup; float Active; float Recovery; }` (seconds) in `CombatTuning`. Combat checks for contact only during `Active`.
-- `MoveStarted` carries the current `MoveTiming`. Presentation looks up the clip in a `MoveAnimationTable` (ScriptableObject in `Assets/Animation/`, owned by Animation & Tooling) that records each clip's contact time at native speed, and sets playback speed so the contact frame lands at `Startup`. `MovePhaseChanged` lets presentation resync.
+- `MoveStarted` carries the current `MoveTiming`. Presentation looks up the clip in a `MoveAnimationTable` (type `Assets/Scripts/Presentation/MoveAnimationTable.cs`, asset `Assets/Animation/MoveAnimationTable.asset`, both owned by Animation & Tooling; see section 2 for why the type is not in `Assets/Animation/`) that records each clip's contact time at native speed, and sets playback speed so the contact frame lands at `Startup`. `MovePhaseChanged` lets presentation resync. `WrestlerView` gets the table through a serialized field on the wrestler prefab.
+- Strike starting timings match the approved art's contact frames (D-024): Strike 1/2 Startup 0.21, Active 0.1, Recovery 0.15 s; Strike 3 0.125 / 0.1 / 0.25 s. Stomp has no art yet; its timing is a Combat starting point and its clip is a stand-in until the Stomp animation exists.
 - Animation events never trigger hits or state changes. If a clip cannot match the timing, Animation & Tooling reports it; it does not change tuning.
 - An Editor validator in `Assets/Editor/Tooling/` reports moves whose clip contact time and tuned `Startup` would require extreme playback speeds.
 - **Approved (D-021).** Reason: keeps hit detection testable without Animators, and Play Mode tuning edits stay in sync because speed is computed at each move start.
 
 **Hit detection.** Plain C# box overlap on the arena plane (`ArenaRect` hurt/hit boxes with a depth tolerance), computed in `CombatMatch.Tick`, not Physics2D colliders or triggers. Box sizes and ranges are tuning values. Both wrestlers are resolved in one tick, so "first strike to land wins" is deterministic. Arena bounds and obstacles are `ArenaRect`s collected from `ArenaObstacleMarker` components (Combat) on the arena prefab at match start. **Approved (D-021).** Reason: EditMode-testable, deterministic, no physics callback ordering.
+
+**Wrestler blocking (D-027, D-029, D-030).** The two wrestlers' blocking boxes (`feetHalfWidth` × `wrestlerBlockHalfDepth`, default 0.25; `feetHalfDepth` is only for the arena bounds) never overlap. Exceptions: a running wrestler passes over an opponent who is Knocked Down or Knocked Out (walking is still blocked by a downed wrestler), and a runner who reaches a standing opponent knocks both down, each with their normal knockdown and `runCollisionDamage` (default 0) (D-029, D-030). `CombatMatch` resolves this after movement in the same tick, in plain C# like the arena bounds: a move that would overlap is stopped at contact (no pushing). The resolution must not depend on which wrestler is ticked first in a way that favors the player; Combat documents its order. Paired moves (lock-up slice) place wrestlers by anchor and are exempt while they play. Hit boxes are separate from feet boxes, so strikes still reach a blocked opponent.
+
+**Walking speed (D-029, replaces D-027's "same speed").** Three Inspector values: `walkSpeedHorizontal` (3.0), `walkSpeedDepth` (2.0; means vertical, toward/away from the camera), `walkSpeedDiagonal` (3.6, total speed along a diagonal).
 
 **Tick.** `CombatMatchRunner.Update` calls `CombatMatch.Tick(dt, playerIntent, cpuIntent)` with `Time.deltaTime` clamped to a maximum step. Rules never read `Time`. **Approved (D-021).** Reason: simplest loop with no lost button presses; tests pass explicit `dt`.
 
@@ -186,7 +215,7 @@ Both wrestlers share one Animator controller; each wrestler gets an `AnimatorOve
 
 ### 4.3 Combat → UI
 
-UI reads `IWrestlerView.Health / MaxHealth` (bars only, never numbers), subscribes to `HealthChanged` and `MatchEnded`, and reads `CombatMatch.ElapsedSeconds` for the timer. `MatchResult { WrestlerId Winner; WrestlerId Loser; float ElapsedSeconds; }`.
+UI reads `IWrestlerView.Health / MaxHealth` (bars only, never numbers), subscribes to `HealthChanged` and `MatchEnded`, and reads `CombatMatch.ElapsedSeconds` for the timer. `MatchResult { WrestlerId Winner; WrestlerId Loser; float ElapsedSeconds; bool IsDraw; static MatchResult Draw(float elapsedSeconds); }` (Core, `Assets/Scripts/Core/Session/MatchSetup.cs`). `IsDraw` is true for a double knockout on one tick (D-030); then `Winner`/`Loser` carry no meaning and UI shows the draw message (Victory screen, UI step). Added by Combat State & AI with the coordinator's approval in combat-core step 2.
 
 - The match timer counts up (STYLE_GUIDE) and stops at knockout. Combat owns it because it is match state.
 - On `MatchEnded`, UI's `MatchFlow` stores the result in `GameSession.LastResult` and loads Victory. Victory builds "Victory! {Winner} knocked out {Loser} in {timer}" plus "Congratulations!" or "Game Over!" from `MatchResult` and the definitions in `GameSession.Setup`.
@@ -209,7 +238,8 @@ public static class GameSession { MatchSetup Setup; MatchResult LastResult; bool
 - **Stand-in (movement slice):** Peaux has no art yet, so `Peaux.asset`'s prefab points at `Barry.prefab`. Replace it with `Peaux.prefab` when Animation & Tooling delivers it. Portraits are empty until UI art exists.
 - CharacterSelect sets `GameSession.Setup` (player's pick; CPU gets the other) and loads Match.
 - `MatchBootstrap` (`RuralRumble.Match`, D-022; in Match scene) reads `GameSession.Setup`, instantiates both prefabs, creates `PlayerInputSource` and (later) `OpponentBrain`, and configures `CombatMatchRunner`, which builds the `CombatMatch`. If `HasSetup` is false (Match opened directly in the Editor), it uses roster entry 0 as player and 1 as CPU.
-- **Bootstrap order (built).** `MatchBootstrap.Awake`: resolve the setup, instantiate both prefabs at the spawn feet points (serialized; player (9.0, −11.6667), CPU (17.6667, −11.6667)), add `PlayerInputSource` to the bootstrap object, call `CombatMatchRunner.Configure(playerRoot, cpuRoot, playerInput, cpuInput)` (CPU input null = idle until `OpponentBrain`). All Awakes precede all Starts. `CombatMatchRunner.Start` (order −50) builds the match from the roots' positions and the Arena's markers. `MatchBootstrap.Start` (order −40) binds each `WrestlerView` to `Match.Player` / `Match.Cpu` and calls `MatchCamera.SetTargets`. Each frame: runner `Update` (−50) ticks and writes roots, `WrestlerView.Update` (0) animates, `MatchCamera.LateUpdate` follows. `MatchBootstrap.Match` is valid from default-order Starts onward.
+- **Bootstrap order (built).** `MatchBootstrap.Awake`: resolve the setup, instantiate both prefabs at the spawn feet points (serialized; player (9.0, −11.6667), CPU (17.6667, −11.6667)), add `PlayerInputSource` to the bootstrap object, call `CombatMatchRunner.Configure(playerRoot, cpuRoot, playerInput, cpuInput)` (CPU input = an `InputRelay` that `Start` points at the `OpponentBrain`, see below). All Awakes precede all Starts. `CombatMatchRunner.Start` (order −50) builds the match from the roots' positions and the Arena's markers. `MatchBootstrap.Start` (order −40) binds each `WrestlerView` to `Match.Player` / `Match.Cpu` and calls `MatchCamera.SetTargets`. Each frame: runner `Update` (−50) ticks and writes roots, `WrestlerView.Update` (0) animates, `MatchCamera.LateUpdate` follows. `MatchBootstrap.Match` is valid from default-order Starts onward.
+- **CPU brain wiring (built, combat-core step 4).** `OpponentBrain` needs the two `IWrestlerView`s and the tuning, which come from the `CombatMatch` built in `CombatMatchRunner.Start`, but `Configure` runs in `Awake`. `MatchBootstrap.Awake` passes an `InputRelay` (internal `IWrestlerInput` in `MatchBootstrap.cs`) as the CPU input. `MatchBootstrap.Start` creates `new OpponentBrain(match.Cpu, match.Player, match.Tuning, () => match.ElapsedSeconds)`, sets it as the relay's source, and exposes it as `MatchBootstrap.CpuBrain`. The relay reads idle until then; no tick happens before Start. (The brain's `(tuning, clock, seed)` + `Bind` constructor would also work, but needs the tuning in `Awake`; the relay keeps `CombatMatch.Tuning` the only tuning reference.) `MatchBootstrap.Start` also calls `WrestlerView.Bind(view)` and `WrestlerView.BindEvents(match.Events, id)` for each wrestler.
 - `GameSession` resets in a `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]` method so Play Mode without domain reload starts clean.
 - **Approved (D-021).** Reason: a static holder is the simplest way to cross one scene load; no DontDestroyOnLoad objects to manage.
 
@@ -224,14 +254,15 @@ public static class GameSession { MatchSetup Setup; MatchResult LastResult; bool
 ## 5. Combat tuning asset
 
 - Type: `CombatTuning : ScriptableObject` in `Assets/Scripts/Combat/Tuning/`. Asset: `Assets/Data/Tuning/CombatTuning.asset`. One asset shared by both wrestlers and the CPU.
-- **Built so far (movement slice):** the type and asset exist with the movement subset only (`maxHealth`, `walkSpeedHorizontal`, `walkSpeedDepth`, `runSpeed`, `moveDeadzone`, `feetHalfWidth`, `feetHalfDepth`, `maxTickStep`). The groups below are added with the slices that use them.
+- **Built so far:** movement and combat-core fields. Movement: `walkSpeedHorizontal`, `walkSpeedDepth` (vertical walk speed), `walkSpeedDiagonal` (D-029), `recoveringWalkSpeedMultiplier`, `runSpeed`, `moveDeadzone`, `feetHalfWidth`, `feetHalfDepth` (arena bounds), `wrestlerBlockHalfDepth` (wrestler-vs-wrestler blocking), `maxTickStep`. Combat-core: the Timing, Health and Damage (incl. `runCollisionDamage`, D-029), Recovery and Knockdown groups below, strike reaches and hurt box, stomp range, and the CPU values. Lock-up, grapple and whip values come with the lock-up slice.
 - Rules hold a reference to the asset and read fields at the moment of use. Never copy values into fields in constructors, `Awake`, or `Start`. Inspector edits in Play Mode apply on the next use.
 - Edits to a ScriptableObject in Play Mode persist after exiting Play Mode. Agents must not reset or overwrite tuned values in the asset; field initializers carry the COMBAT_SPEC defaults and apply only to new instances.
 - Fields, grouped as in COMBAT_SPEC Tuning Values:
-  - Timing: combo window (0.5 s), lock-up timer (2.0 s).
-  - Health and Damage: max health (100), Recovering threshold (30), Strike 1/2/3 damage (3/4/6), bodyslam damage (12), Irish Whip impact damage (8), obstacle collision damage (8).
-  - Recovery and Knockdown: recovery rate (1/s), recovery cap (30), minimum knockdown time (1.0 s), maximum knockdown time (3.0 s), mash reduction per press (8%), shortest possible knockdown (0.5 s).
-- Values not in COMBAT_SPEC that Combat adds as starting points, each reported for designer review: `MoveTiming` per move, walk/run speeds, Recovering walk-speed multiplier, hit/hurt box sizes, lock-up range, paired-move positioning offsets, Struck duration, CPU decision interval, ranges, and action probabilities (GDD: "configurable probabilities").
+  - Timing: combo window (0.5 s), lock-up timer (2.0 s), Struck duration (0.4 s, D-024), `MoveTiming` for Strike 1, 2, 3 (D-024 values, 4.2) and Stomp, whip no-control time (3.0 s, D-028; lock-up slice).
+  - Health and Damage: max health (100), Recovering threshold (30), Strike 1/2/3 damage (3/4/6), Stomp damage (3, D-025), Stomp cooldown (1.0 s, D-025), bodyslam damage (12), Irish Whip impact damage (8), obstacle collision damage (8, truck and pool only, D-027).
+  - Recovery and Knockdown: recovery rate (1/s), recovery cap (30), minimum knockdown time (1.0 s), maximum knockdown time (3.0 s), mash reduction per press (8%), shortest possible knockdown (0.5 s), CPU mash rate (3 presses/s, D-025).
+  - Combat-core slice adds Timing, Health and Damage, and Recovery and Knockdown fields except the lock-up, bodyslam, Irish Whip and whip values, which come with the lock-up slice.
+- Values not in COMBAT_SPEC that Combat adds as starting points, each reported for designer review: `MoveTiming` for moves other than strikes, walk/run speeds, Recovering walk-speed multiplier, hit/hurt box sizes, stomp range, lock-up range, paired-move positioning offsets, CPU decision interval, ranges, and action probabilities (GDD: "configurable probabilities").
 - Rules (what is allowed, what happens) are never added to the asset as settings to avoid a design decision.
 
 ## 6. Two-wrestler synchronized moves
@@ -257,25 +288,29 @@ Lock-up, bodyslam, Irish Whip, and break lock-up.
 Reported, not resolved. Each needs a designer decision before the affected work.
 
 Conflicts between documents:
-1. **Lock-up target state.** CONTROLS.md: A triggers a lock-up "if close to *standing* opponent". COMBAT_SPEC allows it when Wrestler B is Standing, Walking, Striking (before the strike lands), or Recovering.
+1. ~~**Lock-up target state.**~~ Resolved (D-028): COMBAT_SPEC's list; CONTROLS.md corrected. CONTROLS.md: A triggers a lock-up "if close to *standing* opponent". COMBAT_SPEC allows it when Wrestler B is Standing, Walking, Striking (before the strike lands), or Recovering.
 2. **Knockdown floor naming.** `qa-testing.md` says mashing "never below the minimum"; COMBAT_SPEC's floor is "Shortest possible knockdown" (0.5 s), separate from "Minimum knockdown time" (1.0 s, length at full health). Tests should use the 0.5 s value.
 3. **AI state names.** GDD uses "Grapple" and "Stunned / Downed"; COMBAT_SPEC uses "Lock Up/Grapple" and "Stunned / Knocked Down". This document follows COMBAT_SPEC.
 4. **Combat state list.** GDD MVP Scope lists seven states ("attacking", "grappling", ...); COMBAT_SPEC defines twelve. This document follows COMBAT_SPEC.
 5. **Y = Pin.** GDD Controls table lists Y = Pin (stretch); CONTROLS.md does not. Not bound in MVP.
 7. ~~**MatchBootstrap's assembly.**~~ Resolved (D-022): `MatchBootstrap` moves (with its .meta, so the scene reference survives) to a new Architect-owned `RuralRumble.Match` assembly in `Assets/Scripts/Match/`, done in movement-slice step 4.
+8. ~~**Striking from Running.**~~ Resolved (D-029): Strike allowed while running (ends the run, Strike 1); Lock Up not. D-024 says "Striking ends a run (D-020: another action)", which implies a running wrestler can strike. COMBAT_SPEC Striking/Combo Rules lists Running as a valid state for Wrestler B only (the target), not for the striker, and the Lock Up list doesn't allow Running either. Until the designer decides, it is unclear which buttons, if any, a running wrestler can use besides B (cancel). Found in combat-core step 1.
+9. ~~**"Same speed in every direction" vs. separate depth speed.**~~ Resolved (D-029): three tunable walk speeds (horizontal 3.0, vertical 2.0, diagonal 3.6). D-027 says walking is the same speed in every direction. The movement slice has separate horizontal (3.0) and depth (2.0) walk speeds, which the designer playtested. Read literally, D-027 means one walk speed for all eight directions; read narrowly ("diagonals are no longer faster"), it means only that a diagonal must not exceed the straight speeds while horizontal and depth speeds may still differ. Found in combat-core step 1.
 6. **Missing files.** CLAUDE.md lists `docs/ACCEPTANCE_TESTS.md` and `docs/ASSET_REGISTRY.csv` as sources of truth; neither exists yet. Q-004 refers to `.docx` files in `docs/`; none are there now.
 
 Gaps (rules or values not specified):
-1. Startup / active / recovery timing for each move (Combat adds starting points).
-2. Match start: when the timer starts and whether fighting waits for the versus text; timer display format.
-3. After the Victory screen: return to Start, restart, or quit; menu buttons are decided (D-019). Delay between knockout and the Victory screen.
-4. Irish Whip: the whipper's state during the whip; whether the whipped wrestler can act or stops on its own; whether a strike on a whipped wrestler uses strike damage or Irish Whip impact damage.
+1. ~~Move timing~~ Strikes resolved (D-024); grapple timings are still Combat starting points.
+2. ~~Match start~~ Resolved (D-026). When the timer starts and whether fighting waits for the versus text; timer display format.
+3. ~~After the Victory screen~~ Resolved (D-026). return to Start, restart, or quit; menu buttons are decided (D-019). Delay between knockout and the Victory screen.
+4. ~~Irish Whip~~ Resolved (D-028): whipped wrestler has no control for 3 s, then may cancel with Run; the whipper regains control when the whip animation ends; strikes on a whipped wrestler deal strike damage. The whipper's state during the whip; whether the whipped wrestler can act or stops on its own; whether a strike on a whipped wrestler uses strike damage or Irish Whip impact damage.
 5. ~~Running~~ Resolved (D-020): one press runs until an obstacle, the arena edge, a hit, or another action; facing up/down runs toward the last left/right facing.
-6. Struck: how long it lasts and when the wrestler can act again.
-7. Knockdown length: whether it scales linearly with health lost.
-8. Whether the CPU mashes to shorten knockdowns.
-9. Simultaneous lock-up attempts by both wrestlers.
-10. Which arena edges are damaging obstacles and which are plain bounds (STYLE_GUIDE: "some of the items ... could be used").
+6. ~~Struck~~ Resolved (D-024): 0.4 s; strikes can land on Struck. How long it lasts and when the wrestler can act again.
+7. ~~Knockdown length~~ Resolved (D-025): linear. whether it scales linearly with health lost.
+8. ~~CPU mashing~~ Resolved (D-025): yes, tunable rate. Whether the CPU mashes to shorten knockdowns.
+9. ~~Simultaneous lock-up~~ Resolved (D-028): random 50/50.
+10. ~~Damaging edges~~ Resolved (D-027): truck and pool damage a runner; trailer/fence line and arena ends don't. Which arena edges are damaging obstacles and which are plain bounds (STYLE_GUIDE: "some of the items ... could be used").
 11. ~~Audio playback ownership~~ Resolved (D-021): Juice Agent plays SFX and music; Sound Wrangler provides files.
 12. ~~Character select~~ Resolved (D-021): the CPU always gets the wrestler the player didn't pick.
 13. ~~Shift key bindings~~ Resolved (D-019): no Shift keys; Strike = J, Lock Up/Grapple = K.
+14. ~~**Running into the other wrestler.**~~ Resolved (D-029, D-030): knocks both down (run-collision damage, default 0); runners pass over downed wrestlers. D-027 makes wrestlers block each other, but a run ends only at an obstacle, the arena edge, a hit, another action, or a second Run press (D-020, D-027). What happens when a runner reaches the opponent (run ends with no damage like an arena end, the runner stays Running in place, or something else) is not specified.
+15. ~~**Knockdown check: health before or after the hit.**~~ Resolved (D-029): after damage. COMBAT_SPEC Knocked Down lists "a strike is performed on the Wrestler when below 30 points of health", while the striking process applies damage first and then says the wrestler "may enter Knocked Down if their health is below the Recovering threshold". The second reading (check after damage, so the hit that takes health from 32 to 28 knocks down) follows the written order; the first would not knock down on that hit. Confirm.

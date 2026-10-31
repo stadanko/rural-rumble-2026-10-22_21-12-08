@@ -12,9 +12,11 @@ namespace RuralRumble.EditorTooling
     /// <summary>
     /// Builds the shared wrestler Animator graph, one wrestler's clips + AnimatorOverrideController, and the
     /// wrestler's presentation prefab (ARCHITECTURE 4.2, D-021). Re-running updates assets in place so GUIDs
-    /// and references survive. Standing, Walking, Running, and the three Striking clips (Strike1-3).
+    /// and references survive. Standing, Walking, Running, the three Striking clips (Strike1-3), and PLACEHOLDER stand-ins
+    /// for Stomp, Struck, Knocked Down / Knocked Out and Recovering (stand + walk) built from the stand/walk sprites.
     ///
     /// Menu: Rural Rumble/Tooling/Build Barry Animations + Prefab.
+    /// A wrestler with no run or strike art gets PLACEHOLDER stand-ins for those too (WriteMissingArtStandIns).
     /// </summary>
     public static class WrestlerAnimationBuilder
     {
@@ -23,10 +25,10 @@ namespace RuralRumble.EditorTooling
         public const string PrefabFolder = "Assets/Prefabs/Wrestlers";
         public const string MoveTablePath = "Assets/Animation/MoveAnimationTable.asset";
 
-        /// <summary>Animator int parameter: (int)MoveId of the current move. WrestlerView does not set it yet.</summary>
+        /// <summary>Animator int parameter: (int)MoveId of the current move. WrestlerView sets it every frame.</summary>
         public const string MoveParam = "Move";
         /// <summary>Animator float parameter (default 1): speed multiplier on move states only, so presentation can
-        /// land the contact frame on the tuned Startup (ARCHITECTURE 4.2). WrestlerView does not set it yet.</summary>
+        /// land the contact frame on the tuned Startup (ARCHITECTURE 4.2). WrestlerView sets it on MoveStarted, 1 otherwise.</summary>
         public const string MoveSpeedParam = "MoveSpeed";
 
         /// <summary>Wrestler sprite import (ARCHITECTURE 3.1): pixels per unit.</summary>
@@ -44,6 +46,20 @@ namespace RuralRumble.EditorTooling
         public const string SlotStrike1 = "Slot_Strike1";
         public const string SlotStrike2 = "Slot_Strike2";
         public const string SlotStrike3 = "Slot_Strike3";
+        // Combat-core slice slots. Barry fills these with stand-in (PLACEHOLDER) clips until real art exists.
+        public const string SlotStomp = "Slot_Stomp";
+        public const string SlotStruck = "Slot_Struck";
+        public const string SlotKnockedDown = "Slot_KnockedDown";
+        public const string SlotKnockedOut = "Slot_KnockedOut";
+        public const string SlotRecoveringStandFront = "Slot_RecoveringStandFront";
+        public const string SlotRecoveringStandBack = "Slot_RecoveringStandBack";
+        public const string SlotRecoveringWalkFront = "Slot_RecoveringWalkFront";
+        public const string SlotRecoveringWalkBack = "Slot_RecoveringWalkBack";
+
+        /// <summary>Animator bool parameter: Recovering walk (true) or stand (false). Set by WrestlerView from position change.</summary>
+        public const string MovingParam = "Moving";
+        public const string RecoveringStandState = "RecoveringStand";
+        public const string RecoveringWalkState = "RecoveringWalk";
 
         /// <summary>One non-looping move clip: sprites, their key times and the clip length in SourceFps frames,
         /// and which sprite is the contact pose.</summary>
@@ -69,12 +85,12 @@ namespace RuralRumble.EditorTooling
             public Sprite[] WalkBack;                // null -> placeholder (WalkFront timing)
             public int[] WalkBackKeyFrames;
             public int WalkBackLoopFrames;
-            public Sprite[] Run;
+            public Sprite[] Run;                     // null -> placeholder (WalkFront at double speed)
             public int[] RunKeyFrames;
             public int RunLoopFrames;
-            public MoveClipSpec Strike1;             // right punch
-            public MoveClipSpec Strike2;             // left punch
-            public MoveClipSpec Strike3;             // combo finisher
+            public MoveClipSpec Strike1;             // right punch; null -> placeholder (StandFront pose)
+            public MoveClipSpec Strike2;             // left punch; null -> placeholder
+            public MoveClipSpec Strike3;             // combo finisher; null -> placeholder
         }
 
         [MenuItem("Rural Rumble/Tooling/Build Barry Animations + Prefab")]
@@ -244,8 +260,9 @@ namespace RuralRumble.EditorTooling
                     spec.WalkFront, spec.WalkKeyFrames, spec.WalkLoopFrames, loop: true)
                 : WriteSpriteClip($"{folder}/{spec.Name}_WalkBack.anim",
                     spec.WalkBack, spec.WalkBackKeyFrames, spec.WalkBackLoopFrames, loop: true);
-            AnimationClip run = WriteSpriteClip($"{folder}/{spec.Name}_Run.anim",
-                spec.Run, spec.RunKeyFrames, spec.RunLoopFrames, loop: true);
+            AnimationClip run = spec.Run == null
+                ? WriteRunStandIn(spec, folder)
+                : WriteSpriteClip($"{folder}/{spec.Name}_Run.anim", spec.Run, spec.RunKeyFrames, spec.RunLoopFrames, loop: true);
 
             var bySlot = new Dictionary<string, AnimationClip>
             {
@@ -260,15 +277,180 @@ namespace RuralRumble.EditorTooling
             WriteMoveClip(spec.Strike1, $"{folder}/{spec.Name}_Strike1.anim", MoveId.Strike1, SlotStrike1, bySlot, table);
             WriteMoveClip(spec.Strike2, $"{folder}/{spec.Name}_Strike2.anim", MoveId.Strike2, SlotStrike2, bySlot, table);
             WriteMoveClip(spec.Strike3, $"{folder}/{spec.Name}_Strike3.anim", MoveId.Strike3, SlotStrike3, bySlot, table);
+            string standIns = WriteMissingArtStandIns(spec, folder, bySlot, table) + WriteStandIns(spec, folder, bySlot, table);
             EditorUtility.SetDirty(table);
 
             AnimatorOverrideController overrides = WriteOverride($"{folder}/{spec.Name}.overrideController", controller, bySlot);
 
-            string prefabPath = writePrefab ? WritePrefab(spec, overrides) : "(not rebuilt)";
+            string prefabPath = writePrefab ? WritePrefab(spec, overrides, table) : "(not rebuilt)";
             AssetDatabase.SaveAssets();
 
             return $"Built {spec.Name}: controller {ControllerPath}, override {AssetDatabase.GetAssetPath(overrides)}, prefab {prefabPath}. " +
-                   $"Placeholders: {(standBackPlaceholder ? "StandBack " : "")}{(walkBackPlaceholder ? "WalkBack" : "")}".TrimEnd();
+                   $"Placeholders: {(standBackPlaceholder ? "StandBack " : "")}{(walkBackPlaceholder ? "WalkBack " : "")}{standIns}".TrimEnd();
+        }
+
+        // ---------- combat-core stand-ins (PLACEHOLDER) ----------
+
+        /// <summary>Stomp stand-in contact frame (boot comes down), in SourceFps frames: 5 = 0.208 s at 1x.</summary>
+        public const int StompStandInContactFrame = 5;
+
+        private static readonly Color HitTint = new Color(1f, 0.45f, 0.45f, 1f);
+        private static readonly Color HitTintFade = new Color(1f, 0.7f, 0.7f, 1f);
+        private static readonly Color HitTintFaint = new Color(1f, 0.88f, 0.88f, 1f);
+
+        /// <summary>
+        /// Temporary clips for states with no art yet, built only from the wrestler's approved stand/walk sprites
+        /// with child-sprite offset, rotation and tint (ARCHITECTURE 6). Named {Name}_{State}_PLACEHOLDER.anim.
+        /// All keys are stepped at SourceFps. Offsets are whole native pixels, authored for left-facing art.
+        /// Knocked Out maps to the Knocked Down clip (D-023). Returns the list of stand-in names for the summary.
+        /// </summary>
+        private static string WriteStandIns(WrestlerArtSpec spec, string folder, Dictionary<string, AnimationClip> bySlot,
+            MoveAnimationTable table)
+        {
+            string P(string state) => $"{folder}/{spec.Name}_{state}_PLACEHOLDER.anim";
+            Sprite[] stand = { spec.StandFront };
+            Sprite[] standBack = { spec.StandBack != null ? spec.StandBack : spec.StandFront };
+            int[] one = { 0 };
+
+            // Struck: red flash that fades, knocked back 6 px and leaning back 6 deg, recovering over 0.25 s. 0.417 s long
+            // (Struck lasts 0.4 s by default, D-024); restarted on every hit.
+            AnimationClip struck = WriteSpriteClip(P("Struck"), stand, one, 10, loop: false, new[]
+            {
+                new PoseKey(0, 6, 0, -6, HitTint),
+                new PoseKey(2, 4, 0, -4, HitTintFade),
+                new PoseKey(4, 2, 0, -2, HitTintFaint),
+                new PoseKey(6, 0, 0, 0),
+            });
+
+            // Knocked Down: falls backwards over 4 frames (red flash on the first), bounces 9 px, then lies on the back.
+            // Lying pose: rotated -90 about the feet (head toward +x = behind the wrestler), shifted -120 px so the
+            // 240 px body is centered on the feet point (spans root x -2..+2 units), and raised 45 px so the
+            // 102 px-thick body rests on the feet line (bottom edge 6 px below it). The sort point (sprite pivot)
+            // is then 45 px (0.75 units) behind the feet, so a stomper within stomp range draws in front.
+            // The x offsets are authored for a 240 px stand sprite and scale with the wrestler's stand height
+            // (whole pixels; exactly the authored values for Barry's 240 px).
+            float h = spec.StandFront.rect.height;
+            float L(float xPx) => Mathf.Round(xPx * h / 240f);
+            AnimationClip knockedDown = WriteSpriteClip(P("KnockedDown"), stand, one, 12, loop: false, new[]
+            {
+                new PoseKey(0, 4, 0, -12, HitTint),
+                new PoseKey(1, L(-20), 6, -30, HitTintFade),
+                new PoseKey(2, L(-60), 18, -55),
+                new PoseKey(3, L(-100), 36, -80),
+                new PoseKey(4, L(-120), 54, -90),
+                new PoseKey(6, L(-120), 45, -90),
+            });
+
+            // Recovering (D-023: clutching ribs, walking slowly). Stand: hunched forward 6 deg with a 2 px breathing bob
+            // (1 s loop). Walk: the walk cycle at half speed (6 frames per sprite, 2 s loop; Recovering walk speed is
+            // 0.5x by default) with the same hunch. Back-facing variants: same timing, no lean (it would not read
+            // from behind).
+            AnimationClip recStand = WriteSpriteClip(P("RecoveringStand"), stand, one, 24, loop: true, new[]
+            {
+                new PoseKey(0, 0, 0, 6), new PoseKey(12, 0, -2, 6),
+            });
+            AnimationClip recStandBack = WriteSpriteClip(P("RecoveringStandBack"), standBack, one, 24, loop: true, new[]
+            {
+                new PoseKey(0, 0, 0, 0), new PoseKey(12, 0, -2, 0),
+            });
+            int[] halfSpeed = Enumerable.Range(0, spec.WalkFront.Length).Select(i => i * 6).ToArray();
+            AnimationClip recWalk = WriteSpriteClip(P("RecoveringWalk"), spec.WalkFront, halfSpeed,
+                spec.WalkFront.Length * 6, loop: true, new[] { new PoseKey(0, 0, 0, 6) });
+            Sprite[] walkBack = spec.WalkBack ?? spec.WalkFront;
+            int[] halfSpeedBack = Enumerable.Range(0, walkBack.Length).Select(i => i * 6).ToArray();
+            AnimationClip recWalkBack = WriteSpriteClip(P("RecoveringWalkBack"), walkBack, halfSpeedBack,
+                walkBack.Length * 6, loop: true, null);
+
+            // Stomp: rises 10 px leaning back (wind-up), slams down 2 px leaning forward onto the boot at the contact
+            // frame (5 = 0.208 s), settles by frame 9. 0.5 s long; WrestlerView scales it to the tuned Startup.
+            AnimationClip stomp = WriteSpriteClip(P("Stomp"), stand, one, 12, loop: false, new[]
+            {
+                new PoseKey(0, 0, 0, 0),
+                new PoseKey(1, 0, 2, -4),
+                new PoseKey(2, 0, 6, -8),
+                new PoseKey(3, 0, 10, -10),
+                new PoseKey(StompStandInContactFrame, 0, -2, 6),
+                new PoseKey(7, 0, 0, 3),
+                new PoseKey(9, 0, 0, 0),
+            });
+            table.SetEntry(MoveId.Stomp, stomp, StompStandInContactFrame / SourceFps);
+
+            bySlot[SlotStruck] = struck;
+            bySlot[SlotKnockedDown] = knockedDown;
+            bySlot[SlotKnockedOut] = knockedDown; // D-023: Knocked Out reuses Knocked Down
+            bySlot[SlotRecoveringStandFront] = recStand;
+            bySlot[SlotRecoveringStandBack] = recStandBack;
+            bySlot[SlotRecoveringWalkFront] = recWalk;
+            bySlot[SlotRecoveringWalkBack] = recWalkBack;
+            bySlot[SlotStomp] = stomp;
+            return "Struck KnockedDown(+KnockedOut) RecoveringStand RecoveringStandBack RecoveringWalk RecoveringWalkBack Stomp";
+        }
+
+        /// <summary>
+        /// PLACEHOLDER run for a wrestler with no run art: the walk-front sprites at double walk speed (2 frames each)
+        /// leaning forward 8 deg. Named {Name}_Run_PLACEHOLDER.anim.
+        /// </summary>
+        private static AnimationClip WriteRunStandIn(WrestlerArtSpec spec, string folder)
+        {
+            int[] keys = Enumerable.Range(0, spec.WalkFront.Length).Select(i => i * 2).ToArray();
+            return WriteSpriteClip($"{folder}/{spec.Name}_Run_PLACEHOLDER.anim", spec.WalkFront, keys,
+                spec.WalkFront.Length * 2, loop: true, new[] { new PoseKey(0, 0, 0, 8) });
+        }
+
+        /// <summary>Strike stand-in contact frames (SourceFps), matching Barry's approved strikes: 5 (0.208 s) and 3 (0.125 s).</summary>
+        public const int Strike12StandInContactFrame = 5;
+        public const int Strike3StandInContactFrame = 3;
+
+        /// <summary>
+        /// PLACEHOLDER strikes for a wrestler with no strike art (only for null Strike specs): the stand-front sprite
+        /// rocks back (wind-up), then lunges forward at the contact frame and settles. Same lengths and contact frames
+        /// as Barry's strikes, so the tuned Startups (D-024) need no extra speed scaling. -x = forward (left-facing art).
+        /// Returns the stand-in names (run included) for the summary; empty when the wrestler has all the art.
+        /// </summary>
+        private static string WriteMissingArtStandIns(WrestlerArtSpec spec, string folder,
+            Dictionary<string, AnimationClip> bySlot, MoveAnimationTable table)
+        {
+            Sprite[] stand = { spec.StandFront };
+            int[] one = { 0 };
+            var names = new List<string>();
+            if (spec.Run == null)
+                names.Add("Run");
+
+            void StandIn(MoveClipSpec art, MoveId move, string slot, int length, int contact, PoseKey[] poses)
+            {
+                if (art != null)
+                    return;
+                AnimationClip clip = WriteSpriteClip($"{folder}/{spec.Name}_{move}_PLACEHOLDER.anim", stand, one, length,
+                    loop: false, poses);
+                bySlot[slot] = clip;
+                table.SetEntry(move, clip, contact / SourceFps);
+                names.Add(move.ToString());
+            }
+
+            // Strike 1 (right punch): wind-up at 3, lunge 8 px / lean 8 deg at contact (5), settle at 7. 8 frames (333 ms).
+            StandIn(spec.Strike1, MoveId.Strike1, SlotStrike1, 8, Strike12StandInContactFrame, new[]
+            {
+                new PoseKey(0, 0, 0, 0),
+                new PoseKey(3, 3, 0, -5),
+                new PoseKey(Strike12StandInContactFrame, -8, 0, 8),
+                new PoseKey(7, -3, 0, 3),
+            });
+            // Strike 2 (left punch): same timing, a lower, shorter lunge so it reads as a different hand.
+            StandIn(spec.Strike2, MoveId.Strike2, SlotStrike2, 8, Strike12StandInContactFrame, new[]
+            {
+                new PoseKey(0, 0, 0, 0),
+                new PoseKey(3, 2, -2, -3),
+                new PoseKey(Strike12StandInContactFrame, -6, -2, 6),
+                new PoseKey(7, -2, 0, 2),
+            });
+            // Strike 3 (finisher): wind-up 0-2, big lunge 12 px / 12 deg at contact (3), settle at 7. 9 frames (375 ms).
+            StandIn(spec.Strike3, MoveId.Strike3, SlotStrike3, 9, Strike3StandInContactFrame, new[]
+            {
+                new PoseKey(0, 4, 2, -8),
+                new PoseKey(Strike3StandInContactFrame, -12, 0, 12),
+                new PoseKey(7, -4, 0, 4),
+            });
+            return names.Count == 0 ? "" : string.Join(" ", names) + " ";
         }
 
         // ---------- shared controller ----------
@@ -344,6 +526,7 @@ namespace RuralRumble.EditorTooling
             changed |= EnsureMoveState(sm, MoveId.Strike1, SlotStrike1, new Vector3(560, 0));
             changed |= EnsureMoveState(sm, MoveId.Strike2, SlotStrike2, new Vector3(560, 80));
             changed |= EnsureMoveState(sm, MoveId.Strike3, SlotStrike3, new Vector3(560, 160));
+            changed |= EnsureCombatCoreStates(controller);
 
             if (changed)
             {
@@ -377,14 +560,71 @@ namespace RuralRumble.EditorTooling
             return true;
         }
 
+        /// <summary>
+        /// Adds (once) the combat-core slice states (ARCHITECTURE 4.2 slice rules, D-023, D-025):
+        /// parameter Moving (bool); Stomp (move state, State == Striking and Move == Stomp, at MoveSpeed);
+        /// Struck, KnockedDown, KnockedOut (one clip each, Any State when State equals the value);
+        /// RecoveringStand / RecoveringWalk (front/back blend trees on Back; Any State when State == Recovering
+        /// and Moving is false / true). All instant, no exit time, no self-transition. Existing states untouched.
+        /// </summary>
+        public static bool EnsureCombatCoreStates(AnimatorController controller)
+        {
+            bool changed = false;
+            if (controller.parameters.All(p => p.name != MovingParam))
+            {
+                controller.AddParameter(MovingParam, AnimatorControllerParameterType.Bool);
+                changed = true;
+            }
+
+            AnimatorStateMachine sm = controller.layers[0].stateMachine;
+            changed |= EnsureMoveState(sm, MoveId.Stomp, SlotStomp, new Vector3(560, 240));
+            changed |= EnsureClipState(sm, CombatState.Struck, SlotStruck, new Vector3(300, 240));
+            changed |= EnsureClipState(sm, CombatState.KnockedDown, SlotKnockedDown, new Vector3(300, 320));
+            changed |= EnsureClipState(sm, CombatState.KnockedOut, SlotKnockedOut, new Vector3(300, 400));
+
+            if (sm.states.All(s => s.state.name != RecoveringStandState))
+            {
+                AnimatorState stand = AddFrontBackState(controller, sm, RecoveringStandState,
+                    WriteSlotClip(SlotRecoveringStandFront), WriteSlotClip(SlotRecoveringStandBack), new Vector3(300, 480));
+                AnimatorStateTransition t = AddAnyStateTransition(sm, stand, CombatState.Recovering);
+                t.AddCondition(AnimatorConditionMode.IfNot, 0f, MovingParam);
+                changed = true;
+            }
+            if (sm.states.All(s => s.state.name != RecoveringWalkState))
+            {
+                AnimatorState walk = AddFrontBackState(controller, sm, RecoveringWalkState,
+                    WriteSlotClip(SlotRecoveringWalkFront), WriteSlotClip(SlotRecoveringWalkBack), new Vector3(300, 560));
+                AnimatorStateTransition t = AddAnyStateTransition(sm, walk, CombatState.Recovering);
+                t.AddCondition(AnimatorConditionMode.If, 0f, MovingParam);
+                changed = true;
+            }
+            return changed;
+        }
+
+        private static bool EnsureClipState(AnimatorStateMachine sm, CombatState combatState, string slotName, Vector3 position)
+        {
+            string stateName = combatState.ToString();
+            if (sm.states.Any(s => s.state.name == stateName))
+                return false;
+            AnimatorState state = sm.AddState(stateName, position);
+            state.motion = WriteSlotClip(slotName, loop: false);
+            state.writeDefaultValues = false;
+            AddAnyStateTransition(sm, state, combatState);
+            return true;
+        }
+
         private static AnimatorState AddFrontBackState(AnimatorController controller, AnimatorStateMachine sm, CombatState combatState,
+            AnimationClip front, AnimationClip back, Vector3 position) =>
+            AddFrontBackState(controller, sm, combatState.ToString(), front, back, position);
+
+        private static AnimatorState AddFrontBackState(AnimatorController controller, AnimatorStateMachine sm, string stateName,
             AnimationClip front, AnimationClip back, Vector3 position)
         {
-            AnimatorState state = sm.AddState(combatState.ToString(), position);
+            AnimatorState state = sm.AddState(stateName, position);
             state.writeDefaultValues = false;
             var tree = new BlendTree
             {
-                name = combatState + "_FrontBack",
+                name = stateName + "_FrontBack",
                 blendType = BlendTreeType.Simple1D,
                 blendParameter = "Back",
                 useAutomaticThresholds = false,
@@ -397,7 +637,7 @@ namespace RuralRumble.EditorTooling
             return state;
         }
 
-        private static void AddAnyStateTransition(AnimatorStateMachine sm, AnimatorState target, CombatState combatState)
+        private static AnimatorStateTransition AddAnyStateTransition(AnimatorStateMachine sm, AnimatorState target, CombatState combatState)
         {
             AnimatorStateTransition t = sm.AddAnyStateTransition(target);
             t.AddCondition(AnimatorConditionMode.Equals, (int)combatState, "State");
@@ -407,6 +647,7 @@ namespace RuralRumble.EditorTooling
             t.offset = 0f;
             t.canTransitionToSelf = false;
             t.interruptionSource = TransitionInterruptionSource.None;
+            return t;
         }
 
         private static AnimationClip WriteSlotClip(string slotName, bool loop = true)
@@ -454,7 +695,67 @@ namespace RuralRumble.EditorTooling
         /// sprite clip one sample longer than its last key, so a hold key repeating the last sprite goes at
         /// loopFrames - 1: the clip is then exactly loopFrames long and the last sprite holds until the loop point.
         /// </summary>
-        private static AnimationClip WriteSpriteClip(string path, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop)
+        private static AnimationClip WriteSpriteClip(string path, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop) =>
+            WriteSpriteClip(path, sprites, keyFrames, loopFrames, loop, null);
+
+        /// <summary>
+        /// One stepped pose key for a stand-in clip: child-sprite offset (native pixels), z rotation (degrees,
+        /// about the feet pivot) and tint, at a SourceFps frame. Authored for left-facing art: +x = backwards,
+        /// negative rotation = leaning back. WrestlerView mirrors x and rotation when the sprite is flipped.
+        /// Never moves the wrestler root (ARCHITECTURE 6: visual offsets are child-sprite animation).
+        /// </summary>
+        public struct PoseKey
+        {
+            public int Frame;
+            public float XPx, YPx, RotZ;
+            public Color Tint;
+
+            public PoseKey(int frame, float xPx, float yPx, float rotZ, Color? tint = null)
+            {
+                Frame = frame; XPx = xPx; YPx = yPx; RotZ = rotZ; Tint = tint ?? Color.white;
+            }
+        }
+
+        private static readonly PoseKey[] RestPose = { new PoseKey(0, 0f, 0f, 0f) };
+
+        private static EditorCurveBinding TransformBinding(string property) =>
+            EditorCurveBinding.FloatCurve("", typeof(Transform), property);
+
+        private static EditorCurveBinding ColorBinding(string channel) =>
+            EditorCurveBinding.FloatCurve("", typeof(SpriteRenderer), "m_Color." + channel);
+
+        /// <summary>
+        /// Writes stepped child-sprite pose curves (local position, local euler z, SpriteRenderer color) to every
+        /// clip. Clips without a pose get the rest pose (0 offset, 0 rotation, white), so with Write Defaults off a
+        /// stand-in's offset, rotation or tint never sticks into the next state.
+        /// </summary>
+        private static void WritePoseCurves(AnimationClip clip, PoseKey[] poses)
+        {
+            poses = poses == null || poses.Length == 0 ? RestPose : poses;
+            float KeyTime(PoseKey k) => k.Frame / SourceFps;
+            void Curve(EditorCurveBinding binding, Func<PoseKey, float> value)
+            {
+                var curve = new AnimationCurve(poses.Select(k => new Keyframe(KeyTime(k), value(k))).ToArray());
+                for (int i = 0; i < curve.length; i++)
+                {
+                    AnimationUtility.SetKeyLeftTangentMode(curve, i, AnimationUtility.TangentMode.Constant);
+                    AnimationUtility.SetKeyRightTangentMode(curve, i, AnimationUtility.TangentMode.Constant);
+                }
+                AnimationUtility.SetEditorCurve(clip, binding, curve);
+            }
+            Curve(TransformBinding("m_LocalPosition.x"), k => k.XPx / WrestlerPpu);
+            Curve(TransformBinding("m_LocalPosition.y"), k => k.YPx / WrestlerPpu);
+            Curve(TransformBinding("m_LocalPosition.z"), k => 0f);
+            Curve(TransformBinding("localEulerAnglesRaw.x"), k => 0f);
+            Curve(TransformBinding("localEulerAnglesRaw.y"), k => 0f);
+            Curve(TransformBinding("localEulerAnglesRaw.z"), k => k.RotZ);
+            Curve(ColorBinding("r"), k => k.Tint.r);
+            Curve(ColorBinding("g"), k => k.Tint.g);
+            Curve(ColorBinding("b"), k => k.Tint.b);
+            Curve(ColorBinding("a"), k => k.Tint.a);
+        }
+
+        private static AnimationClip WriteSpriteClip(string path, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop, PoseKey[] poses)
         {
             var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
             bool isNew = clip == null;
@@ -472,6 +773,7 @@ namespace RuralRumble.EditorTooling
                 keys.Add(new ObjectReferenceKeyframe { time = (loopFrames - 1) / SourceFps, value = sprites[sprites.Length - 1] });
 
             AnimationUtility.SetObjectReferenceCurve(clip, SpriteBinding, keys.ToArray());
+            WritePoseCurves(clip, poses);
             SetLoop(clip, loop);
 
             if (isNew)
@@ -521,12 +823,41 @@ namespace RuralRumble.EditorTooling
         /// <summary>
         /// Root (WrestlerView) with child "Sprite" (SpriteRenderer + Animator) at local (0,0,0), so the sprite's
         /// bottom-center pivot (feet) sits exactly on the root, which Combat's runner places at the feet point.
-        /// No combat components.
+        /// No combat components. An existing prefab is edited in place (LoadPrefabContents) so its file IDs, and the
+        /// WrestlerDefinition references to its root, survive; only the presentation fields are rewritten.
         /// </summary>
-        private static string WritePrefab(WrestlerArtSpec spec, AnimatorOverrideController overrides)
+        private static string WritePrefab(WrestlerArtSpec spec, AnimatorOverrideController overrides, MoveAnimationTable table)
         {
             EnsureFolder(PrefabFolder);
             string path = $"{PrefabFolder}/{spec.Name}.prefab";
+
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(path) != null)
+            {
+                GameObject contents = PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    var view = contents.GetComponent<WrestlerView>();
+                    var animator = contents.GetComponentInChildren<Animator>();
+                    var sr = contents.GetComponentInChildren<SpriteRenderer>();
+                    if (view == null || animator == null || sr == null)
+                        throw new InvalidOperationException($"{path} is missing WrestlerView, Animator or SpriteRenderer; not rewritten.");
+                    animator.runtimeAnimatorController = overrides;
+                    var so = new SerializedObject(view);
+                    so.FindProperty("animator").objectReferenceValue = animator;
+                    so.FindProperty("spriteRenderer").objectReferenceValue = sr;
+                    so.FindProperty("artFacesLeft").boolValue = spec.ArtFacesLeft;
+                    so.FindProperty("moveTable").objectReferenceValue = table;
+                    so.ApplyModifiedPropertiesWithoutUndo();
+                    PrefabUtility.SaveAsPrefabAsset(contents, path, out bool ok);
+                    if (!ok)
+                        throw new InvalidOperationException($"Saving prefab {path} failed.");
+                }
+                finally
+                {
+                    PrefabUtility.UnloadPrefabContents(contents);
+                }
+                return path;
+            }
 
             var root = new GameObject(spec.Name);
             try
@@ -552,6 +883,7 @@ namespace RuralRumble.EditorTooling
                 so.FindProperty("animator").objectReferenceValue = animator;
                 so.FindProperty("spriteRenderer").objectReferenceValue = sr;
                 so.FindProperty("artFacesLeft").boolValue = spec.ArtFacesLeft;
+                so.FindProperty("moveTable").objectReferenceValue = table;
                 so.ApplyModifiedPropertiesWithoutUndo();
 
                 PrefabUtility.SaveAsPrefabAsset(root, path, out bool success);
@@ -588,7 +920,8 @@ namespace RuralRumble.EditorTooling
             if (string.IsNullOrEmpty(spec.Name)) throw new ArgumentException("Name required.");
             if (spec.StandFront == null) throw new ArgumentException("StandFront required.");
             CheckSheet("WalkFront", spec.WalkFront, spec.WalkKeyFrames, spec.WalkLoopFrames);
-            CheckSheet("Run", spec.Run, spec.RunKeyFrames, spec.RunLoopFrames);
+            if (spec.Run != null)
+                CheckSheet("Run", spec.Run, spec.RunKeyFrames, spec.RunLoopFrames);
             if (spec.WalkBack != null)
                 CheckSheet("WalkBack", spec.WalkBack, spec.WalkBackKeyFrames, spec.WalkBackLoopFrames);
             CheckMove("Strike1", spec.Strike1);

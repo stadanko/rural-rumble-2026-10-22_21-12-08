@@ -41,16 +41,28 @@ namespace RuralRumble.Tests.EditMode
             Assert.AreEqual(CombatState.Walking, h.Player.State);
         }
 
-        // Each axis keeps its own tuned speed on diagonals (implementation choice, see report).
+        // D-029: diagonals keep the horizontal:vertical direction of travel and move at walkSpeedDiagonal.
+        // (Updated in combat-core step 2: the movement slice moved each axis at its own speed.)
         [Test]
-        public void Walk_Diagonal_EachAxisUsesItsTunedSpeed()
+        public void Walk_Diagonal_UsesDiagonalSpeedAlongAxisRatio()
         {
             using var h = new MatchHarness(SliceArena.OpenFloor);
             h.PlayerInput.HeldMove = new Vector2(-1f, -1f);
             h.Tick(25);
             float t = 25 * MatchHarness.Dt;
-            V2Assert.AreEqual(SliceArena.OpenFloor + new Vector2(-h.Tuning.walkSpeedHorizontal * t, -h.Tuning.walkSpeedDepth * t),
-                h.Player.Position, Tol);
+            Vector2 dir = new Vector2(-h.Tuning.walkSpeedHorizontal, -h.Tuning.walkSpeedDepth).normalized;
+            V2Assert.AreEqual(SliceArena.OpenFloor + dir * h.Tuning.walkSpeedDiagonal * t, h.Player.Position, Tol);
+        }
+
+        [Test]
+        public void Walk_Diagonal_SpeedIsTunable()
+        {
+            using var h = new MatchHarness(SliceArena.OpenFloor);
+            h.Tuning.walkSpeedDiagonal = 1.5f;
+            h.PlayerInput.HeldMove = new Vector2(1f, 1f);
+            h.Tick(10);
+            float travelled = Vector2.Distance(SliceArena.OpenFloor, h.Player.Position);
+            Assert.AreEqual(1.5f * 10 * MatchHarness.Dt, travelled, Tol);
         }
 
         // COMBAT_SPEC: Standing = not moving. Releasing the stick stops at once and returns to Standing.

@@ -5,9 +5,9 @@
 - Note: Wrestler and Opponent are used to describe the entity performing the move and the entity that is the victim of the move. These terms are interchangeable between the Player and AI Opponent, as either can be a Wrestler or Opponent in these definitions.
 - **Standing** - Wrestler is standing in the arena and not moving.
 - **Walking** - Wrestler is walking in one of eight directions around the arena.
-- **Running** - Wrestler is running in one of two directions(left or right) around the arena. One press of Run starts it; it continues until the wrestler hits an obstacle or the arena edge, gets hit, or performs another action (D-020).
+- **Running** - Wrestler is running in one of two directions(left or right) around the arena. One press of Run starts it; it continues until the wrestler hits an obstacle or the arena edge, gets hit, performs another action, or presses Run again (D-020, D-027). Hitting the truck or pool puts the runner in Struck with obstacle collision damage; the trailer/fence line and arena ends just end the run (D-027). Pressing Strike while running ends the run and throws Strike 1; Lock Up isn't allowed while running. A runner below 30 health after obstacle damage is knocked down; a runner passes over a downed opponent (D-030). Running into the opponent knocks both wrestlers down (run-collision damage, tunable, starts at 0) (D-029). A whipped wrestler has no control at all until 3 s into the whip, then may cancel with Run. The whipper regains normal control when the Irish Whip animation finishes. A strike on a whipped wrestler deals normal strike damage (D-028).
 - **Striking** - Wrestler is striking or attempting to strike an opponent.
-- **Struck** - Wrestler is being struck by an Opponent.
+- **Struck** - Wrestler is being struck by an Opponent. Lasts 0.4 s (tunable); each new hit restarts it (D-024).
 - **Lock Up** - Wrestler is triggering or attempting to trigger the Lock Up animation.
 - **Locked Up** - Opponent has triggered a lock up animation on the Wrestler.
 - **Grappling** - Wrestler triggers a Grapple move from the Lock Up animation. (Body Slam, Suplex, etc)
@@ -58,6 +58,11 @@
     - Striking(Wrestler A and/or B, The first Strike to land in a wrestler’s hitbox is the one that registers. They other wrestler’s Strike is canceled and they enter a Struck state)
     - Lock Up(Wrestler B only, Wrestler A’s Strike must land in Wrestler B’s hitbox before Lock Up occurs)
     - Recovering(Wrestler A and B)
+    - Struck(Wrestler B only, so combos connect; D-024)
+    - Knocked Down(Wrestler B only, Stomp only; D-025)
+- Wrestlers can't move while Striking (D-024).
+- The "below 30 health" knockdown check happens after the strike's damage is applied (D-029).
+- **Stomp (D-025):** Strike pressed while standing over a Knocked Down opponent performs a Stomp instead of a combo strike. It deals Stomp damage, doesn't change the knockdown timer, and can knock out. No limit per knockdown, but after a stomp ends the wrestler can't stomp again for the Stomp cooldown (1.0 s, tunable).
 - Process of striking
     - Wrestler A pushes strike button once
         - Strike 1 animation is triggered
@@ -97,6 +102,7 @@
     - Damage per attack is adjustable in the Unity editor for game balancing. See Tuning Values.
     - When a Wrestler drops below 30 points of health (the Recovering threshold), the Wrestler will enter the Recovering state.
     - If the wrestler is able to stand still in the Recovering state, they can recover a certain amount of health points per second. See Tuning Values.
+    - If both wrestlers reach 0 health on the same tick, the match is a draw (D-030).
     - When an attack takes a Wrestler to 0 Health, the wrestler enters the Knocked Out state. The Knocked Down animation is triggered and they do not get up. The fight is over and their opponent is declared the winner.
 
 ## Knocked Down
@@ -111,8 +117,9 @@ When in a Knocked Down state
 
 - At the end of the Knocked Down state, the Wrestler will return to a Standing state if they have 30 or more health points, or a Recovering state if below 30 health points
 - A timer begins to determine the duration of the Knocked Down state.
-- The lower the Wrestler's health, the longer the timer.
-- The wrestler can push the strike or grapple buttons repeatedly to help speed up the Knocked Down state timer by a percentage.
+- The lower the Wrestler's health, the longer the timer. It scales linearly with health lost, from Minimum knockdown time at full health to Maximum knockdown time near 0 (D-025).
+- The wrestler can push the strike or grapple buttons repeatedly to help speed up the Knocked Down state timer by a percentage. The CPU mashes too, at a tunable rate (D-025).
+- A Knocked Down wrestler can be hit only by a Stomp (D-025). There is no invulnerability after getting up.
 
 ## Tuning Values
 
@@ -126,6 +133,10 @@ Values marked *Set* were decided by the designer. Values marked *Starting point*
 |---|---|---|---|
 | Combo window | 0.5 s | Set | Time allowed after a strike to press Strike again and continue the combo |
 | Lock-up timer | 2.0 s | Set | Time Wrestler A has to press Grapple or Irish Whip before the lock-up breaks |
+| Struck duration | 0.4 s | Set | D-024 |
+| Strike 1/2 wind-up, hit window, recovery | 0.21 / 0.1 / 0.15 s | Starting point | D-024; wind-up matches the art's contact frame |
+| Strike 3 wind-up, hit window, recovery | 0.125 / 0.1 / 0.25 s | Starting point | D-024 |
+| Whip no-control time | 3.0 s | Set | D-028; after this the whipped wrestler may cancel with Run |
 
 ### Health and Damage
 
@@ -138,7 +149,11 @@ Values marked *Set* were decided by the designer. Values marked *Starting point*
 | Strike 3 damage | 6 | Starting point | Combo finisher; 13 total for a full combo |
 | Bodyslam damage | 12 | Starting point | Grapples hit harder than strikes but need close range |
 | Irish Whip impact damage | 8 | Starting point | Whipped Wrestler runs into an arena object |
-| Obstacle collision damage | 8 | Starting point | A running Wrestler runs into an arena object |
+| Obstacle collision damage | 8 | Starting point | A running Wrestler runs into the truck or pool (D-027) |
+| Stomp damage | 3 | Starting point | D-025 |
+| Run-collision damage | 0 | Starting point | D-029; running into the opponent knocks both down |
+| Walk speed horizontal / vertical / diagonal | 3.0 / 2.0 / 3.6 units/s | Set | D-029; three separate values |
+| Stomp cooldown | 1.0 s | Set | D-025; from the end of a stomp until the next stomp is allowed |
 
 ### Recovery and Knockdown
 
@@ -150,6 +165,7 @@ Values marked *Set* were decided by the designer. Values marked *Starting point*
 | Maximum knockdown time | 3.0 s | Starting point | Knockdown length near 0 health; length scales between the two by health lost |
 | Mash reduction per press | 8% | Starting point | Each Strike or Grapple press removes this share of the remaining knockdown time |
 | Shortest possible knockdown | 0.5 s | Starting point | Mashing cannot shorten a knockdown below this |
+| CPU mash rate | 3 presses/s | Starting point | D-025 |
 
 ## CPU AI
 

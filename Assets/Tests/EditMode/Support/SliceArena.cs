@@ -4,9 +4,12 @@ using UnityEngine;
 namespace RuralRumble.Tests.EditMode
 {
     /// <summary>
-    /// The arena rectangles exactly as written in ARCHITECTURE 3.1 "Arena rectangles" (world units),
-    /// typed in from the document rather than read from the prefab, so the tests check the code
-    /// against the spec. The PlayMode tests check the prefab against the same table.
+    /// The arena rectangles as written in ARCHITECTURE 3.1 "Arena rectangles" for the movement slice
+    /// (world units), typed in from the document rather than read from the prefab, so the tests check
+    /// the clamping and obstacle code against the spec. The truck and pool are unchanged; the band
+    /// here is the movement slice's full width (x 0 - 26.6667). D-027 narrowed the real band to
+    /// x 1.5 - 25.1667; the clamping rule is the same, and the PlayMode tests
+    /// (ArenaPrefabTests.AssertMatchesTable) check the prefab against the current D-027 table.
     /// </summary>
     public static class SliceArena
     {

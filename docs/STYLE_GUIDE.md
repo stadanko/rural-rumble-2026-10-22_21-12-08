@@ -122,6 +122,8 @@ Sprite Examples are from the Hulk Hogan character in WWF Wrestlefest. These are 
     - Example image to come from the designer.
 - Knocked Out
     - Reuses the Knocked Down animation; the wrestler does not get up (D-023).
+- Stomp(Stomping a Knocked Down opponent, D-025)
+    - No WrestleFest example yet. A downward stomp with the front boot.
 
 ## Music & Sounds
 - Music Style

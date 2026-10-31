@@ -1,0 +1,21 @@
+{
+    "name": "RuralRumble.Editor.Tooling",
+    "rootNamespace": "RuralRumble.EditorTooling",
+    "references": [
+        "RuralRumble.Core",
+        "RuralRumble.Combat",
+        "RuralRumble.Presentation",
+        "Unity.2D.Sprite.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

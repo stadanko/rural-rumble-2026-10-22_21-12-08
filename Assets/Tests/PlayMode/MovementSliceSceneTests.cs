@@ -13,39 +13,26 @@ namespace RuralRumble.Tests.PlayMode
     /// <summary>
     /// Match.unity wiring (ARCHITECTURE 3, 3.1, 4.4 bootstrap order) and the player input path
     /// (ARCHITECTURE 4.1 PlayerInputSource -> CombatMatch). Each test loads Match fresh and unloads it after.
+    ///
+    /// Since combat-core step 4 the CPU is driven by OpponentBrain, so it walks toward the player from the first
+    /// tick. Tests about spawning and player movement load the scene with the CPU silenced (see
+    /// <see cref="MatchSceneLoader"/>); the brain wiring is checked with the real brain.
     /// </summary>
     public class MovementSliceSceneTests
     {
         // ARCHITECTURE 4.4 "Bootstrap order (built)": player (9.0, -11.6667), CPU (17.6667, -11.6667).
-        private static readonly Vector2 PlayerSpawn = new Vector2(9.0f, -11.6667f);
-        private static readonly Vector2 CpuSpawn = new Vector2(17.6667f, -11.6667f);
+        internal static readonly Vector2 PlayerSpawn = new Vector2(9.0f, -11.6667f);
+        internal static readonly Vector2 CpuSpawn = new Vector2(17.6667f, -11.6667f);
 
-        private Scene matchScene;
-
-        [UnitySetUp]
-        public IEnumerator LoadMatch()
-        {
-            GameSession.Reset(); // Match opened directly: roster entry 0 vs 1 (ARCHITECTURE 4.4)
-            SceneManager.LoadScene("Match", LoadSceneMode.Single);
-            yield return null; // Awake/Start
-            yield return null; // first ticks
-            matchScene = SceneManager.GetSceneByName("Match");
-            Assert.IsTrue(matchScene.isLoaded, "Match.unity did not load");
-        }
+        private readonly MatchSceneLoader loader = new MatchSceneLoader();
 
         [UnityTearDown]
-        public IEnumerator UnloadMatch()
-        {
-            Scene empty = SceneManager.CreateScene("QA_Empty_" + Time.frameCount);
-            SceneManager.SetActiveScene(empty);
-            if (matchScene.IsValid() && matchScene.isLoaded)
-                yield return SceneManager.UnloadSceneAsync(matchScene);
-            GameSession.Reset();
-        }
+        public IEnumerator UnloadMatch() => loader.Unload();
 
         [UnityTest]
         public IEnumerator Match_BuildsTwoWrestlersAtSpawnPoints_AndBindsViewsAndCamera()
         {
+            yield return loader.Load(silenceCpu: true);
             MatchBootstrap boot = MatchBootstrap.Current;
             Assert.IsNotNull(boot, "MatchBootstrap.Current is null");
             CombatMatch match = boot.Match;
@@ -71,7 +58,7 @@ namespace RuralRumble.Tests.PlayMode
             Assert.IsTrue(pv.SpriteRenderer.flipX, "player faces right -> flipped");
             Assert.IsFalse(cv.SpriteRenderer.flipX, "CPU faces left -> not flipped");
 
-            // Arena geometry built from the scene's markers matches the ARCHITECTURE 3.1 table.
+            // Arena geometry built from the scene's markers matches the ARCHITECTURE 3.1 table (D-027 band).
             ArenaPrefabTests.AssertMatchesTable(match.Arena);
 
             // Camera follows the wrestlers: force a 16:9 target and check the default framing (3.1).
@@ -81,25 +68,36 @@ namespace RuralRumble.Tests.PlayMode
             Assert.IsTrue(cam.TargetCamera.orthographic);
             cam.TargetCamera.aspect = 16f / 9f;
             yield return new WaitForSecondsRealtime(1.5f);
+            V2Assert(CpuSpawn, match.Cpu.Position, 1e-3f, "silenced CPU stays put while the camera settles");
             Assert.AreEqual(4.5f, cam.TargetCamera.orthographicSize, 1e-3f, "default zoom at 16:9");
             float mid = (PlayerSpawn.x + CpuSpawn.x) * 0.5f;
             Assert.AreEqual(mid, cam.transform.position.x, 0.02f, "camera centers on the wrestlers' midpoint");
             Assert.AreEqual(-570f / 60f, cam.transform.position.y, 0.02f, "default view centered on canvas row 570");
         }
 
+        // ARCHITECTURE 4.4 "CPU brain wiring (built)": MatchBootstrap.Start creates an OpponentBrain bound to the
+        // match's CPU and player views and the CPU reads it. Replaces the movement slice's "CPU stays idle" check.
         [UnityTest]
-        public IEnumerator Match_CpuStandInStaysIdle()
+        public IEnumerator Match_CpuIsDrivenByOpponentBrain_AndApproachesThePlayer()
         {
-            CombatMatch match = MatchBootstrap.Current.Match;
-            yield return new WaitForSeconds(0.5f);
-            V2Assert(CpuSpawn, match.Cpu.Position, 1e-3f, "idle CPU moved");
-            Assert.AreEqual(CombatState.Standing, match.Cpu.State);
+            yield return loader.Load(silenceCpu: false);
+            MatchBootstrap boot = MatchBootstrap.Current;
+            CombatMatch match = boot.Match;
+            Assert.IsNotNull(boot.CpuBrain, "MatchBootstrap.CpuBrain is null after Start");
+            Assert.IsTrue(boot.CpuBrain.IsBound, "the brain must be bound to the match views");
+
+            float startGap = Mathf.Abs(match.Cpu.Position.x - match.Player.Position.x);
+            yield return new WaitForSeconds(1.5f);
+            float gap = Mathf.Abs(match.Cpu.Position.x - match.Player.Position.x);
+            Assert.Less(gap, startGap - 1f, "the CPU should walk toward the idle player (COMBAT_SPEC CPU AI: Approach)");
+            V2Assert(PlayerSpawn, match.Player.Position, 0.05f, "the player has no input and must not move");
         }
 
         // ARCHITECTURE 4.1 / D-019: keyboard D = move right, A = left, Space = Run (press once, D-020).
         [UnityTest]
         public IEnumerator PlayerInput_Keyboard_WalksAndRuns()
         {
+            yield return loader.Load(silenceCpu: true);
             MatchBootstrap boot = MatchBootstrap.Current;
             CombatMatch match = boot.Match;
             Assert.IsNotNull(boot.GetComponent<PlayerInputSource>(), "MatchBootstrap did not add PlayerInputSource");
@@ -135,13 +133,66 @@ namespace RuralRumble.Tests.PlayMode
                 Assert.Less(match.Player.Position.x, beforeRun.x - 0.5f);
                 Assert.AreEqual(beforeRun.y, match.Player.Position.y, 1e-4f, "runs are left/right only");
 
+                // The CPU is silenced in this test, so any CPU movement would have to come from the player's input.
                 V2Assert(CpuSpawn, match.Cpu.Position, 1e-3f, "player input must not move the CPU");
             }
         }
 
-        private static void V2Assert(Vector2 expected, Vector3 actual, float tol, string msg)
+        internal static void V2Assert(Vector2 expected, Vector3 actual, float tol, string msg)
         {
             Assert.That(Vector2.Distance(expected, actual), Is.LessThanOrEqualTo(tol), $"{msg}: expected {expected:F4}, was {(Vector2)actual:F4}");
+        }
+    }
+
+    /// <summary>
+    /// Loads Match.unity for a test and unloads it afterwards. With <c>silenceCpu</c>, the CPU reads
+    /// <see cref="IdleInput"/> instead of the brain: in <see cref="SceneManager.sceneLoaded"/> (after every
+    /// Awake, before any Start) it calls the public <see cref="CombatMatchRunner.Configure"/> with only a CPU
+    /// input, which Configure documents as "call before Start; null keeps the existing value". No production
+    /// code changes; MatchBootstrap still creates and exposes its brain, the runner just doesn't read it.
+    /// </summary>
+    internal sealed class MatchSceneLoader
+    {
+        private Scene matchScene;
+        private bool silence;
+
+        public IEnumerator Load(bool silenceCpu)
+        {
+            silence = silenceCpu;
+            GameSession.Reset(); // Match opened directly: roster entry 0 vs 1 (ARCHITECTURE 4.4)
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            try
+            {
+                SceneManager.LoadScene("Match", LoadSceneMode.Single);
+                yield return null; // Awake/Start
+                yield return null; // first ticks
+            }
+            finally
+            {
+                SceneManager.sceneLoaded -= OnSceneLoaded;
+            }
+            matchScene = SceneManager.GetSceneByName("Match");
+            Assert.IsTrue(matchScene.isLoaded, "Match.unity did not load");
+            Assert.IsNotNull(MatchBootstrap.Current, "MatchBootstrap.Current is null");
+            Assert.IsNotNull(MatchBootstrap.Current.Match, "MatchBootstrap.Match is null after Start");
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (!silence || scene.name != "Match")
+                return;
+            var runner = Object.FindFirstObjectByType<CombatMatchRunner>();
+            Assert.IsNotNull(runner, "no CombatMatchRunner in Match.unity");
+            runner.Configure(null, null, null, IdleInput.Instance);
+        }
+
+        public IEnumerator Unload()
+        {
+            Scene empty = SceneManager.CreateScene("QA_Empty_" + Time.frameCount);
+            SceneManager.SetActiveScene(empty);
+            if (matchScene.IsValid() && matchScene.isLoaded)
+                yield return SceneManager.UnloadSceneAsync(matchScene);
+            GameSession.Reset();
         }
     }
 }

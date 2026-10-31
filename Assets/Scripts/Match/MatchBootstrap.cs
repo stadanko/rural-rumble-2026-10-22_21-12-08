@@ -1,3 +1,4 @@
+using RuralRumble.AI;
 using RuralRumble.Combat;
 using RuralRumble.Core;
 using RuralRumble.Presentation;
@@ -11,11 +12,12 @@ namespace RuralRumble.Match
     /// Order:
     /// - Awake (any order vs. other Awakes): reads GameSession (fallback: roster entries 0 vs 1),
     ///   instantiates both wrestler prefabs at their spawn feet points, adds the player's
-    ///   PlayerInputSource, and calls CombatMatchRunner.Configure. All Awakes run before any Start,
+    ///   PlayerInputSource, and calls CombatMatchRunner.Configure with a CPU input relay. All Awakes run before any Start,
     ///   so the runner sees the spawned roots when it builds the CombatMatch in its Start.
     /// - CombatMatchRunner.Start (execution order -50): builds the CombatMatch.
     /// - Start (this, execution order -40, i.e. after the runner): binds both WrestlerViews to the
-    ///   match's views and hands the two roots to MatchCamera. Default-order (0) components such as
+    ///   match's views and events, creates the CPU's OpponentBrain from the match's views and tuning and
+    ///   points the relay at it, and hands the two roots to MatchCamera. Default-order (0) components such as
     ///   the HUD can read <see cref="Match"/> from their own Start onward.
     /// </summary>
     [DefaultExecutionOrder(-40)]
@@ -36,12 +38,15 @@ namespace RuralRumble.Match
         private Transform cpuRoot;
         private WrestlerView playerView;
         private WrestlerView cpuView;
+        private readonly InputRelay cpuInput = new InputRelay();
 
         /// <summary>The running combat match, or null before this component's Start.</summary>
         public CombatMatch Match => combatRunner != null ? combatRunner.Match : null;
         public MatchSetup Setup { get; private set; }
         public Transform PlayerRoot => playerRoot;
         public Transform CpuRoot => cpuRoot;
+        /// <summary>The CPU's brain (ARCHITECTURE 4.1), or null before Start.</summary>
+        public OpponentBrain CpuBrain { get; private set; }
 
         private void Awake()
         {
@@ -63,8 +68,9 @@ namespace RuralRumble.Match
                 return;
 
             var playerInput = gameObject.AddComponent<PlayerInputSource>();
-            // CPU input left null: idle stand-in until OpponentBrain exists.
-            combatRunner.Configure(playerRoot, cpuRoot, playerInput, null);
+            // The brain needs the match's views and tuning, which exist only after the runner's Start, so
+            // the runner gets a relay now and the relay gets the brain in Start (ARCHITECTURE 4.4).
+            combatRunner.Configure(playerRoot, cpuRoot, playerInput, cpuInput);
         }
 
         private void Start()
@@ -76,8 +82,20 @@ namespace RuralRumble.Match
                 return;
             }
 
-            if (playerView != null) playerView.Bind(match.Player);
-            if (cpuView != null) cpuView.Bind(match.Cpu);
+            if (playerView != null)
+            {
+                playerView.Bind(match.Player);
+                playerView.BindEvents(match.Events, WrestlerId.Player);
+            }
+            if (cpuView != null)
+            {
+                cpuView.Bind(match.Cpu);
+                cpuView.BindEvents(match.Events, WrestlerId.Cpu);
+            }
+
+            // The CPU always drives the non-player wrestler through the same rules as the player (D-021).
+            CpuBrain = new OpponentBrain(match.Cpu, match.Player, match.Tuning, () => match.ElapsedSeconds);
+            cpuInput.Source = CpuBrain;
 
             if (matchCamera != null)
                 matchCamera.SetTargets(playerRoot, cpuRoot);
@@ -124,5 +142,16 @@ namespace RuralRumble.Match
             if (Current == this)
                 Current = null;
         }
+    }
+
+    /// <summary>
+    /// Forwards Read() to a source set later (MatchBootstrap.Start). Idle until then; no combat tick
+    /// happens before Start, so the idle reads are never used in practice.
+    /// </summary>
+    internal sealed class InputRelay : IWrestlerInput
+    {
+        public IWrestlerInput Source { get; set; }
+
+        public WrestlerIntent Read() => Source != null ? Source.Read() : WrestlerIntent.None;
     }
 }

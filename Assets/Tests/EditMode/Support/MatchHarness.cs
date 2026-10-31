@@ -27,8 +27,18 @@ namespace RuralRumble.Tests.EditMode
             new List<(WrestlerId, CombatState, CombatState)>();
         public readonly List<(WrestlerId id, Vector2 facing)> FacingChanges = new List<(WrestlerId, Vector2)>();
 
+        public readonly List<HitInfo> Hits = new List<HitInfo>();
+        public readonly List<(WrestlerId id, float health)> HealthChanges = new List<(WrestlerId, float)>();
+        public readonly List<(WrestlerId id, float duration)> KnockDowns = new List<(WrestlerId, float)>();
+        public readonly List<MatchResult> MatchEnds = new List<MatchResult>();
+        public readonly List<(WrestlerId id, MoveId move, MoveTiming timing)> MovesStarted = new List<(WrestlerId, MoveId, MoveTiming)>();
+        public readonly List<(WrestlerId id, MoveId move, MovePhase phase)> PhaseChanges = new List<(WrestlerId, MoveId, MovePhase)>();
+        public readonly List<(WrestlerId id, Vector2 contact)> ObstacleHits = new List<(WrestlerId, Vector2)>();
+
         /// <summary>When true the CPU reads IdleInput (the slice's stand-in opponent) instead of CpuInput.</summary>
         public bool CpuIdle = true;
+        /// <summary>When set (e.g. an OpponentBrain), the CPU reads this instead of CpuInput / IdleInput.</summary>
+        public IWrestlerInput CpuSource;
 
         public MatchHarness(Vector2 playerStart, Vector2? cpuStart = null, ArenaGeometry arena = null,
             Action<CombatTuning> configure = null)
@@ -38,10 +48,35 @@ namespace RuralRumble.Tests.EditMode
             Match = new CombatMatch(Tuning, arena ?? SliceArena.Build(), playerStart, cpuStart ?? DefaultCpuStart);
             Match.Events.StateChanged += (id, from, to) => StateChanges.Add((id, from, to));
             Match.Events.FacingChanged += (id, f) => FacingChanges.Add((id, f));
+            Match.Events.HitLanded += hit => Hits.Add(hit);
+            Match.Events.HealthChanged += (id, hp) => HealthChanges.Add((id, hp));
+            Match.Events.KnockedDown += (id, d) => KnockDowns.Add((id, d));
+            Match.Events.MatchEnded += r => MatchEnds.Add(r);
+            Match.Events.MoveStarted += (id, m, t) => MovesStarted.Add((id, m, t));
+            Match.Events.MovePhaseChanged += (id, m, ph) => PhaseChanges.Add((id, m, ph));
+            Match.Events.ObstacleHit += (id, c) => ObstacleHits.Add((id, c));
         }
 
         public IWrestlerView Player => Match.Player;
         public IWrestlerView Cpu => Match.Cpu;
+        /// <summary>The player's combat object, for timers not on IWrestlerView (knockdown, Struck, cooldown).</summary>
+        public CombatWrestler PlayerW => (CombatWrestler)Match.Player;
+        public CombatWrestler CpuW => (CombatWrestler)Match.Cpu;
+
+        /// <summary>Ticks until <paramref name="until"/> is true (checked after each tick) or maxSeconds pass.
+        /// Returns the combat seconds ticked.</summary>
+        public float TickUntil(Func<bool> until, float maxSeconds = 10f, float dt = Dt)
+        {
+            float t = 0f;
+            while (t < maxSeconds)
+            {
+                Tick(1, dt);
+                t += dt;
+                if (until()) return t;
+            }
+            Assert.Fail($"condition not reached within {maxSeconds} s");
+            return t;
+        }
         public Vector2 HalfExtents => new Vector2(Tuning.feetHalfWidth, Tuning.feetHalfDepth);
 
         public void Tick(int ticks = 1, float dt = Dt, Action<int> afterEachTick = null)
@@ -49,7 +84,7 @@ namespace RuralRumble.Tests.EditMode
             for (int i = 0; i < ticks; i++)
             {
                 WrestlerIntent p = PlayerInput.Read();
-                WrestlerIntent c = CpuIdle ? IdleInput.Instance.Read() : CpuInput.Read();
+                WrestlerIntent c = CpuSource != null ? CpuSource.Read() : CpuIdle ? IdleInput.Instance.Read() : CpuInput.Read();
                 Match.Tick(dt, p, c);
                 afterEachTick?.Invoke(i);
             }

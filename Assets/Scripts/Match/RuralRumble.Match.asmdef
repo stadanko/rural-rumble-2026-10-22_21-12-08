@@ -4,6 +4,7 @@
     "references": [
         "RuralRumble.Core",
         "RuralRumble.Combat",
+        "RuralRumble.AI",
         "RuralRumble.Presentation"
     ],
     "includePlatforms": [],

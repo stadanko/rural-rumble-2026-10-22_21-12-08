@@ -122,3 +122,6 @@ InitTestScene*.unity*
 # AI generation working folder (D-010): drafts only, never referenced by the game; provenance is in docs/ASSET_REGISTRY.csv
 /Assets/Art/_Generated/
 /Assets/Art/_Generated.meta
+
+# Local Unity CLI / editor-pipeline connection settings (per machine)
+/ProjectSettings/Packages/com.unity.pipeline/EditorPipelineConfig.json

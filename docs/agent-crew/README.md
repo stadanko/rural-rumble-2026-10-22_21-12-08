@@ -50,13 +50,16 @@ See **[CREW_DIAGRAM.md](CREW_DIAGRAM.md)** for both diagrams.
 
 ## Evidence the crew runs
 
+**Transcript:** [TRANSCRIPT_PEAUX.md](TRANSCRIPT_PEAUX.md) is a real session in which all three
+agents ran. It includes every brief, report, and designer approval.
+
 These commits were produced by the crew:
 
 | Commit | What the crew did |
 |---|---|
 | `5c9c841` | Combat core and CPU opponent brain (Combat State & AI), plus Barry's strike animations (Animation & Tooling) |
-| `ee29267` | Peaux from concept art to playable prefab: sprites (Art Wrangler), then clips and prefab (Animation & Tooling) |
-| `lock-ups` branch | Lock-up feature across all three agents (in progress; clips are placeholders) |
+| `ee29267` | Peaux from concept art to playable prefab. The Art Wrangler made his first base-sprite candidates. The orchestrator made the rest of his art after the designer stopped that run. Animation & Tooling built all his clips and his prefab. |
+| `lock-ups` branch | Lock-up feature: rules and CPU behavior (Combat State & AI), lock-up sprites (Art Wrangler), and stand-in clips (Animation & Tooling). In progress. |
 
 ## How to run it
 

@@ -10,15 +10,21 @@ namespace RuralRumble.AI
     /// that only produces <see cref="WrestlerIntent"/>s; Combat applies them under the same rules as the
     /// player's input. Plain C#: reads only the two read-only views, the tuning asset and a clock.
     ///
-    /// States (combat-core slice; Lock Up/Grapple comes with the lock-up slice):
+    /// States:
     /// <list type="bullet">
     /// <item><b>Idle</b> (Idle / Evaluate): stands still; each decision picks the next state.</item>
     /// <item><b>Approach</b>: walks 8-way to a point beside the player (strike distance), or to stomp range
     /// of a Knocked Down player.</item>
     /// <item><b>Attack</b>: throws Strike 1, then presses again on later decisions to continue the combo
     /// (Strike 2, Strike 3), or stomps a Knocked Down player.</item>
-    /// <item><b>Stunned</b> (Stunned / Knocked Down): while Struck, no input; while Knocked Down, mashes
-    /// Strike at the CPU mash rate (D-025).</item>
+    /// <item><b>LockUp</b> (Lock Up/Grapple): when it would strike a player who can be locked up, it goes for
+    /// a lock-up instead at <see cref="CombatTuning.cpuLockUpChance"/>: it presses Lock Up if the player is
+    /// in lock-up reach, otherwise it steps in closer (Approach with a lock-up goal, kept until it presses
+    /// or the player can no longer be locked up). While its own
+    /// state is Lock Up (a lock-up or a whiff) it gives no input: with no grapple yet (lock-up slice step 1)
+    /// it holds until the break.</item>
+    /// <item><b>Stunned</b> (Stunned / Knocked Down): while Struck or Locked Up, no input; while Knocked
+    /// Down, mashes Strike at the CPU mash rate (D-025).</item>
     /// <item><b>Recover</b>: while Recovering, stands still to regenerate, with a chance to strike back
     /// at a player in range.</item>
     /// <item><b>Knockout</b>: terminal; either wrestler is Knocked Out. No input.</item>
@@ -37,10 +43,11 @@ namespace RuralRumble.AI
             Attack,
             Stunned,
             Recover,
-            Knockout
+            Knockout,
+            LockUp
         }
 
-        private enum ApproachGoal { Strike, Stomp }
+        private enum ApproachGoal { Strike, Stomp, LockUp }
 
         private readonly CombatTuning tuning;
         private readonly Func<float> clock;
@@ -53,6 +60,7 @@ namespace RuralRumble.AI
         private float lastDecision;
         private bool forceDecision;
         private bool pendingStrike;
+        private bool pendingLockUp;
         private ApproachGoal goal;
         private int comboPresses;
         private float lastAttackPress;
@@ -106,10 +114,27 @@ namespace RuralRumble.AI
             if (self.State == CombatState.KnockedDown)
                 return Mash(now);
 
-            if (self.State == CombatState.Struck)
+            if (self.State == CombatState.Struck || self.State == CombatState.LockedUp)
             {
+                // Locked Up: Wrestler B has no control (D-031).
                 EnterStunned(now);
                 return WrestlerIntent.None;
+            }
+
+            if (self.State == CombatState.LockUp)
+            {
+                // Lock-up (or a whiff): nothing to press until the grapple step; hold until the break.
+                State = BrainState.LockUp;
+                pendingStrike = false;
+                pendingLockUp = false;
+                comboPresses = 0;
+                return WrestlerIntent.None;
+            }
+
+            if (State == BrainState.LockUp)
+            {
+                State = self.State == CombatState.Recovering ? BrainState.Recover : BrainState.Idle;
+                forceDecision = true;
             }
 
             if (State == BrainState.Stunned)
@@ -139,6 +164,7 @@ namespace RuralRumble.AI
                 State = BrainState.Stunned;
                 comboPresses = 0;
                 pendingStrike = false;
+                pendingLockUp = false;
                 nextMash = float.NaN;
             }
         }
@@ -220,12 +246,26 @@ namespace RuralRumble.AI
             bool hittable = CombatMatch.CanBeStruck(opponent.State);
             bool inRange = hittable && InStrikeRange(d);
 
+            // Committed to a lock-up: keep stepping in until in reach, then press.
+            if (!recovering && State == BrainState.Approach && goal == ApproachGoal.LockUp)
+            {
+                if (LockUpController.CanBeLockedUp(opponent.State, opponent.CurrentMove, opponent.Phase))
+                {
+                    if (InLockUpRange(d) && FacingOpponent(d))
+                        PressLockUp();
+                    return;
+                }
+                State = BrainState.Idle;
+            }
+
             if (recovering)
             {
                 // COMBAT_SPEC Recover: finish recovering first, with a configurable chance to fight back.
                 State = BrainState.Recover;
                 if (inRange && FacingOpponent(d) && Roll(tuning.cpuRecoverCounterChance))
                 {
+                    if (TryLockUp(d, allowStepIn: false))
+                        return;
                     State = BrainState.Attack;
                     comboPresses = 0;
                     Press(now);
@@ -239,6 +279,10 @@ namespace RuralRumble.AI
                 {
                     State = BrainState.Approach; // Execute turns toward the player
                     goal = ApproachGoal.Strike;
+                }
+                else if (TryLockUp(d, allowStepIn: true))
+                {
+                    // Lock Up/Grapple chosen instead of striking.
                 }
                 else if (Roll(tuning.cpuAttackChance))
                 {
@@ -264,6 +308,39 @@ namespace RuralRumble.AI
             }
         }
 
+        /// <summary>
+        /// COMBAT_SPEC CPU AI Lock Up/Grapple: with the lock-up chance, go for a lock-up instead of striking,
+        /// only when the player can be locked up. In lock-up reach it presses Lock Up; otherwise, with
+        /// <paramref name="allowStepIn"/>, it steps in closer first (so it never whiffs on purpose).
+        /// </summary>
+        private bool TryLockUp(Vector2 d, bool allowStepIn)
+        {
+            if (!LockUpController.CanBeLockedUp(opponent.State, opponent.CurrentMove, opponent.Phase))
+                return false;
+            bool inReach = InLockUpRange(d);
+            if (!inReach && !allowStepIn)
+                return false;
+            if (!Roll(tuning.cpuLockUpChance))
+                return false;
+            comboPresses = 0;
+            if (inReach)
+            {
+                PressLockUp();
+            }
+            else
+            {
+                State = BrainState.Approach;
+                goal = ApproachGoal.LockUp;
+            }
+            return true;
+        }
+
+        private void PressLockUp()
+        {
+            State = BrainState.LockUp;
+            pendingLockUp = true;
+        }
+
         private void Press(float now)
         {
             pendingStrike = true;
@@ -282,12 +359,20 @@ namespace RuralRumble.AI
                 return StrikePress();
             }
 
+            if (pendingLockUp)
+            {
+                pendingLockUp = false;
+                return LockUpPress();
+            }
+
             if (State != BrainState.Approach)
                 return WrestlerIntent.None;
 
             Vector2 d = opponent.Position - self.Position;
             float side = self.Position.x >= opponent.Position.x ? 1f : -1f;
-            float distance = goal == ApproachGoal.Stomp ? tuning.stompRangeX * 0.5f : tuning.cpuStrikeDistance;
+            float distance = goal == ApproachGoal.Stomp ? tuning.stompRangeX * 0.5f
+                : goal == ApproachGoal.LockUp ? LockUpApproachDistance()
+                : tuning.cpuStrikeDistance;
             Vector2 target = opponent.Position + new Vector2(side * distance, 0f);
             Vector2 toTarget = target - self.Position;
 
@@ -296,7 +381,7 @@ namespace RuralRumble.AI
             float mx = Mathf.Abs(toTarget.x) > tolX ? Mathf.Sign(toTarget.x) : 0f;
             float my = Mathf.Abs(toTarget.y) > tolY ? Mathf.Sign(toTarget.y) : 0f;
 
-            if (mx == 0f && my == 0f && goal == ApproachGoal.Strike && !FacingOpponent(d))
+            if (mx == 0f && my == 0f && goal != ApproachGoal.Stomp && !FacingOpponent(d))
                 mx = Mathf.Sign(d.x); // one step toward the player turns the CPU to face them
 
             return new WrestlerIntent(new Vector2(mx, my), ButtonState.None, ButtonState.None, ButtonState.None);
@@ -311,6 +396,17 @@ namespace RuralRumble.AI
             return Mathf.Abs(d.x) <= reach && Mathf.Abs(d.y) <= tuning.strikeDepthTolerance;
         }
 
+        /// <summary>
+        /// Where the CPU stands to lock up: midway between the closest the feet boxes allow and the far edge of
+        /// lock-up reach (no tuning value of its own).
+        /// </summary>
+        private float LockUpApproachDistance() =>
+            0.5f * (2f * tuning.feetHalfWidth + tuning.lockUpReach + tuning.hurtHalfWidth);
+
+        /// <summary>The lock-up reach test as Combat makes it (grab box vs. hurt box), from the feet offset.</summary>
+        private bool InLockUpRange(Vector2 d) =>
+            Mathf.Abs(d.x) <= tuning.lockUpReach + tuning.hurtHalfWidth && Mathf.Abs(d.y) <= tuning.strikeDepthTolerance;
+
         private bool InStompRange(Vector2 d) =>
             Mathf.Abs(d.x) <= tuning.stompRangeX && Mathf.Abs(d.y) <= tuning.stompRangeDepth;
 
@@ -322,6 +418,9 @@ namespace RuralRumble.AI
             if (chance <= 0f) return false;
             return rng.NextDouble() < chance;
         }
+
+        private static WrestlerIntent LockUpPress() =>
+            new WrestlerIntent(Vector2.zero, new ButtonState(true, true), ButtonState.None, ButtonState.None);
 
         private static WrestlerIntent StrikePress() =>
             new WrestlerIntent(Vector2.zero, ButtonState.None, ButtonState.None, new ButtonState(true, true));

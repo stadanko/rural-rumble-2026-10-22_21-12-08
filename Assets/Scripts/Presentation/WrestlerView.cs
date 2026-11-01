@@ -21,6 +21,11 @@ namespace RuralRumble.Presentation
     /// and only if the view still shows that state, so an event from a tick that also changed state
     /// (Strike 3 -> Knocked Down) cannot flash the wrong clip.
     ///
+    /// Lock-up slice (ARCHITECTURE 6, D-031): PairedMoveStarted marks the wrestler as paired (Animator
+    /// "Paired"), which is the only way to tell a lock-up hold from a whiff (both are State LockUp, Move LockUp).
+    /// Whiff and break clips are fitted to the move's total time (MoveAnimationTable contact time 0); the hold
+    /// loops play at native speed. While paired, Wrestler A draws one sorting order in front of B.
+    ///
     /// Clip offsets and rotations are authored for left-facing art. When the sprite is flipped,
     /// <see cref="LateUpdate"/> mirrors the child sprite's animated x offset and z rotation so a knock-back
     /// or a fall still goes away from the way the wrestler faces.
@@ -39,12 +44,57 @@ namespace RuralRumble.Presentation
         /// <summary>Animator bool parameter: Recovering walk (true) or stand (false) pose. Visual only.</summary>
         public static readonly int MovingParam = Animator.StringToHash("Moving");
 
+        /// <summary>
+        /// Animator bool parameter: this wrestler is in a paired move (lock-up slice, ARCHITECTURE 6). Set from
+        /// <see cref="CombatEvents.PairedMoveStarted"/>; cleared by a one-wrestler MoveStarted (a lock-up whiff,
+        /// D-031) and whenever the state leaves Lock Up / Locked Up. Visual only: picks the Lock Up hold clip
+        /// over the whiff clip, which share State = LockUp and Move = LockUp.
+        /// </summary>
+        public static readonly int PairedParam = Animator.StringToHash("Paired");
+
         /// <summary>Animator state names used for restarts (match WrestlerAnimationBuilder).</summary>
         public const string StruckStateName = "Struck";
         public const string KnockedOutStateName = "KnockedOut";
+        /// <summary>Lock-up slice states. Each plays the slot clip "Slot_" + state name.</summary>
+        public const string LockUpStateName = "LockUp";                    // A, paired, holding (loop)
+        public const string LockUpWhiffStateName = "LockUpWhiff";          // A, no partner (D-031)
+        public const string LockedUpStateName = "LockedUp";                // B, held (loop)
+        public const string BreakLockUpStateName = "BreakLockUp";          // A, break
+        public const string BreakLockUpReceiverStateName = "BreakLockUpReceiver"; // B, break
 
         /// <summary>Shared-controller slot clip for a move: "Slot_" + MoveId (e.g. Slot_Strike1, Slot_Stomp).</summary>
         public static string SlotNameFor(MoveId move) => "Slot_" + move;
+
+        /// <summary>Shared-controller slot clip played by an Animator state: "Slot_" + state name.</summary>
+        public static string SlotNameForState(string animatorState) => "Slot_" + animatorState;
+
+        /// <summary>
+        /// The Animator state that plays a timed move, or null if the state shows no move clip. Striking:
+        /// the move's own state (Strike1-3, Stomp). Lock Up: hold when paired, whiff otherwise; Break for
+        /// BreakLockUp. Locked Up: held, or the receiver's break.
+        /// </summary>
+        public static string MoveStateName(CombatState state, MoveId move, bool paired)
+        {
+            switch (state)
+            {
+                case CombatState.Striking:
+                    return move == MoveId.None ? null : move.ToString();
+                case CombatState.LockUp:
+                    if (move == MoveId.BreakLockUp) return BreakLockUpStateName;
+                    if (move == MoveId.LockUp) return paired ? LockUpStateName : LockUpWhiffStateName;
+                    return null;
+                case CombatState.LockedUp:
+                    if (move == MoveId.BreakLockUp) return BreakLockUpReceiverStateName;
+                    if (move == MoveId.LockUp) return LockedUpStateName;
+                    return null;
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>States whose clip follows the current move's timing (MoveSpeed is not forced to 1).</summary>
+        public static bool IsTimedMoveState(CombatState state) =>
+            state == CombatState.Striking || state == CombatState.LockUp || state == CombatState.LockedUp;
 
         /// <summary>Playback speed limits for move clips. Extreme values are reported by the Editor validator, not fixed here.</summary>
         public const float MinMoveSpeed = 0.1f;
@@ -71,6 +121,11 @@ namespace RuralRumble.Presentation
         private MoveId pendingMove;
         private MoveTiming pendingTiming;
         private bool pendingStruckRestart;
+
+        // Lock-up slice: in a paired move (from PairedMoveStarted), and the sprite's sorting order outside it.
+        private bool paired;
+        private bool baseSortingOrderKnown;
+        private int baseSortingOrder;
 
         private float moveSpeed = 1f;
         private CombatState? lastState;
@@ -123,6 +178,7 @@ namespace RuralRumble.Presentation
             events.MoveStarted += OnMoveStarted;
             events.MovePhaseChanged += OnMovePhaseChanged;
             events.HitLanded += OnHitLanded;
+            events.PairedMoveStarted += OnPairedMoveStarted;
         }
 
         private void UnbindEvents()
@@ -132,10 +188,12 @@ namespace RuralRumble.Presentation
                 events.MoveStarted -= OnMoveStarted;
                 events.MovePhaseChanged -= OnMovePhaseChanged;
                 events.HitLanded -= OnHitLanded;
+                events.PairedMoveStarted -= OnPairedMoveStarted;
             }
             events = null;
             pendingMoveRestart = false;
             pendingStruckRestart = false;
+            paired = false;
         }
 
         private void OnDestroy() => UnbindEvents();
@@ -143,9 +201,22 @@ namespace RuralRumble.Presentation
         private void OnMoveStarted(WrestlerId id, MoveId move, MoveTiming timing)
         {
             if (id != eventsId) return;
+            // A one-wrestler move: never paired (a Lock Up MoveStarted is a whiff, D-031).
+            paired = false;
             pendingMoveRestart = true;
             pendingMove = move;
             pendingTiming = timing;
+        }
+
+        // ARCHITECTURE 6: both wrestlers play their side of the paired clip from the same tick. Positions are
+        // already snapped by Combat; facing comes from each wrestler's own HorizontalFacing as usual.
+        private void OnPairedMoveStarted(PairedMoveInfo info)
+        {
+            if (info.Initiator != eventsId && info.Receiver != eventsId) return;
+            paired = true;
+            pendingMoveRestart = true;
+            pendingMove = info.Move;
+            pendingTiming = info.Timing;
         }
 
         private void OnMovePhaseChanged(WrestlerId id, MoveId move, MovePhase phase)
@@ -191,22 +262,32 @@ namespace RuralRumble.Presentation
             movingHold = moved ? MovingHoldSeconds : Mathf.Max(0f, movingHold - dt);
             bool moving = moved || movingHold > 0f;
 
+            // Paired only while in Lock Up / Locked Up; the receiver is always paired.
+            if (state != CombatState.LockUp && state != CombatState.LockedUp)
+                paired = false;
+            bool showPaired = paired || state == CombatState.LockedUp;
+
             bool animatorReady = animator != null && animator.runtimeAnimatorController != null && animator.isActiveAndEnabled;
             if (animatorReady)
             {
                 MoveId currentMove = view.CurrentMove;
-                if (currentMove == MoveId.None || state != CombatState.Striking)
+                if (currentMove == MoveId.None || !IsTimedMoveState(state))
                     SetMoveSpeed(1f);
 
                 animator.SetInteger(StateParam, (int)state);
                 animator.SetInteger(MoveParam, (int)currentMove);
                 animator.SetFloat(BackParam, IsBackFacing(view.Facing) ? 1f : 0f);
                 animator.SetBool(MovingParam, moving);
+                animator.SetBool(PairedParam, showPaired);
 
-                if (pendingMoveRestart && state == CombatState.Striking && currentMove == pendingMove)
+                if (pendingMoveRestart && IsTimedMoveState(state) && currentMove == pendingMove)
                 {
-                    SetMoveSpeed(ComputeMoveSpeed(pendingMove, pendingTiming));
-                    PlayFromStart(pendingMove.ToString(), 0f);
+                    string moveState = MoveStateName(state, currentMove, showPaired);
+                    if (moveState != null)
+                    {
+                        SetMoveSpeed(ComputeStateSpeed(moveState, pendingTiming));
+                        PlayFromStart(moveState, 0f);
+                    }
                 }
 
                 if (pendingStruckRestart && state == CombatState.Struck)
@@ -222,7 +303,17 @@ namespace RuralRumble.Presentation
             lastState = state;
 
             if (spriteRenderer != null)
+            {
                 spriteRenderer.flipX = flip;
+                // ARCHITECTURE 6: presentation may adjust sorting for the pair. Both feet share one depth during a
+                // lock-up, so the Y sort ties; Wrestler A draws in front (their reaching arm over B).
+                if (!baseSortingOrderKnown)
+                {
+                    baseSortingOrder = spriteRenderer.sortingOrder;
+                    baseSortingOrderKnown = true;
+                }
+                spriteRenderer.sortingOrder = baseSortingOrder + (state == CombatState.LockUp && paired ? 1 : 0);
+            }
         }
 
         // After the Animator has written this frame's pose: mirror the clip's x offset and z rotation for a
@@ -275,12 +366,29 @@ namespace RuralRumble.Presentation
         /// Playback speed that lands the clip's contact frame at the move's tuned Startup (ARCHITECTURE 4.2):
         /// contact time (native) / Startup. 1 if the clip or its contact time is unknown.
         /// </summary>
-        public float ComputeMoveSpeed(MoveId move, MoveTiming timing)
+        public float ComputeMoveSpeed(MoveId move, MoveTiming timing) => ComputeClipSpeed(ClipForMove(move), timing);
+
+        /// <summary>Playback speed for the clip an Animator state plays (see <see cref="ComputeClipSpeed"/>).</summary>
+        public float ComputeStateSpeed(string animatorState, MoveTiming timing) =>
+            ComputeClipSpeed(ClipForSlot(SlotNameForState(animatorState)), timing);
+
+        /// <summary>
+        /// A clip with a contact time lands its contact frame at Startup (<see cref="SpeedFor"/>). A clip recorded
+        /// with contact time 0 has no contact frame (lock-up whiff, break): its whole length is fitted to the
+        /// move's total time (<see cref="FitSpeed"/>). 1 if the clip has no table entry (looping holds).
+        /// </summary>
+        public float ComputeClipSpeed(AnimationClip clip, MoveTiming timing)
         {
-            AnimationClip clip = ClipForMove(move);
             if (moveTable == null || clip == null || !moveTable.TryGetContactTime(clip, out float contact))
                 return 1f;
-            return SpeedFor(contact, timing.Startup);
+            return contact > 0f ? SpeedFor(contact, timing.Startup) : FitSpeed(clip.length, timing.Total);
+        }
+
+        /// <summary>clipLength / total, clamped to [MinMoveSpeed, MaxMoveSpeed]; 1 if either is not positive.</summary>
+        public static float FitSpeed(float clipLength, float total)
+        {
+            if (clipLength <= 0f || total <= 0f) return 1f;
+            return Mathf.Clamp(clipLength / total, MinMoveSpeed, MaxMoveSpeed);
         }
 
         /// <summary>contact / startup, clamped to [MinMoveSpeed, MaxMoveSpeed]; startup 0 = fastest.</summary>
@@ -292,11 +400,13 @@ namespace RuralRumble.Presentation
         }
 
         /// <summary>This wrestler's clip for a move: the override for the move's slot, or the slot clip itself.</summary>
-        public AnimationClip ClipForMove(MoveId move)
+        public AnimationClip ClipForMove(MoveId move) => ClipForSlot(SlotNameFor(move));
+
+        /// <summary>This wrestler's clip for a shared slot: its override, or the slot clip itself.</summary>
+        public AnimationClip ClipForSlot(string slot)
         {
             if (animator == null) return null;
             RuntimeAnimatorController rac = animator.runtimeAnimatorController;
-            string slot = SlotNameFor(move);
             if (rac is AnimatorOverrideController aoc)
             {
                 AnimationClip clip = aoc[slot];

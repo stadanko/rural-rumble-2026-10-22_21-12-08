@@ -46,3 +46,21 @@ MonoBehaviour:
   - Move: 3
     Clip: {fileID: 7400000, guid: 56a4c55ca1504ae4f9fe11bc3c155951, type: 2}
     ContactTime: 0.125
+  - Move: 5
+    Clip: {fileID: 7400000, guid: 312be9965f6a0f246af3843ab2835eff, type: 2}
+    ContactTime: 0
+  - Move: 8
+    Clip: {fileID: 7400000, guid: 8508f9c05ac3ad2479a6cd7371b17491, type: 2}
+    ContactTime: 0
+  - Move: 8
+    Clip: {fileID: 7400000, guid: 129197201e951b44ca10714260e30827, type: 2}
+    ContactTime: 0
+  - Move: 5
+    Clip: {fileID: 7400000, guid: 56cbaacbadd8dc043acbfdd549b2ad5b, type: 2}
+    ContactTime: 0
+  - Move: 8
+    Clip: {fileID: 7400000, guid: ab81850441c787b4bb32847e5d6cffd5, type: 2}
+    ContactTime: 0
+  - Move: 8
+    Clip: {fileID: 7400000, guid: a1eb8116c8a92724582f1e5c68fe2dd6, type: 2}
+    ContactTime: 0

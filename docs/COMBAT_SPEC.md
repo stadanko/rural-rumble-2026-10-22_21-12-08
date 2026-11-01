@@ -25,7 +25,9 @@
         - Walking(Wrestler A and/or B)
         - Striking(Wrestler B only, Lock Up must occur before  Wrestler B’s Strike lands in Wrestler A’s hitbox)
         - Recovering(Wrestler A and B)
+    - If no valid Wrestler B is in range, the Lock Up whiffs: Wrestler A grabs at air for the Lock-up whiff time, rooted and able to be hit, then returns to Standing or Recovering (D-031)
     - A Grapple can only be performed when Wrestler A is in a Lock Up state and Wrestler B is in a Locked Up state
+    - During a Lock Up, Wrestler B has no control, and Wrestler A's Strike button is ignored (D-031)
     - Wrestler A performs a successful Lock Up on Wrestler B
         - Wrestler B enters a Locked Up state
         - Lock Up animation is triggered
@@ -133,6 +135,7 @@ Values marked *Set* were decided by the designer. Values marked *Starting point*
 |---|---|---|---|
 | Combo window | 0.5 s | Set | Time allowed after a strike to press Strike again and continue the combo |
 | Lock-up timer | 2.0 s | Set | Time Wrestler A has to press Grapple or Irish Whip before the lock-up breaks |
+| Lock-up whiff time | 0.4 s | Starting point | D-031; a Lock Up press with no opponent in range |
 | Struck duration | 0.4 s | Set | D-024 |
 | Strike 1/2 wind-up, hit window, recovery | 0.21 / 0.1 / 0.15 s | Starting point | D-024; wind-up matches the art's contact frame |
 | Strike 3 wind-up, hit window, recovery | 0.125 / 0.1 / 0.25 s | Starting point | D-024 |

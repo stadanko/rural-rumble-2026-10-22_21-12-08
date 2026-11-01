@@ -56,6 +56,17 @@ namespace RuralRumble.EditorTooling
         public const string SlotRecoveringWalkFront = "Slot_RecoveringWalkFront";
         public const string SlotRecoveringWalkBack = "Slot_RecoveringWalkBack";
 
+        // Lock-up slice slots (ARCHITECTURE 6, D-031). PLACEHOLDER stand-ins until lock-up art exists.
+        public const string SlotLockUp = "Slot_" + WrestlerView.LockUpStateName;
+        public const string SlotLockUpWhiff = "Slot_" + WrestlerView.LockUpWhiffStateName;
+        public const string SlotLockedUp = "Slot_" + WrestlerView.LockedUpStateName;
+        public const string SlotBreakLockUp = "Slot_" + WrestlerView.BreakLockUpStateName;
+        public const string SlotBreakLockUpReceiver = "Slot_" + WrestlerView.BreakLockUpReceiverStateName;
+
+        /// <summary>Animator bool parameter: in a paired move (set by WrestlerView from PairedMoveStarted). Tells the
+        /// Lock Up hold from a whiff, which share State = LockUp and Move = LockUp.</summary>
+        public const string PairedParam = "Paired";
+
         /// <summary>Animator bool parameter: Recovering walk (true) or stand (false). Set by WrestlerView from position change.</summary>
         public const string MovingParam = "Moving";
         public const string RecoveringStandState = "RecoveringStand";
@@ -352,7 +363,8 @@ namespace RuralRumble.EditorTooling
             WriteMoveClip(spec.Strike1, $"{folder}/{spec.Name}_Strike1.anim", MoveId.Strike1, SlotStrike1, bySlot, table);
             WriteMoveClip(spec.Strike2, $"{folder}/{spec.Name}_Strike2.anim", MoveId.Strike2, SlotStrike2, bySlot, table);
             WriteMoveClip(spec.Strike3, $"{folder}/{spec.Name}_Strike3.anim", MoveId.Strike3, SlotStrike3, bySlot, table);
-            string standIns = WriteMissingArtStandIns(spec, folder, bySlot, table) + WriteStandIns(spec, folder, bySlot, table);
+            string standIns = WriteMissingArtStandIns(spec, folder, bySlot, table) + WriteStandIns(spec, folder, bySlot, table)
+                              + " " + WriteLockUpStandIns(spec, folder, bySlot, table);
             EditorUtility.SetDirty(table);
 
             AnimatorOverrideController overrides = WriteOverride($"{folder}/{spec.Name}.overrideController", controller, bySlot);
@@ -459,6 +471,94 @@ namespace RuralRumble.EditorTooling
             bySlot[SlotRecoveringWalkBack] = recWalkBack;
             bySlot[SlotStomp] = stomp;
             return "Struck KnockedDown(+KnockedOut) RecoveringStand RecoveringStandBack RecoveringWalk RecoveringWalkBack Stomp";
+        }
+
+        // ---------- lock-up slice stand-ins (PLACEHOLDER) ----------
+
+        /// <summary>Lock Up / Locked Up hold loop length (SourceFps frames): a 0.5 s push-pull.</summary>
+        public const int LockUpHoldLoopFrames = 12;
+        /// <summary>Whiff and break stand-in length (SourceFps frames, 0.417 s native). WrestlerView fits them to the
+        /// move's total time (whiff 0.4 s, break 0.2 + 0.2 s by default), so no contact frame is recorded.</summary>
+        public const int LockUpOneShotFrames = 10;
+
+        /// <summary>
+        /// Lock-up slice stand-ins (ARCHITECTURE 6, D-031), built only from the wrestler's approved stand and strike
+        /// sprites with child-sprite offset and lean (no new art). Named {Name}_{State}_PLACEHOLDER.anim.
+        /// Authored for left-facing art: -x = toward the opponent, +rotation = leaning forward. The pair stands
+        /// lockUpPairSpacing apart (Combat, 1.2 units = 72 px by default), which already overlaps the two bodies, so
+        /// the hold keeps A at rest and B leaning back 6-8 px; the break shoves both further apart before settling.
+        ///   Lock Up (A, hold, loops): Strike 1 contact frame (arm reaching forward), leaning in, pushing on beat 2.
+        ///   Locked Up (B, hold, loops): Strike 2 first frame (fists up, braced), leaning back, rocked back on beat 2.
+        ///   Break (A): reach frame for 2 frames, then the stand sprite stepping back 8 px and settling.
+        ///   Break (B): braced frame for 2 frames, then the stand sprite staggering back 14 px and settling.
+        ///   Whiff (A alone): Strike 1 wind-up, lunge into the reach frame overreaching, a clutch at air, back to stand.
+        /// A wrestler without strike art falls back to the stand sprite. Returns the stand-in names for the summary.
+        /// </summary>
+        private static string WriteLockUpStandIns(WrestlerArtSpec spec, string folder, Dictionary<string, AnimationClip> bySlot,
+            MoveAnimationTable table)
+        {
+            string P(string state) => $"{folder}/{spec.Name}_{state}_PLACEHOLDER.anim";
+            Sprite stand = spec.StandFront;
+            Sprite reach = spec.Strike1 != null ? spec.Strike1.Sprites[spec.Strike1.ContactIndex] : stand;
+            Sprite windUp = spec.Strike1 != null ? spec.Strike1.Sprites[0] : stand;
+            Sprite braced = spec.Strike2 != null ? spec.Strike2.Sprites[0] : stand;
+
+            AnimationClip hold = WriteSpriteClip(P(WrestlerView.LockUpStateName), new[] { reach }, new[] { 0 },
+                LockUpHoldLoopFrames, loop: true, new[]
+                {
+                    new PoseKey(0, 0, 0, 4),
+                    new PoseKey(6, -2, 0, 6),
+                });
+            AnimationClip held = WriteSpriteClip(P(WrestlerView.LockedUpStateName), new[] { braced }, new[] { 0 },
+                LockUpHoldLoopFrames, loop: true, new[]
+                {
+                    new PoseKey(0, 6, 0, -6),
+                    new PoseKey(6, 8, -2, -8),
+                });
+
+            AnimationClip breakA = WriteSpriteClip(P(WrestlerView.BreakLockUpStateName), new[] { reach, stand }, new[] { 0, 2 },
+                LockUpOneShotFrames, loop: false, new[]
+                {
+                    new PoseKey(0, 0, 0, 4),
+                    new PoseKey(2, 4, 0, -4),
+                    new PoseKey(4, 8, 0, -6),
+                    new PoseKey(6, 6, 0, -3),
+                    new PoseKey(8, 2, 0, 0),
+                    new PoseKey(9, 0, 0, 0),
+                });
+            AnimationClip breakB = WriteSpriteClip(P(WrestlerView.BreakLockUpReceiverStateName), new[] { braced, stand }, new[] { 0, 2 },
+                LockUpOneShotFrames, loop: false, new[]
+                {
+                    new PoseKey(0, 6, 0, -6),
+                    new PoseKey(2, 10, 0, -8),
+                    new PoseKey(4, 14, 0, -10),
+                    new PoseKey(6, 10, 0, -5),
+                    new PoseKey(8, 4, 0, -2),
+                    new PoseKey(9, 0, 0, 0),
+                });
+
+            AnimationClip whiff = WriteSpriteClip(P(WrestlerView.LockUpWhiffStateName), new[] { windUp, reach, stand }, new[] { 0, 2, 8 },
+                LockUpOneShotFrames, loop: false, new[]
+                {
+                    new PoseKey(0, 2, 0, -3),
+                    new PoseKey(2, -6, 0, 6),
+                    new PoseKey(4, -8, 0, 8),
+                    new PoseKey(6, -6, -1, 6),
+                    new PoseKey(8, -2, 0, 2),
+                    new PoseKey(9, 0, 0, 0),
+                });
+
+            // Contact time 0 = no contact frame: WrestlerView fits the clip to the move's total time.
+            table.SetEntry(MoveId.LockUp, whiff, 0f);
+            table.SetEntry(MoveId.BreakLockUp, breakA, 0f);
+            table.SetEntry(MoveId.BreakLockUp, breakB, 0f);
+
+            bySlot[SlotLockUp] = hold;
+            bySlot[SlotLockedUp] = held;
+            bySlot[SlotBreakLockUp] = breakA;
+            bySlot[SlotBreakLockUpReceiver] = breakB;
+            bySlot[SlotLockUpWhiff] = whiff;
+            return "LockUp LockedUp BreakLockUp BreakLockUpReceiver LockUpWhiff";
         }
 
         /// <summary>
@@ -602,6 +702,7 @@ namespace RuralRumble.EditorTooling
             changed |= EnsureMoveState(sm, MoveId.Strike2, SlotStrike2, new Vector3(560, 80));
             changed |= EnsureMoveState(sm, MoveId.Strike3, SlotStrike3, new Vector3(560, 160));
             changed |= EnsureCombatCoreStates(controller);
+            changed |= EnsureLockUpStates(controller);
 
             if (changed)
             {
@@ -674,6 +775,60 @@ namespace RuralRumble.EditorTooling
                 changed = true;
             }
             return changed;
+        }
+
+        /// <summary>
+        /// Adds (once) the lock-up slice states (ARCHITECTURE 6, D-031): parameter Paired (bool); all states play their
+        /// slot clip at MoveSpeed (1 for the holds, fitted for whiff and break), Any State, instant, no exit time, no
+        /// self-transition:
+        ///   LockUp              State == LockUp   and Move == LockUp      and Paired   (A holding, loops)
+        ///   LockUpWhiff         State == LockUp   and Move == LockUp      and !Paired  (A alone, D-031)
+        ///   LockedUp            State == LockedUp and Move == LockUp                   (B held, loops)
+        ///   BreakLockUp         State == LockUp   and Move == BreakLockUp              (A)
+        ///   BreakLockUpReceiver State == LockedUp and Move == BreakLockUp              (B)
+        /// Existing states untouched.
+        /// </summary>
+        public static bool EnsureLockUpStates(AnimatorController controller)
+        {
+            bool changed = false;
+            if (controller.parameters.All(p => p.name != PairedParam))
+            {
+                controller.AddParameter(PairedParam, AnimatorControllerParameterType.Bool);
+                changed = true;
+            }
+
+            AnimatorStateMachine sm = controller.layers[0].stateMachine;
+            changed |= EnsureTimedState(sm, WrestlerView.LockUpStateName, SlotLockUp, true, CombatState.LockUp, MoveId.LockUp, true,
+                new Vector3(820, 0));
+            changed |= EnsureTimedState(sm, WrestlerView.LockUpWhiffStateName, SlotLockUpWhiff, false, CombatState.LockUp, MoveId.LockUp, false,
+                new Vector3(820, 80));
+            changed |= EnsureTimedState(sm, WrestlerView.LockedUpStateName, SlotLockedUp, true, CombatState.LockedUp, MoveId.LockUp, null,
+                new Vector3(820, 160));
+            changed |= EnsureTimedState(sm, WrestlerView.BreakLockUpStateName, SlotBreakLockUp, false, CombatState.LockUp, MoveId.BreakLockUp, null,
+                new Vector3(820, 240));
+            changed |= EnsureTimedState(sm, WrestlerView.BreakLockUpReceiverStateName, SlotBreakLockUpReceiver, false, CombatState.LockedUp,
+                MoveId.BreakLockUp, null, new Vector3(820, 320));
+            return changed;
+        }
+
+        private static bool EnsureTimedState(AnimatorStateMachine sm, string stateName, string slotName, bool loop,
+            CombatState combatState, MoveId move, bool? paired, Vector3 position)
+        {
+            if (sm.states.Any(s => s.state.name == stateName))
+                return false;
+
+            AnimatorState state = sm.AddState(stateName, position);
+            state.motion = WriteSlotClip(slotName, loop);
+            state.writeDefaultValues = false;
+            state.speed = 1f;
+            state.speedParameter = MoveSpeedParam;
+            state.speedParameterActive = true;
+
+            AnimatorStateTransition t = AddAnyStateTransition(sm, state, combatState);
+            t.AddCondition(AnimatorConditionMode.Equals, (int)move, MoveParam);
+            if (paired.HasValue)
+                t.AddCondition(paired.Value ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0f, PairedParam);
+            return true;
         }
 
         private static bool EnsureClipState(AnimatorStateMachine sm, CombatState combatState, string slotName, Vector3 position)

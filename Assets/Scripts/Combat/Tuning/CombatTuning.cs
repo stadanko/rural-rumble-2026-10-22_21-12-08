@@ -10,7 +10,8 @@ namespace RuralRumble.Combat
     /// the project asset's tuned values.
     /// Tooltips say where each default comes from: "Set" / "Starting point" = COMBAT_SPEC Tuning Values
     /// (with the decision that set it); "Combat starting point" = not in COMBAT_SPEC, chosen by Combat,
-    /// needs designer review. Lock-up, bodyslam and Irish Whip values come with the lock-up slice.
+    /// needs designer review. Lock-up slice step 1 adds the lock-up values; bodyslam and Irish Whip
+    /// values come with steps 2 and 3.
     /// </summary>
     [CreateAssetMenu(fileName = "CombatTuning", menuName = "Rural Rumble/Combat Tuning")]
     public sealed class CombatTuning : ScriptableObject
@@ -29,6 +30,19 @@ namespace RuralRumble.Combat
         public MoveTiming strike3Timing = new MoveTiming(0.125f, 0.1f, 0.25f);
         [Tooltip("Combat starting point (no art yet). Stomp wind-up / hit window / recovery, seconds.")]
         public MoveTiming stompTiming = new MoveTiming(0.2f, 0.1f, 0.3f);
+
+        // ------------------------------------------------------------------ Lock-up
+        [Header("Lock-up")]
+        [Tooltip("COMBAT_SPEC Set. Seconds Wrestler A has to press Grapple or Irish Whip before the lock-up breaks.")]
+        [Min(0f)] public float lockUpTimer = 2.0f;
+        [Tooltip("COMBAT_SPEC Starting point (D-031). Seconds a Lock Up press with no valid opponent in range grabs at air: rooted and able to be hit.")]
+        [Min(0f)] public float lockUpWhiffTime = 0.4f;
+        [Tooltip("Combat starting point. How far the lock-up grab reaches in front of the feet point, world units. Measured like a strike: the opponent's hurt box (hurtHalfWidth) must touch it, so the feet-to-feet range is this + hurtHalfWidth. Depth uses strikeDepthTolerance.")]
+        [Min(0f)] public float lockUpReach = 1.0f;
+        [Tooltip("Combat starting point. Feet-to-feet distance the two wrestlers are snapped to for a lock-up (ARCHITECTURE 6 pair anchor), world units. Below 2 x feetHalfWidth their feet boxes overlap.")]
+        [Min(0f)] public float lockUpPairSpacing = 1.2f;
+        [Tooltip("Combat starting point. Break lock-up (lock-up timer ran out) wind-up / active / recovery, seconds. Both wrestlers return to Standing or Recovering when it ends.")]
+        public MoveTiming breakLockUpTiming = new MoveTiming(0.2f, 0f, 0.2f);
 
         // ------------------------------------------------------------------ Health and Damage
         [Header("Health and Damage")]
@@ -123,6 +137,8 @@ namespace RuralRumble.Combat
         [Range(0f, 1f)] public float cpuStompChance = 0.6f;
         [Tooltip("Combat starting point. Chance per decision that a Recovering CPU strikes back at a player in range instead of standing still to regenerate. 0 = always finish recovering first.")]
         [Range(0f, 1f)] public float cpuRecoverCounterChance = 0.3f;
+        [Tooltip("Combat starting point. When the CPU would strike a player in lock-up range, the chance it attempts a lock-up instead (COMBAT_SPEC CPU AI: Lock Up/Grapple). Also applies to the Recovering strike-back.")]
+        [Range(0f, 1f)] public float cpuLockUpChance = 0.25f;
         [Tooltip("Combat starting point. Horizontal distance (feet to feet) the CPU walks to before striking, world units.")]
         [Min(0f)] public float cpuStrikeDistance = 1.6f;
         [Tooltip("Combat starting point. How close (world units) the CPU must get to its approach point before it stops walking.")]
@@ -142,9 +158,20 @@ namespace RuralRumble.Combat
                 case MoveId.Strike2: return strike2Timing;
                 case MoveId.Strike3: return strike3Timing;
                 case MoveId.Stomp: return stompTiming;
+                case MoveId.LockUp: return LockUpHoldTiming;
+                case MoveId.BreakLockUp: return breakLockUpTiming;
                 default: return default;
             }
         }
+
+        /// <summary>
+        /// A successful lock-up (ARCHITECTURE 6): Active is the lock-up timer, the window in which Wrestler A's
+        /// Grapple or Irish Whip acts. No wind-up or recovery of its own; the break follows.
+        /// </summary>
+        public MoveTiming LockUpHoldTiming => new MoveTiming(0f, lockUpTimer, 0f);
+
+        /// <summary>A lock-up whiff (D-031): Active is the whiff time, grabbing at air.</summary>
+        public MoveTiming LockUpWhiffTiming => new MoveTiming(0f, lockUpWhiffTime, 0f);
 
         /// <summary>Damage for a move, read now.</summary>
         public float DamageFor(MoveId move)
@@ -159,7 +186,7 @@ namespace RuralRumble.Combat
             }
         }
 
-        /// <summary>Hit box reach in front of the feet point for a combo strike, read now.</summary>
+        /// <summary>Hit box reach in front of the feet point for a combo strike or the lock-up grab, read now.</summary>
         public float ReachFor(MoveId move)
         {
             switch (move)
@@ -167,6 +194,7 @@ namespace RuralRumble.Combat
                 case MoveId.Strike1: return strike1Reach;
                 case MoveId.Strike2: return strike2Reach;
                 case MoveId.Strike3: return strike3Reach;
+                case MoveId.LockUp: return lockUpReach;
                 default: return 0f;
             }
         }

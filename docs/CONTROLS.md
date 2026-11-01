@@ -11,6 +11,8 @@ Xbox Style Controller Layout
 - A Button = Lock Up/Grapple
     - If close to an opponent who is Standing, Walking, Recovering, or Striking (before the strike lands) & not in Lock Up animation (D-028)
         - Trigger’s a Lock Up
+    - Else (no opponent in range)
+        - Lock Up whiff: grab at air briefly, rooted (D-031)
     - If in Player Triggered Lock Up animation
         - Grapple 1
 - B Button = Run/Whip

@@ -289,6 +289,17 @@ Agents: read this before starting work. If a task conflicts with a decision here
 - **Why:** Gaps found while building the combat rules (combat-core slice step 2).
 - **Affects:** docs/COMBAT_SPEC.md, docs/ARCHITECTURE.md (`MatchResult` gains a draw), UI Victory screen.
 
+## D-031: Lock-up whiffs and controls during a lock-up
+
+- **Date:** 2026-10-31
+- **Decided by:** Designer
+- **Decision:**
+  - Pressing Lock Up with no valid opponent in range is a whiff: the wrestler grabs at air for a short, tunable time (starting at 0.4 s), rooted and able to be hit, then returns to Standing or Recovering.
+  - The locked-up wrestler (Wrestler B) has no control during the lock-up. Reversals stay future work.
+  - During the lock-up, the initiator's Strike button is ignored. Only Grapple (A) and Irish Whip (B) act; otherwise the lock-up timer runs out and the lock-up breaks.
+- **Why:** COMBAT_SPEC's Lock Up state covers "attempting to trigger" a lock-up but never said what a miss does, or which buttons work during a lock-up. Found when starting the lock-up slice.
+- **Affects:** docs/COMBAT_SPEC.md (Lock Up/Grappling/Irish Whip Rules, Tuning Values), docs/CONTROLS.md, CombatTuning.
+
 ---
 
 ## Open Questions

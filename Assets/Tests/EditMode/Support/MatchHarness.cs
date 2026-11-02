@@ -42,7 +42,8 @@ namespace RuralRumble.Tests.EditMode
         public IWrestlerInput CpuSource;
 
         public MatchHarness(Vector2 playerStart, Vector2? cpuStart = null, ArenaGeometry arena = null,
-            Action<CombatTuning> configure = null, Func<float> random01 = null)
+            Action<CombatTuning> configure = null, Func<float> random01 = null,
+            WrestlerDefinition playerWrestler = null, WrestlerDefinition cpuWrestler = null)
         {
             Tuning = ScriptableObject.CreateInstance<CombatTuning>();
             configure?.Invoke(Tuning);
@@ -52,7 +53,8 @@ namespace RuralRumble.Tests.EditMode
                 var rng = new System.Random(12345);
                 random01 = () => (float)rng.NextDouble();
             }
-            Match = new CombatMatch(Tuning, arena ?? SliceArena.Build(), playerStart, cpuStart ?? DefaultCpuStart, random01);
+            Match = new CombatMatch(Tuning, arena ?? SliceArena.Build(), playerStart, cpuStart ?? DefaultCpuStart, random01,
+                playerWrestler, cpuWrestler);
             Match.Events.StateChanged += (id, from, to) => StateChanges.Add((id, from, to));
             Match.Events.FacingChanged += (id, f) => FacingChanges.Add((id, f));
             Match.Events.HitLanded += hit => Hits.Add(hit);

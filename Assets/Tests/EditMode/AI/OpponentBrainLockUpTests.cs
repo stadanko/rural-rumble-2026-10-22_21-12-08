@@ -57,9 +57,10 @@ namespace RuralRumble.Tests.EditMode
         [Test]
         public void InLockUp_CpuHoldsUntilTheBreak_ThenActsAgain()
         {
+            // Bodyslam chance 0 (step 2 added it): the CPU never grapples, so the lock-up breaks on the timer.
             using var h = new MatchHarness(new Vector2(8f, -12f), new Vector2(14f, -12f), configure: t =>
             {
-                t.cpuApproachChance = 1f; t.cpuAttackChance = 1f; t.cpuLockUpChance = 1f;
+                t.cpuApproachChance = 1f; t.cpuAttackChance = 1f; t.cpuLockUpChance = 1f; t.cpuBodyslamChance = 0f;
             });
             var (brain, rec) = AttachBrain(h);
             h.TickUntil(() => h.PairedMoves.Count > 0, 10f, Dt);

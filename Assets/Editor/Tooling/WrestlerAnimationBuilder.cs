@@ -18,7 +18,8 @@ namespace RuralRumble.EditorTooling
     /// Menu: Rural Rumble/Tooling/Build Barry Animations + Prefab, Rural Rumble/Tooling/Build Peaux Animations + Prefab.
     /// A wrestler with no run or strike art gets PLACEHOLDER stand-ins for those too (WriteMissingArtStandIns).
     /// Lock Up / Locked Up use the approved pair sheets (D-032; run ImportLockUpSheets first); lock-up whiff and
-    /// break stay PLACEHOLDER stand-ins.
+    /// break stay PLACEHOLDER stand-ins. Bodyslam / Bodyslammed use the approved bodyslam pair sheets (D-033; run
+    /// ImportBodyslamSheets first).
     /// </summary>
     public static class WrestlerAnimationBuilder
     {
@@ -64,6 +65,8 @@ namespace RuralRumble.EditorTooling
         public const string SlotLockedUp = "Slot_" + WrestlerView.LockedUpStateName;
         public const string SlotBreakLockUp = "Slot_" + WrestlerView.BreakLockUpStateName;
         public const string SlotBreakLockUpReceiver = "Slot_" + WrestlerView.BreakLockUpReceiverStateName;
+        public const string SlotBodyslam = "Slot_" + WrestlerView.BodyslamStateName;
+        public const string SlotBodyslammed = "Slot_" + WrestlerView.BodyslammedStateName;
 
         /// <summary>Animator bool parameter: in a paired move (set by WrestlerView from PairedMoveStarted). Tells the
         /// Lock Up hold from a whiff, which share State = LockUp and Move = LockUp.</summary>
@@ -106,6 +109,8 @@ namespace RuralRumble.EditorTooling
             public MoveClipSpec Strike3;             // combo finisher; null -> placeholder
             public Sprite[] LockUp;                  // Lock Up hold (A, initiator); null -> placeholder
             public Sprite[] LockedUp;                // Locked Up hold (B, receiver); null -> placeholder
+            public MoveClipSpec Bodyslam;            // Bodyslam (A, Grappling); contact = impact frame; null -> LockUp hold stand-in
+            public MoveClipSpec Bodyslammed;         // Bodyslammed (B, Grappled); contact = impact frame; null -> LockedUp hold stand-in
         }
 
         [MenuItem("Rural Rumble/Tooling/Build Barry Animations + Prefab")]
@@ -160,6 +165,18 @@ namespace RuralRumble.EditorTooling
                 // D-032: gen-barry-lockup-5 / gen-barry-lockedup-5 (pair sheets vs Peaux), imported by ImportLockUpSheets.
                 LockUp = LoadSprites(art + "barry_lockup.png"),
                 LockedUp = LoadSprites(art + "barry_lockedup.png"),
+                // D-033: gen-barry-bodyslam-3 (Barry slams Peaux, 7 frames) and gen-barry-bodyslammed-3 (Peaux slams
+                // Barry, 6 frames), imported by ImportBodyslamSheets.
+                Bodyslam = new MoveClipSpec
+                {
+                    Sprites = LoadSprites(art + "barry_bodyslam.png"),
+                    KeyFrames = BodyslamKeyFrames7, LengthFrames = BodyslamLengthFrames7, ContactIndex = BodyslamImpactIndex7,
+                },
+                Bodyslammed = new MoveClipSpec
+                {
+                    Sprites = LoadSprites(art + "barry_bodyslammed.png"),
+                    KeyFrames = BodyslamKeyFrames6, LengthFrames = BodyslamLengthFrames6, ContactIndex = BodyslamImpactIndex6,
+                },
             };
             return Build(spec, writePrefab);
         }
@@ -219,6 +236,18 @@ namespace RuralRumble.EditorTooling
                 // D-032: gen-peaux-lockup-5 / gen-peaux-lockedup-5 (pair sheets vs Barry), imported by ImportLockUpSheets.
                 LockUp = LoadSprites(art + "peaux_lockup.png"),
                 LockedUp = LoadSprites(art + "peaux_lockedup.png"),
+                // D-033: gen-peaux-bodyslam-3 (Peaux slams Barry, 6 frames) and gen-peaux-bodyslammed-3 (Barry slams
+                // Peaux, 7 frames), imported by ImportBodyslamSheets.
+                Bodyslam = new MoveClipSpec
+                {
+                    Sprites = LoadSprites(art + "peaux_bodyslam.png"),
+                    KeyFrames = BodyslamKeyFrames6, LengthFrames = BodyslamLengthFrames6, ContactIndex = BodyslamImpactIndex6,
+                },
+                Bodyslammed = new MoveClipSpec
+                {
+                    Sprites = LoadSprites(art + "peaux_bodyslammed.png"),
+                    KeyFrames = BodyslamKeyFrames7, LengthFrames = BodyslamLengthFrames7, ContactIndex = BodyslamImpactIndex7,
+                },
             };
             return Build(spec, writePrefab);
         }
@@ -294,6 +323,27 @@ namespace RuralRumble.EditorTooling
             }) + $"\nLock-up pivot shift: {shift} px toward the opponent.";
         }
 
+        /// <summary>
+        /// Imports the approved bodyslam pair sheets (D-033, ASSET_REGISTRY gen-*-bodyslam(med)-3), each by its own
+        /// cell size: barry_bodyslam 7 x 298x285, peaux_bodyslammed 7 x 496x401 (Barry slams Peaux), peaux_bodyslam
+        /// 6 x 360x266, barry_bodyslammed 6 x 526x322 (Peaux slams Barry). The pair art is drawn with pivots 132 px
+        /// apart, like the lock-up, so every sheet gets the same LockUpPivotShiftPx toward the opponent (the pair
+        /// starts from the lock-up positions). The receivers' registry pivots sit above the cell bottom (Peaux 4 px,
+        /// Barry 1 px), kept as drawn. All four are wider than 2048, so ImportSheet raises the max texture size to
+        /// 4096 (never downscaled). Run before the Barry / Peaux builders.
+        /// </summary>
+        public static string ImportBodyslamSheets()
+        {
+            int shift = LockUpPivotShiftPx();
+            return string.Join("\n", new[]
+            {
+                ImportSheet("Assets/Art/Wrestlers/Barry/barry_bodyslam.png", 298, 285, shift),
+                ImportSheet("Assets/Art/Wrestlers/Peaux/peaux_bodyslammed.png", 496, 401, shift, 4),
+                ImportSheet("Assets/Art/Wrestlers/Peaux/peaux_bodyslam.png", 360, 266, shift),
+                ImportSheet("Assets/Art/Wrestlers/Barry/barry_bodyslammed.png", 526, 322, shift, 1),
+            }) + $"\nBodyslam pivot shift: {shift} px toward the opponent.";
+        }
+
         // ---------- sprite import ----------
 
         /// <summary>
@@ -301,12 +351,16 @@ namespace RuralRumble.EditorTooling
         /// Clamp, Full Rect, then a single-row-or-grid slice at the sheet's own cell size, read left-to-right,
         /// top-to-bottom, named {file}_{i}, pivot Bottom Center. Never rescales. Existing sprite IDs are kept by name.
         /// pivotTowardOpponentPx (lock-up pair sheets only, D-032) moves the pivot that many pixels toward -x
-        /// (toward the opponent for left-facing art), still on the bottom row: a Custom pivot.
+        /// (toward the opponent for left-facing art), still on the bottom row: a Custom pivot. pivotUpPx (bodyslam
+        /// receiver sheets only, D-033) raises the pivot that many pixels above the cell bottom, where the art's
+        /// ground line is drawn. Max texture size is the smallest power of two that holds the whole sheet, at least
+        /// 2048 (the default), so a wide sheet is never downscaled on import.
         /// </summary>
-        public static string ImportSheet(string texturePath, int cellWidth, int cellHeight, int pivotTowardOpponentPx = 0)
+        public static string ImportSheet(string texturePath, int cellWidth, int cellHeight, int pivotTowardOpponentPx = 0,
+            int pivotUpPx = 0)
         {
-            var pivot = new Vector2(0.5f - pivotTowardOpponentPx / (float)cellWidth, 0f);
-            SpriteAlignment alignment = pivotTowardOpponentPx == 0 ? SpriteAlignment.BottomCenter : SpriteAlignment.Custom;
+            var pivot = new Vector2(0.5f - pivotTowardOpponentPx / (float)cellWidth, pivotUpPx / (float)cellHeight);
+            SpriteAlignment alignment = pivotTowardOpponentPx == 0 && pivotUpPx == 0 ? SpriteAlignment.BottomCenter : SpriteAlignment.Custom;
             var importer = AssetImporter.GetAtPath(texturePath) as TextureImporter;
             if (importer == null)
                 throw new InvalidOperationException($"No TextureImporter at {texturePath}.");
@@ -315,7 +369,11 @@ namespace RuralRumble.EditorTooling
             if (width % cellWidth != 0 || height % cellHeight != 0)
                 throw new InvalidOperationException(
                     $"{texturePath} is {width}x{height}, not a whole number of {cellWidth}x{cellHeight} cells.");
+            int maxSize = Mathf.Max(2048, Mathf.NextPowerOfTwo(Mathf.Max(width, height)));
+            if (maxSize > 16384)
+                throw new InvalidOperationException($"{texturePath} is {width}x{height}, larger than Unity's 16384 texture limit.");
 
+            importer.maxTextureSize = maxSize;
             importer.textureType = TextureImporterType.Sprite;
             importer.spriteImportMode = SpriteImportMode.Multiple;
             importer.spritePixelsPerUnit = WrestlerPpu;
@@ -370,7 +428,7 @@ namespace RuralRumble.EditorTooling
                 nameIds.SetNameFileIdPairs(rects.Select(r => new UnityEditor.SpriteNameFileIdPair(r.name, r.spriteID)));
             provider.Apply();
             importer.SaveAndReimport();
-            return $"{texturePath}: {width}x{height}, {rects.Count} sprites of {cellWidth}x{cellHeight}, pivot ({pivot.x:0.####}, {pivot.y}).";
+            return $"{texturePath}: {width}x{height}, {rects.Count} sprites of {cellWidth}x{cellHeight}, pivot ({pivot.x:0.####}, {pivot.y:0.####}), max size {maxSize}.";
         }
 
         /// <summary>Builds (or updates) the shared controller, the wrestler's clips and override, and its prefab. Returns a summary.</summary>
@@ -416,6 +474,22 @@ namespace RuralRumble.EditorTooling
             WriteMoveClip(spec.Strike3, $"{folder}/{spec.Name}_Strike3.anim", MoveId.Strike3, SlotStrike3, bySlot, table);
             string standIns = WriteMissingArtStandIns(spec, folder, bySlot, table) + WriteStandIns(spec, folder, bySlot, table)
                               + " " + WriteLockUpStandIns(spec, folder, bySlot, table);
+            // D-033: bodyslam sides, played once with the last frame held; contact time = impact frame, so WrestlerView
+            // lands the impact at the Bodyslam MoveTiming's Startup. No art: the lock-up hold clip stands in (no entry).
+            WriteMoveClip(spec.Bodyslam, $"{folder}/{spec.Name}_{WrestlerView.BodyslamStateName}.anim", MoveId.Bodyslam,
+                SlotBodyslam, bySlot, table);
+            WriteMoveClip(spec.Bodyslammed, $"{folder}/{spec.Name}_{WrestlerView.BodyslammedStateName}.anim", MoveId.Bodyslam,
+                SlotBodyslammed, bySlot, table);
+            if (spec.Bodyslam == null)
+            {
+                bySlot[SlotBodyslam] = bySlot[SlotLockUp];
+                standIns += " Bodyslam(=LockUp)";
+            }
+            if (spec.Bodyslammed == null)
+            {
+                bySlot[SlotBodyslammed] = bySlot[SlotLockedUp];
+                standIns += " Bodyslammed(=LockedUp)";
+            }
             EditorUtility.SetDirty(table);
 
             AnimatorOverrideController overrides = WriteOverride($"{folder}/{spec.Name}.overrideController", controller, bySlot);
@@ -538,6 +612,22 @@ namespace RuralRumble.EditorTooling
         /// </summary>
         public static readonly int[] LockUpHoldKeyFrames = { 0, 8, 21 };
         public const int LockUpHoldLengthFrames = 22;
+
+        /// <summary>
+        /// Approved bodyslam timing (D-033, ASSET_REGISTRY gen-*-bodyslam(med)-3), played once with the last frame
+        /// held, rounded per frame to 24 fps like the lock-up and strikes.
+        /// 7-frame pair (Barry slams Peaux: barry_bodyslam + peaux_bodyslammed): 300/140/430/130/230/700/500 ms ->
+        /// 7/3/10/3/6/17/12 samples = 292/125/417/125/250/708/500 ms, 2.417 s; impact = frame 6 (receiver flat on
+        /// the ground) at sample 29 = 1.208 s.
+        /// 6-frame pair (Peaux slams Barry: peaux_bodyslam + barry_bodyslammed): 300/430/130/230/700/500 ms ->
+        /// 7/10/3/6/17/12 samples, 2.292 s; impact = frame 5 at sample 26 = 1.083 s.
+        /// </summary>
+        public static readonly int[] BodyslamKeyFrames7 = { 0, 7, 10, 20, 23, 29, 46 };
+        public const int BodyslamLengthFrames7 = 58;
+        public const int BodyslamImpactIndex7 = 5;
+        public static readonly int[] BodyslamKeyFrames6 = { 0, 7, 17, 20, 26, 43 };
+        public const int BodyslamLengthFrames6 = 55;
+        public const int BodyslamImpactIndex6 = 4;
         /// <summary>Whiff and break stand-in length (SourceFps frames, 0.417 s native). WrestlerView fits them to the
         /// move's total time (whiff 0.4 s, break 0.2 + 0.2 s by default), so no contact frame is recorded.</summary>
         public const int LockUpOneShotFrames = 10;
@@ -891,6 +981,12 @@ namespace RuralRumble.EditorTooling
                 new Vector3(820, 240));
             changed |= EnsureTimedState(sm, WrestlerView.BreakLockUpReceiverStateName, SlotBreakLockUpReceiver, false, CombatState.LockedUp,
                 MoveId.BreakLockUp, null, new Vector3(820, 320));
+            // D-033 bodyslam: Bodyslam (A) State == Grappling and Move == Bodyslam; Bodyslammed (B) State == Grappled
+            // and Move == Bodyslam. Not looping (last frame held), at MoveSpeed.
+            changed |= EnsureTimedState(sm, WrestlerView.BodyslamStateName, SlotBodyslam, false, CombatState.Grappling,
+                MoveId.Bodyslam, null, new Vector3(820, 400));
+            changed |= EnsureTimedState(sm, WrestlerView.BodyslammedStateName, SlotBodyslammed, false, CombatState.Grappled,
+                MoveId.Bodyslam, null, new Vector3(820, 480));
             return changed;
         }
 
@@ -1244,6 +1340,8 @@ namespace RuralRumble.EditorTooling
                 CheckSheet("LockUp", spec.LockUp, LockUpHoldKeyFrames, LockUpHoldLengthFrames);
             if (spec.LockedUp != null)
                 CheckSheet("LockedUp", spec.LockedUp, LockUpHoldKeyFrames, LockUpHoldLengthFrames);
+            CheckMove("Bodyslam", spec.Bodyslam);
+            CheckMove("Bodyslammed", spec.Bodyslammed);
         }
 
         private static void CheckMove(string label, MoveClipSpec move)

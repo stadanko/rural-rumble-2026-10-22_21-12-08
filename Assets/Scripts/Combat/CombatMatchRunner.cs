@@ -32,6 +32,8 @@ namespace RuralRumble.Combat
 
         private IWrestlerInput playerSource;
         private IWrestlerInput cpuSource;
+        private WrestlerDefinition playerWrestler;
+        private WrestlerDefinition cpuWrestler;
 
         public CombatMatch Match { get; private set; }
         public Transform PlayerRoot => playerRoot;
@@ -39,10 +41,15 @@ namespace RuralRumble.Combat
 
         /// <summary>
         /// Optional runtime setup (for MatchBootstrap once it spawns wrestlers). Call before Start;
-        /// any argument left null keeps the inspector value.
+        /// any argument left null keeps the inspector value. <paramref name="playerDefinition"/> /
+        /// <paramref name="cpuDefinition"/> say which wrestler each side plays; Combat uses them only for
+        /// per-wrestler tuning entries (bodyslam Startup per initiator, D-033). Null = the shared defaults.
         /// </summary>
-        public void Configure(Transform player, Transform cpu, IWrestlerInput playerInputSource, IWrestlerInput cpuInputSource)
+        public void Configure(Transform player, Transform cpu, IWrestlerInput playerInputSource, IWrestlerInput cpuInputSource,
+            WrestlerDefinition playerDefinition = null, WrestlerDefinition cpuDefinition = null)
         {
+            if (playerDefinition != null) playerWrestler = playerDefinition;
+            if (cpuDefinition != null) cpuWrestler = cpuDefinition;
             if (player != null) playerRoot = player;
             if (cpu != null) cpuRoot = cpu;
             if (playerInputSource != null) playerSource = playerInputSource;
@@ -78,7 +85,8 @@ namespace RuralRumble.Combat
                 : FindObjectsByType<ArenaObstacleMarker>(FindObjectsSortMode.None);
             ArenaGeometry arena = ArenaObstacleMarker.BuildGeometry(markers);
 
-            Match = new CombatMatch(tuning, arena, playerRoot.position, cpuRoot.position);
+            Match = new CombatMatch(tuning, arena, playerRoot.position, cpuRoot.position,
+                playerWrestler: playerWrestler, cpuWrestler: cpuWrestler);
             WritePositions();
         }
 

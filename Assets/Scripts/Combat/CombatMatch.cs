@@ -15,7 +15,8 @@ namespace RuralRumble.Combat
     /// <item>Think: timers and buttons. Each wrestler sees a snapshot of the opponent's state and
     /// position taken before either thinks.</item>
     /// <item>Lock-ups (<see cref="LockUpController"/>): this tick's Lock Up presses are resolved against the
-    /// opponent's state after thinking (lock up, simultaneous 50/50, or whiff), or the active pair advances.</item>
+    /// opponent's state after thinking (lock up, simultaneous 50/50, or whiff), or the active pair advances
+    /// (lock-up, bodyslam, break; a bodyslam's impact damage and knockdown happen here).</item>
     /// <item>Movement (skipped while a paired move plays: Combat holds both at the pair anchor): each wrestler moves through the arena on its own, then <see cref="WrestlerBlocking"/>
     /// resolves the two feet boxes symmetrically. Obstacle hits, run ends and run collisions follow.</item>
     /// <item>Hits: each strike whose hit window was open this tick is checked against the other's hurt
@@ -34,8 +35,11 @@ namespace RuralRumble.Combat
 
         /// <param name="random01">Random source in [0, 1) for rules that are decided by chance (D-028: who wins
         /// a simultaneous lock-up). Null = a time-seeded System.Random. Tests pass a fixed sequence.</param>
+        /// <param name="playerWrestler">Which wrestler the player plays, or null. Used only for per-wrestler
+        /// tuning entries (bodyslam Startup per initiator, D-033); the rules are the same for both.</param>
+        /// <param name="cpuWrestler">Which wrestler the CPU plays, or null.</param>
         public CombatMatch(CombatTuning tuning, ArenaGeometry arena, Vector2 playerStartFeet, Vector2 cpuStartFeet,
-            Func<float> random01 = null)
+            Func<float> random01 = null, WrestlerDefinition playerWrestler = null, WrestlerDefinition cpuWrestler = null)
         {
             Tuning = tuning;
             Arena = arena ?? ArenaGeometry.Unbounded();
@@ -43,8 +47,8 @@ namespace RuralRumble.Combat
 
             // Starting facing: each wrestler faces the other.
             int playerFacing = cpuStartFeet.x >= playerStartFeet.x ? 1 : -1;
-            player = new CombatWrestler(WrestlerId.Player, tuning, Events, playerStartFeet, playerFacing);
-            cpu = new CombatWrestler(WrestlerId.Cpu, tuning, Events, cpuStartFeet, -playerFacing);
+            player = new CombatWrestler(WrestlerId.Player, tuning, Events, playerStartFeet, playerFacing, playerWrestler);
+            cpu = new CombatWrestler(WrestlerId.Cpu, tuning, Events, cpuStartFeet, -playerFacing, cpuWrestler);
             player.PlaceAt(Arena.ClampToBounds(playerStartFeet, player.FeetHalfExtents));
             cpu.PlaceAt(Arena.ClampToBounds(cpuStartFeet, cpu.FeetHalfExtents));
 

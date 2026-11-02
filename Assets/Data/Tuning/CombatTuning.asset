@@ -12,11 +12,82 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 648986d3684182c49b6905e510400292, type: 3}
   m_Name: CombatTuning
   m_EditorClassIdentifier: RuralRumble.Combat::RuralRumble.Combat.CombatTuning
+  comboWindow: 0.5
+  struckDuration: 0.4
+  strike1Timing:
+    Startup: 0.21
+    Active: 0.1
+    Recovery: 0.15
+  strike2Timing:
+    Startup: 0.21
+    Active: 0.1
+    Recovery: 0.15
+  strike3Timing:
+    Startup: 0.125
+    Active: 0.1
+    Recovery: 0.25
+  stompTiming:
+    Startup: 0.2
+    Active: 0.1
+    Recovery: 0.3
+  lockUpTimer: 2
+  lockUpWhiffTime: 0.4
+  lockUpReach: 1
+  lockUpPairSpacing: 1.2
+  breakLockUpTiming:
+    Startup: 0.2
+    Active: 0
+    Recovery: 0.2
+  bodyslamTiming:
+    Startup: 1.15
+    Active: 0.1
+    Recovery: 1.11
+  bodyslamStartupByInitiator:
+  - wrestler: {fileID: 11400000, guid: a759afccac418004080629b857d011a6, type: 2}
+    startup: 1.208
+  - wrestler: {fileID: 11400000, guid: 88fa395ed34cfaa4cb5494a98b84eec2, type: 2}
+    startup: 1.083
   maxHealth: 100
+  recoveringThreshold: 30
+  strike1Damage: 3
+  strike2Damage: 4
+  strike3Damage: 6
+  bodyslamDamage: 12
+  stompDamage: 3
+  stompCooldown: 1
+  obstacleCollisionDamage: 8
+  runCollisionDamage: 0
+  recoveryRate: 1
+  recoveryCap: 30
+  minKnockdownTime: 1
+  maxKnockdownTime: 3
+  mashReductionPerPress: 0.08
+  shortestKnockdown: 0.5
   walkSpeedHorizontal: 3
   walkSpeedDepth: 2
+  walkSpeedDiagonal: 3.6
+  recoveringWalkSpeedMultiplier: 0.5
   runSpeed: 7
   moveDeadzone: 0.3
   feetHalfWidth: 0.5
   feetHalfDepth: 0
+  wrestlerBlockHalfDepth: 0.25
+  strike1Reach: 2.4
+  strike2Reach: 2.4
+  strike3Reach: 1.6
+  hurtHalfWidth: 0.7
+  strikeDepthTolerance: 0.4
+  stompRangeX: 2
+  stompRangeDepth: 0.5
+  cpuMashRate: 3
+  cpuDecisionInterval: 0.25
+  cpuApproachChance: 0.85
+  cpuAttackChance: 0.8
+  cpuComboContinueChance: 0.75
+  cpuStompChance: 0.6
+  cpuRecoverCounterChance: 0.3
+  cpuLockUpChance: 0.25
+  cpuBodyslamChance: 0.5
+  cpuStrikeDistance: 1.6
+  cpuArriveTolerance: 0.2
   maxTickStep: 0.05

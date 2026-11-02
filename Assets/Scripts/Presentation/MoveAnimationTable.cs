@@ -18,6 +18,8 @@ namespace RuralRumble.Presentation
     /// ContactTime 0, meaning the whole clip is stretched to the move's Startup + Active + Recovery. The looping
     /// Lock Up / Locked Up holds have no entry (native speed). The lock-up slice clips are PLACEHOLDER stand-ins
     /// built from the approved stand and strike sprites (WrestlerAnimationBuilder.WriteLockUpStandIns).
+    /// Both bodyslam sides (Move Bodyslam, D-033) are recorded with their impact frame as ContactTime, so the pair
+    /// lands the impact at the Bodyslam Startup.
     /// </summary>
     [CreateAssetMenu(menuName = "Rural Rumble/Move Animation Table", fileName = "MoveAnimationTable")]
     public sealed class MoveAnimationTable : ScriptableObject

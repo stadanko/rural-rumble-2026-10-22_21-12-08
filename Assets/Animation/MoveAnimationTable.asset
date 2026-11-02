@@ -64,3 +64,15 @@ MonoBehaviour:
   - Move: 8
     Clip: {fileID: 7400000, guid: a1eb8116c8a92724582f1e5c68fe2dd6, type: 2}
     ContactTime: 0
+  - Move: 6
+    Clip: {fileID: 7400000, guid: b6b6d982418a7c94aab7e41f6557cc4d, type: 2}
+    ContactTime: 1.2083334
+  - Move: 6
+    Clip: {fileID: 7400000, guid: b0afdbfa4df07c54e803bb296f39d568, type: 2}
+    ContactTime: 1.0833334
+  - Move: 6
+    Clip: {fileID: 7400000, guid: 773c8385054bcd144a3d58d0027f643f, type: 2}
+    ContactTime: 1.0833334
+  - Move: 6
+    Clip: {fileID: 7400000, guid: 2c8e63803410c664cbfbdb2981b9a885, type: 2}
+    ContactTime: 1.2083334

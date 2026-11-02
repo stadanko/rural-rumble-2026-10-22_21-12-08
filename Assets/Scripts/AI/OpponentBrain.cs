@@ -20,10 +20,11 @@ namespace RuralRumble.AI
     /// <item><b>LockUp</b> (Lock Up/Grapple): when it would strike a player who can be locked up, it goes for
     /// a lock-up instead at <see cref="CombatTuning.cpuLockUpChance"/>: it presses Lock Up if the player is
     /// in lock-up reach, otherwise it steps in closer (Approach with a lock-up goal, kept until it presses
-    /// or the player can no longer be locked up). While its own
-    /// state is Lock Up (a lock-up or a whiff) it gives no input: with no grapple yet (lock-up slice step 1)
-    /// it holds until the break.</item>
-    /// <item><b>Stunned</b> (Stunned / Knocked Down): while Struck or Locked Up, no input; while Knocked
+    /// or the player can no longer be locked up). Holding a lock-up it started, it presses Grapple (bodyslam)
+    /// at <see cref="CombatTuning.cpuBodyslamChance"/> on each decision tick (the first one interval in);
+    /// otherwise the lock-up breaks on the timer. A whiff and its own bodyslam (Grappling) take no input.
+    /// No Irish Whip yet (lock-up slice step 3).</item>
+    /// <item><b>Stunned</b> (Stunned / Knocked Down): while Struck, Locked Up or Grappled, no input; while Knocked
     /// Down, mashes Strike at the CPU mash rate (D-025).</item>
     /// <item><b>Recover</b>: while Recovering, stands still to regenerate, with a chance to strike back
     /// at a player in range.</item>
@@ -61,6 +62,7 @@ namespace RuralRumble.AI
         private bool forceDecision;
         private bool pendingStrike;
         private bool pendingLockUp;
+        private bool holdingLockUp;
         private ApproachGoal goal;
         private int comboPresses;
         private float lastAttackPress;
@@ -114,22 +116,24 @@ namespace RuralRumble.AI
             if (self.State == CombatState.KnockedDown)
                 return Mash(now);
 
-            if (self.State == CombatState.Struck || self.State == CombatState.LockedUp)
+            if (self.State == CombatState.Struck || self.State == CombatState.LockedUp || self.State == CombatState.Grappled)
             {
-                // Locked Up: Wrestler B has no control (D-031).
+                // Locked Up / Grappled: Wrestler B has no control (D-031).
                 EnterStunned(now);
                 return WrestlerIntent.None;
             }
 
-            if (self.State == CombatState.LockUp)
+            if (self.State == CombatState.LockUp || self.State == CombatState.Grappling)
             {
-                // Lock-up (or a whiff): nothing to press until the grapple step; hold until the break.
+                // Lock Up/Grapple. A whiff or a bodyslam plays out with no input. Holding a lock-up it started,
+                // the CPU rolls for a bodyslam on each decision tick, the first one a full interval in.
                 State = BrainState.LockUp;
                 pendingStrike = false;
                 pendingLockUp = false;
                 comboPresses = 0;
-                return WrestlerIntent.None;
+                return HoldLockUp(now);
             }
+            holdingLockUp = false;
 
             if (State == BrainState.LockUp)
             {
@@ -185,6 +189,35 @@ namespace RuralRumble.AI
             if (nextMash <= now)
                 nextMash = now + period; // never burst to catch up
             return StrikePress();
+        }
+
+        // ================================================================ Lock-up hold
+
+        /// <summary>
+        /// COMBAT_SPEC CPU AI Lock Up/Grapple: "if successful, performs a grapple". While the CPU holds a lock-up
+        /// it started (Lock Up, partner Locked Up, lock-up window), each decision tick presses Grapple at
+        /// <see cref="CombatTuning.cpuBodyslamChance"/>. The interval restarts when the hold begins, so the
+        /// first roll is one decision interval after the lock-up. Otherwise (whiff, bodyslam, break) no input.
+        /// </summary>
+        private WrestlerIntent HoldLockUp(float now)
+        {
+            bool holding = self.State == CombatState.LockUp && self.CurrentMove == MoveId.LockUp
+                && opponent.State == CombatState.LockedUp;
+            if (!holding)
+            {
+                holdingLockUp = false;
+                return WrestlerIntent.None;
+            }
+            if (!holdingLockUp)
+            {
+                holdingLockUp = true;
+                lastDecision = now;
+                return WrestlerIntent.None;
+            }
+            if (now - lastDecision < tuning.cpuDecisionInterval)
+                return WrestlerIntent.None;
+            lastDecision = now;
+            return Roll(tuning.cpuBodyslamChance) ? GrapplePress() : WrestlerIntent.None;
         }
 
         // ================================================================ Decide
@@ -421,6 +454,9 @@ namespace RuralRumble.AI
 
         private static WrestlerIntent LockUpPress() =>
             new WrestlerIntent(Vector2.zero, new ButtonState(true, true), ButtonState.None, ButtonState.None);
+
+        /// <summary>Grapple is the Lock Up button (A) pressed during a lock-up.</summary>
+        private static WrestlerIntent GrapplePress() => LockUpPress();
 
         private static WrestlerIntent StrikePress() =>
             new WrestlerIntent(Vector2.zero, ButtonState.None, ButtonState.None, new ButtonState(true, true));

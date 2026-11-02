@@ -6,8 +6,8 @@ namespace RuralRumble.Combat
     /// <summary>
     /// One wrestler's combat state. Plain C#; ticked only by <see cref="CombatMatch"/>, which runs the
     /// same rules for both wrestlers. States: Standing, Walking, Running, Striking, Struck, Lock Up,
-    /// Locked Up, Knocked Down, Recovering, Knocked Out (COMBAT_SPEC State Definitions; Grappling and
-    /// Grappled come with lock-up slice step 2). A Lock Up press is only recorded here
+    /// Locked Up, Grappling, Grappled, Knocked Down, Recovering, Knocked Out (COMBAT_SPEC State Definitions;
+    /// Grappling / Grappled are the bodyslam, driven entirely by LockUpController). A Lock Up press is only recorded here
     /// (<see cref="LockUpRequested"/>); <see cref="LockUpController"/> resolves it after both wrestlers
     /// think and drives the paired lock-up for both.
     ///
@@ -46,9 +46,13 @@ namespace RuralRumble.Combat
         private float knockdownElapsed;
         private float knockdownLeft;
 
-        public CombatWrestler(WrestlerId id, CombatTuning tuning, CombatEvents events, Vector2 startFeet, int startHorizontalFacing)
+        /// <param name="definition">Which wrestler this is (Barry, Peaux), or null. Combat uses it only to pick
+        /// per-wrestler tuning entries (bodyslam Startup, D-033); the rules are the same for both.</param>
+        public CombatWrestler(WrestlerId id, CombatTuning tuning, CombatEvents events, Vector2 startFeet, int startHorizontalFacing,
+            WrestlerDefinition definition = null)
         {
             Id = id;
+            Definition = definition;
             this.tuning = tuning;
             this.events = events;
             position = startFeet;
@@ -67,6 +71,9 @@ namespace RuralRumble.Combat
         public Vector2 Position => position;
         public Vector2 Facing => facing;
         public int HorizontalFacing => horizontalFacing;
+
+        /// <summary>The selected wrestler this combat object plays, or null (tests, match built without one).</summary>
+        public WrestlerDefinition Definition { get; }
 
         // ---------------------------------------------------------------- Extra read-only state (tests, debugging)
         /// <summary>True when facing up, up-left or up-right (STYLE_GUIDE "Walking Back Facing").</summary>
@@ -164,6 +171,7 @@ namespace RuralRumble.Combat
                     return;
 
                 // LockedUp: Wrestler B has no control (D-031); LockUpController drives the pair.
+                // Grappling / Grappled (bodyslam): neither has control; LockUpController drives the pair.
                 // KnockedOut: nothing.
             }
         }
@@ -435,13 +443,57 @@ namespace RuralRumble.Combat
             SetState(pairState);
         }
 
-        /// <summary>The paired move moves on to the next one (lock-up -> break) without leaving the pair.</summary>
-        internal void SwitchPairedMove(MoveId next)
+        /// <summary>
+        /// The paired move moves on to the next one (lock-up -> break, lock-up -> bodyslam) without leaving the
+        /// pair. <paramref name="pairState"/>, when given, is the state for the new move (Grappling / Grappled).
+        /// </summary>
+        internal void SwitchPairedMove(MoveId next, CombatState? pairState = null)
         {
             MoveId ended = move;
             move = next;
             phase = MovePhase.Startup;
+            phaseTime = 0f;
             events.RaiseMovePhaseChanged(Id, ended, MovePhase.None);
+            if (pairState.HasValue)
+                SetState(pairState.Value);
+        }
+
+        /// <summary>
+        /// A grapple's impact (bodyslam, COMBAT_SPEC Grapple: damage is applied to Wrestler B). Raises HitLanded
+        /// and HealthChanged. Stays Grappled until the move ends (<see cref="EndPairedKnockedDown"/>), unless
+        /// the damage knocks out: then the wrestler leaves the pair and is Knocked Out at once. Returns true on
+        /// a knockout.
+        /// </summary>
+        internal bool ReceiveGrappleImpact(WrestlerId attacker, MoveId grappleMove, Vector2 contactPoint)
+        {
+            float damage = TakeDamage(tuning.DamageFor(grappleMove), raise: false);
+            events.RaiseHitLanded(new HitInfo(attacker, Id, grappleMove, damage, contactPoint));
+            events.RaiseHealthChanged(Id, health);
+            if (health > 0f)
+                return false;
+
+            InPairedMove = false;
+            MoveId ended = move;
+            move = MoveId.None;
+            phase = MovePhase.None;
+            phaseTime = 0f;
+            if (ended != MoveId.None)
+                events.RaiseMovePhaseChanged(Id, ended, MovePhase.None);
+            SetState(CombatState.KnockedOut);
+            return true;
+        }
+
+        /// <summary>The grapple is over for Wrestler B: Knocked Down (COMBAT_SPEC Grapple), length from health now.</summary>
+        internal void EndPairedKnockedDown()
+        {
+            InPairedMove = false;
+            MoveId ended = move;
+            move = MoveId.None;
+            phase = MovePhase.None;
+            phaseTime = 0f;
+            if (ended != MoveId.None)
+                events.RaiseMovePhaseChanged(Id, ended, MovePhase.None);
+            KnockDown();
         }
 
         internal void SetPairedPhase(MovePhase next)

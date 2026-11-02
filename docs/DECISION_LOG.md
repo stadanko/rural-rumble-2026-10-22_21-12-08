@@ -312,6 +312,18 @@ Agents: read this before starting work. If a task conflicts with a decision here
 - **Why:** The art needs the wider spacing, and widening the combat spacing would push the receiver about 1.2 units back on every lock-up.
 - **Affects:** docs/ASSET_REGISTRY.csv, WrestlerAnimationBuilder, Barry and Peaux lock-up clips.
 
+## D-033: Bodyslam art in game
+
+- **Date:** 2026-11-02
+- **Decided by:** Designer (art, timing, spacing); presentation wiring by Unity Animation & Tooling, for review
+- **Decision:**
+  - The v3 bodyslam sheets are approved and go into the game: Barry slams Peaux (gen-barry-bodyslam-3 + gen-peaux-bodyslammed-3, 7 frames, 300/140/430/130/230/700/500 ms) and Peaux slams Barry (gen-peaux-bodyslam-3 + gen-barry-bodyslammed-3, 6 frames, 300/430/130/230/700/500 ms, the old frame 2 removed). Each plays once with its partner clip, last frame held.
+  - Like the lock-up art, the pair is drawn with pivots 132 px (2.2 units) apart, so every bodyslam sprite's pivot is moved 30 px toward the opponent (D-032) and the pair lines up at combat's `lockUpPairSpacing` of 1.2. The receivers keep their drawn ground line (Peaux 4 px, Barry 1 px above the cell bottom).
+  - The sheets are wider than 2048 px, so their max texture size is 4096 (not downscaled). Same wrestler import settings otherwise.
+  - Presentation wiring: Grappling + Move Bodyslam plays Bodyslam (initiator), Grappled + Move Bodyslam plays Bodyslammed (receiver). Both clips are in the MoveAnimationTable with the impact frame (receiver flat on the ground: frame 6 of 7, frame 5 of 6) as contact time, so the impact lands at the Bodyslam Startup. The initiator draws in front, as in the approved previews.
+- **Why:** Designer approval of the v3 sheets and previews (ASSET_REGISTRY rows). Reusing the lock-up spacing means combat does not have to move either wrestler when the bodyslam starts from the lock-up.
+- **Affects:** docs/ASSET_REGISTRY.csv, docs/ARCHITECTURE.md (3.1, 6), WrestlerAnimationBuilder, WrestlerView, Barry and Peaux bodyslam clips, Wrestler.controller.
+
 ---
 
 ## Open Questions

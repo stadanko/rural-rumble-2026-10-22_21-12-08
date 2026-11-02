@@ -26,6 +26,10 @@ namespace RuralRumble.Presentation
     /// Whiff and break clips are fitted to the move's total time (MoveAnimationTable contact time 0); the hold
     /// clips (no table entry) play at native speed. While paired, Wrestler A draws one sorting order in front of B.
     ///
+    /// Bodyslam (ARCHITECTURE 6, D-033): Grappling + Move Bodyslam plays "Bodyslam" (A), Grappled + Move Bodyslam
+    /// plays "Bodyslammed" (B). Both clips are in the MoveAnimationTable with their impact frame as contact time,
+    /// so each lands its impact frame at the Bodyslam MoveTiming's Startup. A stays in front of B while paired.
+    ///
     /// Clip offsets and rotations are authored for left-facing art. When the sprite is flipped,
     /// <see cref="LateUpdate"/> mirrors the child sprite's animated x offset and z rotation so a knock-back
     /// or a fall still goes away from the way the wrestler faces.
@@ -61,6 +65,9 @@ namespace RuralRumble.Presentation
         public const string LockedUpStateName = "LockedUp";                // B, held
         public const string BreakLockUpStateName = "BreakLockUp";          // A, break
         public const string BreakLockUpReceiverStateName = "BreakLockUpReceiver"; // B, break
+        /// <summary>Bodyslam states (D-033). Each plays the slot clip "Slot_" + state name.</summary>
+        public const string BodyslamStateName = "Bodyslam";                // A, Grappling
+        public const string BodyslammedStateName = "Bodyslammed";          // B, Grappled
 
         /// <summary>Shared-controller slot clip for a move: "Slot_" + MoveId (e.g. Slot_Strike1, Slot_Stomp).</summary>
         public static string SlotNameFor(MoveId move) => "Slot_" + move;
@@ -71,7 +78,7 @@ namespace RuralRumble.Presentation
         /// <summary>
         /// The Animator state that plays a timed move, or null if the state shows no move clip. Striking:
         /// the move's own state (Strike1-3, Stomp). Lock Up: hold when paired, whiff otherwise; Break for
-        /// BreakLockUp. Locked Up: held, or the receiver's break.
+        /// BreakLockUp. Locked Up: held, or the receiver's break. Grappling / Grappled: the bodyslam sides.
         /// </summary>
         public static string MoveStateName(CombatState state, MoveId move, bool paired)
         {
@@ -87,6 +94,10 @@ namespace RuralRumble.Presentation
                     if (move == MoveId.BreakLockUp) return BreakLockUpReceiverStateName;
                     if (move == MoveId.LockUp) return LockedUpStateName;
                     return null;
+                case CombatState.Grappling:
+                    return move == MoveId.Bodyslam ? BodyslamStateName : null;
+                case CombatState.Grappled:
+                    return move == MoveId.Bodyslam ? BodyslammedStateName : null;
                 default:
                     return null;
             }
@@ -94,7 +105,16 @@ namespace RuralRumble.Presentation
 
         /// <summary>States whose clip follows the current move's timing (MoveSpeed is not forced to 1).</summary>
         public static bool IsTimedMoveState(CombatState state) =>
-            state == CombatState.Striking || state == CombatState.LockUp || state == CombatState.LockedUp;
+            state == CombatState.Striking || IsPairedState(state);
+
+        /// <summary>States a paired move plays in: Lock Up / Locked Up (lock-up, break) and Grappling / Grappled (bodyslam).</summary>
+        public static bool IsPairedState(CombatState state) =>
+            state == CombatState.LockUp || state == CombatState.LockedUp ||
+            state == CombatState.Grappling || state == CombatState.Grappled;
+
+        /// <summary>The initiator's side of a paired move (drawn in front while paired).</summary>
+        public static bool IsInitiatorState(CombatState state) =>
+            state == CombatState.LockUp || state == CombatState.Grappling;
 
         /// <summary>Playback speed limits for move clips. Extreme values are reported by the Editor validator, not fixed here.</summary>
         public const float MinMoveSpeed = 0.1f;
@@ -262,10 +282,10 @@ namespace RuralRumble.Presentation
             movingHold = moved ? MovingHoldSeconds : Mathf.Max(0f, movingHold - dt);
             bool moving = moved || movingHold > 0f;
 
-            // Paired only while in Lock Up / Locked Up; the receiver is always paired.
-            if (state != CombatState.LockUp && state != CombatState.LockedUp)
+            // Paired only while in a paired-move state; the receiver is always paired.
+            if (!IsPairedState(state))
                 paired = false;
-            bool showPaired = paired || state == CombatState.LockedUp;
+            bool showPaired = paired || state == CombatState.LockedUp || state == CombatState.Grappled;
 
             bool animatorReady = animator != null && animator.runtimeAnimatorController != null && animator.isActiveAndEnabled;
             if (animatorReady)
@@ -306,13 +326,14 @@ namespace RuralRumble.Presentation
             {
                 spriteRenderer.flipX = flip;
                 // ARCHITECTURE 6: presentation may adjust sorting for the pair. Both feet share one depth during a
-                // lock-up, so the Y sort ties; Wrestler A draws in front (their reaching arm over B).
+                // lock-up or bodyslam, so the Y sort ties; Wrestler A draws in front (their reaching arm over B; the
+                // approved bodyslam pair previews draw A over B in every frame).
                 if (!baseSortingOrderKnown)
                 {
                     baseSortingOrder = spriteRenderer.sortingOrder;
                     baseSortingOrderKnown = true;
                 }
-                spriteRenderer.sortingOrder = baseSortingOrder + (state == CombatState.LockUp && paired ? 1 : 0);
+                spriteRenderer.sortingOrder = baseSortingOrder + (IsInitiatorState(state) && paired ? 1 : 0);
             }
         }
 

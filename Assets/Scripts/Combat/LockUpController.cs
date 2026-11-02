@@ -21,9 +21,16 @@ namespace RuralRumble.Combat
     /// snapped to the pair anchor, A = Lock Up, B = Locked Up, and PairedMoveStarted(LockUp) is raised. The
     /// LockUp move's Active phase is the lock-up timer. Wrestler B has no control; Wrestler A's Strike and
     /// movement are ignored (D-031). Wrestler A's Grapple (A) and Irish Whip (B) presses reach
-    /// <see cref="OnGrapplePressed"/> / <see cref="OnIrishWhipPressed"/>, which do nothing yet (steps 2 and 3).
+    /// <see cref="OnGrapplePressed"/> / <see cref="OnIrishWhipPressed"/> (the whip does nothing yet, step 3).
     /// When the timer runs out, PairedMoveStarted(BreakLockUp) is raised; when the break's timing ends both
     /// return to Standing or Recovering by health.</para>
+    ///
+    /// <para><b>The bodyslam (step 2).</b> Grapple during the lock-up window: A = Grappling, B = Grappled,
+    /// CurrentMove = Bodyslam, both roots stay where the lock-up put them, PairedMoveStarted(Bodyslam) with
+    /// <see cref="CombatTuning.BodyslamTimingFor"/> the initiator (D-033: Startup per initiator so each pair's
+    /// clips play at native speed). End of Startup = impact: bodyslam damage to B (HitLanded, HealthChanged); a
+    /// knockout ends the pair at once. End of Recovery: B is Knocked Down (length from health then), A returns
+    /// to Standing or Recovering. Neither wrestler has any control during the bodyslam.</para>
     /// </summary>
     public sealed class LockUpController
     {
@@ -47,11 +54,11 @@ namespace RuralRumble.Combat
             this.random01 = random01;
         }
 
-        /// <summary>A paired move (lock-up or break) is playing.</summary>
+        /// <summary>A paired move (lock-up, bodyslam or break) is playing.</summary>
         public bool IsActive => initiator != null;
         public WrestlerId? Initiator => initiator?.Id;
         public WrestlerId? Receiver => receiver?.Id;
-        /// <summary>The paired move playing (LockUp or BreakLockUp), or None.</summary>
+        /// <summary>The paired move playing (LockUp, Bodyslam or BreakLockUp), or None.</summary>
         public MoveId CurrentMove => move;
         /// <summary>Seconds left on the lock-up timer while the LockUp move's window is open; 0 otherwise.</summary>
         public float LockUpTimeRemaining =>
@@ -186,8 +193,10 @@ namespace RuralRumble.Combat
 
         private void Advance(float dt, in WrestlerIntent initiatorIntent)
         {
-            // Nothing can knock a wrestler out of a lock-up yet; if something ever does, drop the pair.
-            if (initiator.State != CombatState.LockUp || receiver.State != CombatState.LockedUp)
+            // Nothing can knock a wrestler out of a paired move (strikes don't land on Locked Up, Grappling or
+            // Grappled); if something ever does, drop the pair.
+            ExpectedStates(move, out CombatState aState, out CombatState bState);
+            if (initiator.State != aState || receiver.State != bState)
             {
                 initiator.LeavePair();
                 receiver.LeavePair();
@@ -195,8 +204,10 @@ namespace RuralRumble.Combat
                 return;
             }
 
-            // D-031: only Wrestler A's Grapple and Irish Whip act during the lock-up window.
-            if (move == MoveId.LockUp && phase == MovePhase.Active)
+            // D-031: only Wrestler A's Grapple and Irish Whip act, for the whole lock-up window. The LockUp
+            // move's Startup and Recovery are zero-length (LockUpHoldTiming), so a press on the first tick
+            // after the lock-up (phase still Startup) counts too.
+            if (move == MoveId.LockUp)
             {
                 if (initiatorIntent.LockUpGrapple.Pressed && OnGrapplePressed(initiatorIntent))
                     return;
@@ -207,12 +218,14 @@ namespace RuralRumble.Combat
             phaseTime += dt;
             for (int guard = 0; guard < 8 && IsActive; guard++)
             {
-                MoveTiming t = tuning.TimingFor(move); // read now: Play Mode edits apply at once
+                MoveTiming t = CurrentTiming(); // read now: Play Mode edits apply at once
                 if (phase == MovePhase.Startup)
                 {
                     if (phaseTime < t.Startup) break;
                     phaseTime -= t.Startup;
                     SetPhase(MovePhase.Active);
+                    if (move == MoveId.Bodyslam && Impact())
+                        return; // knocked out: the pair is over
                 }
                 else if (phase == MovePhase.Active)
                 {
@@ -238,23 +251,63 @@ namespace RuralRumble.Combat
                 return;
             }
 
-            // Break over: both return to Standing or Recovering by health.
             CombatWrestler a = initiator, b = receiver;
+            bool bodyslam = move == MoveId.Bodyslam;
             Clear();
-            a.EndPaired();
-            b.EndPaired();
+            a.EndPaired(); // Standing or Recovering by health
+            if (bodyslam)
+                b.EndPairedKnockedDown(); // COMBAT_SPEC Grapple: Wrestler B enters Knocked Down
+            else
+                b.EndPaired(); // break over: Standing or Recovering by health
         }
 
-        /// <summary>Moves the pair on to the next paired move, keeping the snapped positions.</summary>
+        /// <summary>Timing of the paired move playing, read now. The bodyslam's Startup depends on the initiator (D-033).</summary>
+        private MoveTiming CurrentTiming() =>
+            move == MoveId.Bodyslam ? tuning.BodyslamTimingFor(initiator.Definition) : tuning.TimingFor(move);
+
+        /// <summary>The states Wrestler A and B are in during a paired move.</summary>
+        private static void ExpectedStates(MoveId paired, out CombatState a, out CombatState b)
+        {
+            if (paired == MoveId.Bodyslam)
+            {
+                a = CombatState.Grappling;
+                b = CombatState.Grappled;
+                return;
+            }
+            a = CombatState.LockUp;
+            b = CombatState.LockedUp;
+        }
+
+        /// <summary>
+        /// Moves the pair on to the next paired move, keeping the snapped positions (the bodyslam art assumes
+        /// both roots stay where the lock-up put them, D-033).
+        /// </summary>
         private void StartPaired(MoveId next)
         {
             move = next;
             phase = MovePhase.Startup;
-            initiator.SwitchPairedMove(next);
-            receiver.SwitchPairedMove(next);
+            phaseTime = 0f;
+            ExpectedStates(next, out CombatState aState, out CombatState bState);
+            initiator.SwitchPairedMove(next, aState);
+            receiver.SwitchPairedMove(next, bState);
             Vector2 anchor = (initiator.Position + receiver.Position) * 0.5f;
             events.RaisePairedMoveStarted(new PairedMoveInfo(initiator.Id, receiver.Id, next, anchor,
-                initiator.HorizontalFacing, tuning.TimingFor(next)));
+                initiator.HorizontalFacing, CurrentTiming()));
+        }
+
+        /// <summary>
+        /// The bodyslam's impact (end of its Startup): bodyslam damage to Wrestler B (COMBAT_SPEC Grapple). B stays
+        /// Grappled, still on the clip, until the move ends and B is Knocked Down. If the damage knocks B out, B
+        /// is Knocked Out at once (the match ends this tick and freezes); A is left in Grappling so its clip
+        /// plays out over the frozen match. Returns true on a knockout (the pair is cleared).
+        /// </summary>
+        private bool Impact()
+        {
+            if (!receiver.ReceiveGrappleImpact(initiator.Id, MoveId.Bodyslam, receiver.Position))
+                return false;
+            initiator.LeavePair();
+            Clear();
+            return true;
         }
 
         private void SetPhase(MovePhase next)
@@ -273,13 +326,18 @@ namespace RuralRumble.Combat
             phaseTime = 0f;
         }
 
-        // ================================================================ Hooks for steps 2 and 3
+        // ================================================================ Grapple and Irish Whip
 
         /// <summary>
-        /// Wrestler A pressed Grapple (A) during the lock-up window. Lock-up slice step 2 (Bodyslam) starts the
-        /// grapple here and returns true. Step 1: ignored, the lock-up timer keeps running.
+        /// Wrestler A pressed Grapple (A) during the lock-up window (COMBAT_SPEC: a Grapple only from Lock Up on a
+        /// Locked Up Wrestler B). Starts the bodyslam: A = Grappling, B = Grappled, CurrentMove = Bodyslam for
+        /// both, positions unchanged, PairedMoveStarted(Bodyslam) with the initiator's bodyslam timing.
         /// </summary>
-        private bool OnGrapplePressed(in WrestlerIntent intent) => false;
+        private bool OnGrapplePressed(in WrestlerIntent intent)
+        {
+            StartPaired(MoveId.Bodyslam);
+            return true;
+        }
 
         /// <summary>
         /// Wrestler A pressed Irish Whip (B) during the lock-up window; <paramref name="intent"/>.Move gives the

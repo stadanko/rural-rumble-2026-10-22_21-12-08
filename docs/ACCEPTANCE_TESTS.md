@@ -325,7 +325,7 @@ Step 1: the standing lock-up, the whiff and the break (COMBAT_SPEC Lock Up/Grapp
 |---|---|---|---|---|
 | L3.1 | Wrestler B has no control: no moves, no movement, no strikes | D-031 | `LockUpTests.DuringLockUp_LockedUpWrestler_HasNoControl` | Auto |
 | L3.2 | Wrestler A's Strike and movement are ignored | D-031 | `LockUpTests.DuringLockUp_InitiatorStrikeAndMovement_AreIgnored` | Auto |
-| L3.3 | Step 1: A's Grapple and Irish Whip presses do nothing yet; the timer still runs | Slice plan | `LockUpTests.DuringLockUp_InitiatorGrappleAndWhipPresses_DoNothingYet` | Auto |
+| L3.3 | A's Irish Whip press does nothing yet (step 3); the timer still runs. (Step 1 also covered Grapple; since step 2 Grapple starts the bodyslam, see L5.) | Slice plan | `LockUpTests.DuringLockUp_InitiatorWhipPresses_DoNothingYet` | Auto |
 | L3.4 | Timer (2.0 s, read at use) runs out: `PairedMoveStarted(BreakLockUp)`; when the break's timing ends both return to Standing or Recovering by health and have normal control | Spec | `LockUpTests.Timer_Expires_BreakLockUp_ThenBothStanding`, `Break_ReturnsLowHealthWrestlerToRecovering`, `AfterBreak_BothHaveNormalControl`, `LockUpTimer_IsReadAtUse` | Auto |
 | L3.5 | New tuning carries lock-up timer 2.0 s and whiff time 0.4 s | Spec table | `LockUpTests.NewTuning_HasLockUpDefaults` | Auto |
 
@@ -334,7 +334,7 @@ Step 1: the standing lock-up, the whiff and the break (COMBAT_SPEC Lock Up/Grapp
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
 | L4.1 | When it would strike a lockable player, the CPU goes for a lock-up at `cpuLockUpChance` (stepping into lock-up reach first if needed, never whiffing on purpose); at 0 it never does | Spec CPU AI | `OpponentBrainLockUpTests.LockUpChanceCertain_ApproachesAndLocksUpThePlayer`, `LockUpChanceZero_NeverLocksUp_Strikes` | Auto |
-| L4.2 | In Lock Up the CPU holds (no input) until the break, then decides again; Locked Up gives no input | Spec, D-031 | `OpponentBrainLockUpTests.InLockUp_CpuHoldsUntilTheBreak_ThenActsAgain`, `LockedUpCpu_GivesNoInput_UntilTheBreak` | Auto |
+| L4.2 | In Lock Up with `cpuBodyslamChance` 0 the CPU holds (no input) until the break, then decides again; Locked Up gives no input. (Step 2 adds the bodyslam choice, L6.) | Spec, D-031 | `OpponentBrainLockUpTests.InLockUp_CpuHoldsUntilTheBreak_ThenActsAgain`, `LockedUpCpu_GivesNoInput_UntilTheBreak` | Auto |
 | L4.3 | Same seed, same choices | Spec CPU AI | `OpponentBrainLockUpTests.LockUpChoice_IsRepeatableWithTheSameSeed` | Auto |
 
 ### Lock-Up Slice step 1: human playtest checklist
@@ -348,3 +348,44 @@ Needs the presentation stand-ins (Lock Up, Locked Up, whiff and Break clips) bef
 5. The 2.0 s hold with nothing to do (step 1): is the break (0.4 s) readable? (L3.4)
 6. The CPU: how often does it go for a lock-up (25% of its strike choices)? Does stepping in for one look natural? (L4)
 7. Both press K / A at once: does the coin flip feel fair? (L1.5)
+
+## Lock-Up Slice step 2: Bodyslam
+
+Grapple (A / K) during a lock-up performs a bodyslam (COMBAT_SPEC Lock Up/Grappling/Irish Whip Rules "Wrestler A presses the Grapple button", Grappling / Grappled states, Damage table, Knocked Down; ARCHITECTURE 6; D-033 art and timing). Tests: `Assets/Tests/EditMode/Combat/BodyslamTests.cs`, `Assets/Tests/EditMode/AI/OpponentBrainBodyslamTests.cs`.
+
+Timeline (default tuning): Grapple press → A Grappling, B Grappled, `CurrentMove` Bodyslam, `PairedMoveStarted(Bodyslam)` → impact at the initiator's bodyslam Startup (Barry 1.208 s, Peaux 1.083 s, D-033; 1.15 s when the match has no wrestler definitions): 12 damage, `HitLanded`, `HealthChanged`, B still Grappled → 1.21 s later (Active 0.1 + Recovery 1.11, the rest of both clips) B Knocked Down (length from health), A Standing or Recovering. A knockout at the impact ends the match at once.
+
+### L5. The bodyslam (COMBAT_SPEC, ARCHITECTURE 6, D-033)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| L5.1 | Grapple pressed by A anywhere in the lock-up window (including the first tick after the lock-up and late in the window): A = Grappling, B = Grappled, `CurrentMove` = Bodyslam for both, `PairedMoveStarted(Bodyslam)` with initiator, receiver, facing, anchor and the bodyslam timing; no `MoveStarted`; no damage yet | Spec, ARCHITECTURE 6 | `BodyslamTests.GrappleInLockUp_StartsBodyslam_GrapplingAndGrappled_RaisesPairedMoveStarted`, `GrapplePressedLateInTheLockUpWindow_StillStartsBodyslam`, `CpuInitiator_SameRules` | Auto |
+| L5.2 | Neither root moves at the start, during, or at the end of the bodyslam (the art assumes both stay `lockUpPairSpacing` apart) | D-033, ARCHITECTURE 6 | `BodyslamTests.GrappleInLockUp_StartsBodyslam_*`, `MoveEnd_ReceiverKnockedDown_InitiatorStanding_RootsNeverMove` | Auto |
+| L5.3 | Impact at the bodyslam Startup: Bodyslam damage (12) to B, `HitLanded(Bodyslam)` and `HealthChanged`; B stays Grappled (still on the clip) | Spec Damage table | `BodyslamTests.Impact_AtBodyslamStartup_AppliesDamage_ReceiverStaysGrappled` | Auto |
+| L5.4 | At the end of the move (Startup + Active + Recovery): B Knocked Down with the normal health-based length (`KnockedDown` event), A Standing (or Recovering), both `CurrentMove` None; phase events Bodyslam Active → Recovery → None | Spec Grapple, Knocked Down, D-025 | `BodyslamTests.MoveEnd_ReceiverKnockedDown_InitiatorStanding_RootsNeverMove`, `Bodyslam_LowHealthReceiver_KnockedDownThenRecovering` | Auto |
+| L5.5 | Bodyslam damage taking B to 0: Knocked Out at the impact, `MatchEnded` with A the winner | Spec Damage | `BodyslamTests.Bodyslam_ToZeroHealth_KnocksOutAtImpact_EndsTheMatch` | Auto |
+| L5.6 | Neither wrestler has control during the bodyslam (no moves, movement, facing changes, second paired move) | Spec, D-031 | `BodyslamTests.DuringBodyslam_NeitherWrestlerHasControl` | Auto |
+| L5.7 | After it, A has normal control (Strike over the downed B is a Stomp) | D-025 | `BodyslamTests.AfterBodyslam_InitiatorHasControl_AndCanStompTheDownedReceiver` | Auto |
+| L5.8 | No bodyslam outside a lock-up: Grapple in range from Standing is a lock-up, out of range a whiff (presses during the whiff do nothing), Locked Up B's Grapple does nothing, Grapple during the break does nothing | Spec "A Grapple can only be performed when A is in Lock Up and B in Locked Up" | `BodyslamTests.GrapplePressInRange_OutsideALockUp_IsALockUp_NotABodyslam`, `GrapplePressOutOfRange_Whiffs_NoBodyslam`, `LockedUpWrestlerPressingGrapple_DoesNotBodyslam`, `GrappleDuringBreak_DoesNotBodyslam` | Auto |
+| L5.9 | Bodyslam Startup comes from the initiator's `bodyslamStartupByInitiator` entry (Barry 1.208, Peaux 1.083 in the project asset), else `bodyslamTiming`; Active and Recovery are shared | D-033 | `BodyslamTests.PerInitiatorStartup_FromTheInitiatorsDefinition` | Auto (the project asset's entries are set; the Match scene passes the definitions only once MatchBootstrap does, see ARCHITECTURE 6) |
+| L5.10 | Bodyslam damage and timing are read at use; new tuning carries damage 12 and Active + Recovery ≈ 1.209 s | Spec table, D-005 | `BodyslamTests.BodyslamDamageAndTiming_AreReadAtUse`, `NewTuning_HasBodyslamDefaults` | Auto |
+| L5.11 | Strikes can't land on Grappling or Grappled | Spec allowed-state list | `StrikeAllowedStatesTests.CanBeStruck_MatchesSpecList` | Auto |
+
+### L6. CPU bodyslam (COMBAT_SPEC CPU AI Lock Up/Grapple, demo steps 5-7)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| L6.1 | Holding a lock-up it started, the CPU presses Grapple at `cpuBodyslamChance` per decision tick, the first roll one decision interval into the lock-up; the player is knocked down with bodyslam damage | Spec CPU AI, demo step 6 | `OpponentBrainBodyslamTests.BodyslamChanceCertain_LocksUp_ThenBodyslams_OneIntervalIn` | Auto |
+| L6.2 | At chance 0 the CPU holds until the break | Spec CPU AI | `OpponentBrainBodyslamTests.BodyslamChanceZero_HoldsTheLockUpUntilTheBreak` | Auto |
+| L6.3 | No CPU input while Grappling; afterwards back to Idle / Evaluate | Demo step 7 | `OpponentBrainBodyslamTests.DuringItsBodyslam_CpuGivesNoInput_ThenReturnsToIdleEvaluate` | Auto |
+| L6.4 | A Grappled CPU gives no input, then mashes once Knocked Down | D-031, D-025 | `OpponentBrainBodyslamTests.GrappledCpu_GivesNoInput_ThenIsKnockedDownAndMashes` | Auto |
+| L6.5 | Same seed, same choices | Spec CPU AI | `OpponentBrainBodyslamTests.BodyslamChoice_IsRepeatableWithTheSameSeed` | Auto |
+
+### Lock-Up Slice step 2: human playtest checklist
+
+1. Lock up, then press K / A: does the slam start right away and feel responsive? Can you press too early (on the lock-up's first frame) and does that look abrupt? (L5.1)
+2. Barry slams Peaux and Peaux slams Barry: does each clip play at its natural speed, with the health bar dropping exactly as the receiver hits the ground? (L5.3, L5.9; needs MatchBootstrap to pass the wrestler definitions, otherwise both use 1.15 s and play about 5% off)
+3. Does the Knocked Down clip pick up cleanly where the Bodyslammed clip ends, or is there a jump? The receiver's root stays put while its lying body is drawn 1.1-1.5 units away from it; does the Knocked Down stand-in line up with that? (L5.2, L5.4)
+4. Is 12 damage plus a knockdown the right reward compared with a 13-damage strike combo? (L5.3)
+5. The CPU: with a 50% roll every 0.25 s it almost always slams within about half a second of locking up. Too predictable? Too punishing? (L6.1)
+6. Bodyslam to knock out (low health): does the freeze on the impact frame read as a finish? (L5.5)

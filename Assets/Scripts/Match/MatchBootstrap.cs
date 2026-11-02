@@ -73,7 +73,8 @@ namespace RuralRumble.Match
             var playerInput = gameObject.AddComponent<PlayerInputSource>();
             // The brain needs the match's views and tuning, which exist only after the runner's Start, so
             // the runner gets a relay now and the relay gets the brain in Start (ARCHITECTURE 4.4).
-            combatRunner.Configure(playerRoot, cpuRoot, playerInput, cpuInput);
+            // The definitions let Combat pick each initiator's bodyslam startup (D-033).
+            combatRunner.Configure(playerRoot, cpuRoot, playerInput, cpuInput, setup.Player, setup.Cpu);
         }
 
         private void Start()

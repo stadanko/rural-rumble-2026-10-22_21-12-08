@@ -1,3 +1,4 @@
+using System;
 using RuralRumble.Core;
 using UnityEngine;
 
@@ -10,8 +11,8 @@ namespace RuralRumble.Combat
     /// the project asset's tuned values.
     /// Tooltips say where each default comes from: "Set" / "Starting point" = COMBAT_SPEC Tuning Values
     /// (with the decision that set it); "Combat starting point" = not in COMBAT_SPEC, chosen by Combat,
-    /// needs designer review. Lock-up slice step 1 adds the lock-up values; bodyslam and Irish Whip
-    /// values come with steps 2 and 3.
+    /// needs designer review. Lock-up slice step 1 adds the lock-up values, step 2 the bodyslam values;
+    /// Irish Whip values come with step 3.
     /// </summary>
     [CreateAssetMenu(fileName = "CombatTuning", menuName = "Rural Rumble/Combat Tuning")]
     public sealed class CombatTuning : ScriptableObject
@@ -44,6 +45,13 @@ namespace RuralRumble.Combat
         [Tooltip("Combat starting point. Break lock-up (lock-up timer ran out) wind-up / active / recovery, seconds. Both wrestlers return to Standing or Recovering when it ends.")]
         public MoveTiming breakLockUpTiming = new MoveTiming(0.2f, 0f, 0.2f);
 
+        // ------------------------------------------------------------------ Bodyslam
+        [Header("Bodyslam")]
+        [Tooltip("Bodyslam timing (lock-up slice step 2). Startup = Grapple press to impact (Wrestler B hits the ground); damage is applied when Active starts. When Recovery ends, B is Knocked Down and A returns to Standing or Recovering. Startup: Combat starting point, used only for an initiator with no entry below (between the two approved pairs). Active + Recovery: Combat starting point, = the rest of the approved clips after impact (D-033: 1.209 s for both pairs), so the knockdown starts as the clip finishes.")]
+        public MoveTiming bodyslamTiming = new MoveTiming(1.15f, 0.1f, 1.11f);
+        [Tooltip("Set (D-033 approved art timing). Bodyslam Startup per initiator, so each pair's clips play at native speed: Barry 1.208 s (slams Peaux), Peaux 1.083 s (slams Barry). An initiator not listed uses bodyslamTiming's Startup. Matched against the WrestlerDefinitions the match was built with.")]
+        public WrestlerStartup[] bodyslamStartupByInitiator = new WrestlerStartup[0];
+
         // ------------------------------------------------------------------ Health and Damage
         [Header("Health and Damage")]
         [Tooltip("COMBAT_SPEC: Set. Full health bar.")]
@@ -56,6 +64,8 @@ namespace RuralRumble.Combat
         [Min(0f)] public float strike2Damage = 4f;
         [Tooltip("COMBAT_SPEC Starting point. Strike 3 damage (always knocks down).")]
         [Min(0f)] public float strike3Damage = 6f;
+        [Tooltip("COMBAT_SPEC Starting point. Bodyslam damage to Wrestler B, applied at the impact (end of the bodyslam Startup).")]
+        [Min(0f)] public float bodyslamDamage = 12f;
         [Tooltip("COMBAT_SPEC Starting point (D-025). Stomp damage on a Knocked Down opponent.")]
         [Min(0f)] public float stompDamage = 3f;
         [Tooltip("COMBAT_SPEC Set (D-025). Seconds after a stomp ends before the same wrestler can stomp again.")]
@@ -139,6 +149,8 @@ namespace RuralRumble.Combat
         [Range(0f, 1f)] public float cpuRecoverCounterChance = 0.3f;
         [Tooltip("Combat starting point. When the CPU would strike a player in lock-up range, the chance it attempts a lock-up instead (COMBAT_SPEC CPU AI: Lock Up/Grapple). Also applies to the Recovering strike-back.")]
         [Range(0f, 1f)] public float cpuLockUpChance = 0.25f;
+        [Tooltip("Starting point (COMBAT_SPEC CPU AI Lock Up/Grapple gives no value). Chance per CPU decision, while the CPU holds a lock-up it started, that it presses Grapple (bodyslam). The first roll comes one decision interval into the lock-up; with no bodyslam the lock-up breaks on the timer as usual.")]
+        [Range(0f, 1f)] public float cpuBodyslamChance = 0.5f;
         [Tooltip("Combat starting point. Horizontal distance (feet to feet) the CPU walks to before striking, world units.")]
         [Min(0f)] public float cpuStrikeDistance = 1.6f;
         [Tooltip("Combat starting point. How close (world units) the CPU must get to its approach point before it stops walking.")]
@@ -160,8 +172,30 @@ namespace RuralRumble.Combat
                 case MoveId.Stomp: return stompTiming;
                 case MoveId.LockUp: return LockUpHoldTiming;
                 case MoveId.BreakLockUp: return breakLockUpTiming;
+                case MoveId.Bodyslam: return bodyslamTiming;
                 default: return default;
             }
+        }
+
+        /// <summary>
+        /// Bodyslam timing for this initiator, read now: <see cref="bodyslamTiming"/> with Startup replaced by
+        /// the initiator's <see cref="bodyslamStartupByInitiator"/> entry, if any (D-033: each pair's clips
+        /// play at native speed). A null or unlisted initiator gets bodyslamTiming unchanged.
+        /// </summary>
+        public MoveTiming BodyslamTimingFor(WrestlerDefinition initiator)
+        {
+            MoveTiming t = bodyslamTiming;
+            if (initiator == null || bodyslamStartupByInitiator == null)
+                return t;
+            foreach (WrestlerStartup entry in bodyslamStartupByInitiator)
+            {
+                if (entry.wrestler == initiator)
+                {
+                    t.Startup = Mathf.Max(0f, entry.startup);
+                    break;
+                }
+            }
+            return t;
         }
 
         /// <summary>
@@ -182,6 +216,7 @@ namespace RuralRumble.Combat
                 case MoveId.Strike2: return strike2Damage;
                 case MoveId.Strike3: return strike3Damage;
                 case MoveId.Stomp: return stompDamage;
+                case MoveId.Bodyslam: return bodyslamDamage;
                 default: return 0f;
             }
         }
@@ -197,6 +232,22 @@ namespace RuralRumble.Combat
                 case MoveId.LockUp: return lockUpReach;
                 default: return 0f;
             }
+        }
+    }
+
+    /// <summary>One wrestler's bodyslam Startup in <see cref="CombatTuning.bodyslamStartupByInitiator"/> (D-033).</summary>
+    [Serializable]
+    public struct WrestlerStartup
+    {
+        [Tooltip("The wrestler doing the bodyslam (Assets/Data/Wrestlers/).")]
+        public WrestlerDefinition wrestler;
+        [Tooltip("Seconds from the Grapple press to impact when this wrestler is the initiator.")]
+        [Min(0f)] public float startup;
+
+        public WrestlerStartup(WrestlerDefinition wrestler, float startup)
+        {
+            this.wrestler = wrestler;
+            this.startup = startup;
         }
     }
 }

@@ -24,7 +24,7 @@ namespace RuralRumble.Presentation
     /// Lock-up slice (ARCHITECTURE 6, D-031): PairedMoveStarted marks the wrestler as paired (Animator
     /// "Paired"), which is the only way to tell a lock-up hold from a whiff (both are State LockUp, Move LockUp).
     /// Whiff and break clips are fitted to the move's total time (MoveAnimationTable contact time 0); the hold
-    /// loops play at native speed. While paired, Wrestler A draws one sorting order in front of B.
+    /// clips (no table entry) play at native speed. While paired, Wrestler A draws one sorting order in front of B.
     ///
     /// Clip offsets and rotations are authored for left-facing art. When the sprite is flipped,
     /// <see cref="LateUpdate"/> mirrors the child sprite's animated x offset and z rotation so a knock-back
@@ -56,9 +56,9 @@ namespace RuralRumble.Presentation
         public const string StruckStateName = "Struck";
         public const string KnockedOutStateName = "KnockedOut";
         /// <summary>Lock-up slice states. Each plays the slot clip "Slot_" + state name.</summary>
-        public const string LockUpStateName = "LockUp";                    // A, paired, holding (loop)
+        public const string LockUpStateName = "LockUp";                    // A, paired, holding
         public const string LockUpWhiffStateName = "LockUpWhiff";          // A, no partner (D-031)
-        public const string LockedUpStateName = "LockedUp";                // B, held (loop)
+        public const string LockedUpStateName = "LockedUp";                // B, held
         public const string BreakLockUpStateName = "BreakLockUp";          // A, break
         public const string BreakLockUpReceiverStateName = "BreakLockUpReceiver"; // B, break
 

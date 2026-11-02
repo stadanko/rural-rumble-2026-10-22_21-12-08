@@ -17,6 +17,8 @@ namespace RuralRumble.EditorTooling
     ///
     /// Menu: Rural Rumble/Tooling/Build Barry Animations + Prefab, Rural Rumble/Tooling/Build Peaux Animations + Prefab.
     /// A wrestler with no run or strike art gets PLACEHOLDER stand-ins for those too (WriteMissingArtStandIns).
+    /// Lock Up / Locked Up use the approved pair sheets (D-032; run ImportLockUpSheets first); lock-up whiff and
+    /// break stay PLACEHOLDER stand-ins.
     /// </summary>
     public static class WrestlerAnimationBuilder
     {
@@ -102,6 +104,8 @@ namespace RuralRumble.EditorTooling
             public MoveClipSpec Strike1;             // right punch; null -> placeholder (StandFront pose)
             public MoveClipSpec Strike2;             // left punch; null -> placeholder
             public MoveClipSpec Strike3;             // combo finisher; null -> placeholder
+            public Sprite[] LockUp;                  // Lock Up hold (A, initiator); null -> placeholder
+            public Sprite[] LockedUp;                // Locked Up hold (B, receiver); null -> placeholder
         }
 
         [MenuItem("Rural Rumble/Tooling/Build Barry Animations + Prefab")]
@@ -153,6 +157,9 @@ namespace RuralRumble.EditorTooling
                     Sprites = LoadSprites(art + "barry_strike3.png"),
                     KeyFrames = new[] { 0, 3 }, LengthFrames = 9, ContactIndex = 1,
                 },
+                // D-032: gen-barry-lockup-5 / gen-barry-lockedup-5 (pair sheets vs Peaux), imported by ImportLockUpSheets.
+                LockUp = LoadSprites(art + "barry_lockup.png"),
+                LockedUp = LoadSprites(art + "barry_lockedup.png"),
             };
             return Build(spec, writePrefab);
         }
@@ -209,6 +216,9 @@ namespace RuralRumble.EditorTooling
                     Sprites = LoadSprites(art + "peaux_strike3.png"),
                     KeyFrames = new[] { 0, 3 }, LengthFrames = 9, ContactIndex = 1,
                 },
+                // D-032: gen-peaux-lockup-5 / gen-peaux-lockedup-5 (pair sheets vs Barry), imported by ImportLockUpSheets.
+                LockUp = LoadSprites(art + "peaux_lockup.png"),
+                LockedUp = LoadSprites(art + "peaux_lockedup.png"),
             };
             return Build(spec, writePrefab);
         }
@@ -247,15 +257,56 @@ namespace RuralRumble.EditorTooling
             });
         }
 
+        /// <summary>Distance between the two cell bottom-centres (hips) the lock-up pair sheets are drawn for:
+        /// 132 px = 2.2 units at 60 PPU (ASSET_REGISTRY gen-*-lockup-5 / gen-*-lockedup-5).</summary>
+        public const int LockUpArtPairSpacingPx = 132;
+
+        /// <summary>
+        /// D-032: how far each lock-up sprite's pivot sits toward the opponent from bottom-centre, in native pixels:
+        /// (art spacing - combat lockUpPairSpacing * PPU) / 2, rounded to a whole pixel. With the project tuning
+        /// (1.2 units = 72 px) that is 30 px, so roots 1.2 units apart draw the hips 2.2 units apart. Reads the
+        /// combat tuning asset only; presentation never changes the spacing.
+        /// </summary>
+        public static int LockUpPivotShiftPx()
+        {
+            var tuning = AssetDatabase.LoadAssetAtPath<RuralRumble.Combat.CombatTuning>("Assets/Data/Tuning/CombatTuning.asset");
+            if (tuning == null)
+                throw new InvalidOperationException("Assets/Data/Tuning/CombatTuning.asset not found; cannot place lock-up pivots.");
+            return Mathf.RoundToInt((LockUpArtPairSpacingPx - tuning.lockUpPairSpacing * WrestlerPpu) / 2f);
+        }
+
+        /// <summary>
+        /// Imports the approved lock-up pair sheets (D-032; 3 frames each, own cell sizes from ASSET_REGISTRY):
+        /// barry_lockup 228x251, barry_lockedup 208x230, peaux_lockup 264x242, peaux_lockedup 220x228. Same wrestler
+        /// settings as every sheet, except the pivot is moved LockUpPivotShiftPx toward the opponent (-x, as the art
+        /// faces left). SpriteRenderer.flipX mirrors around the pivot, so a flipped sprite's offset still points at
+        /// the opponent. Run before the Barry / Peaux builders.
+        /// </summary>
+        public static string ImportLockUpSheets()
+        {
+            int shift = LockUpPivotShiftPx();
+            return string.Join("\n", new[]
+            {
+                ImportSheet("Assets/Art/Wrestlers/Barry/barry_lockup.png", 228, 251, shift),
+                ImportSheet("Assets/Art/Wrestlers/Barry/barry_lockedup.png", 208, 230, shift),
+                ImportSheet("Assets/Art/Wrestlers/Peaux/peaux_lockup.png", 264, 242, shift),
+                ImportSheet("Assets/Art/Wrestlers/Peaux/peaux_lockedup.png", 220, 228, shift),
+            }) + $"\nLock-up pivot shift: {shift} px toward the opponent.";
+        }
+
         // ---------- sprite import ----------
 
         /// <summary>
         /// Wrestler sheet import (ARCHITECTURE 3.1): Sprite (Multiple), PPU 60, Point, uncompressed, no mipmaps,
         /// Clamp, Full Rect, then a single-row-or-grid slice at the sheet's own cell size, read left-to-right,
         /// top-to-bottom, named {file}_{i}, pivot Bottom Center. Never rescales. Existing sprite IDs are kept by name.
+        /// pivotTowardOpponentPx (lock-up pair sheets only, D-032) moves the pivot that many pixels toward -x
+        /// (toward the opponent for left-facing art), still on the bottom row: a Custom pivot.
         /// </summary>
-        public static string ImportSheet(string texturePath, int cellWidth, int cellHeight)
+        public static string ImportSheet(string texturePath, int cellWidth, int cellHeight, int pivotTowardOpponentPx = 0)
         {
+            var pivot = new Vector2(0.5f - pivotTowardOpponentPx / (float)cellWidth, 0f);
+            SpriteAlignment alignment = pivotTowardOpponentPx == 0 ? SpriteAlignment.BottomCenter : SpriteAlignment.Custom;
             var importer = AssetImporter.GetAtPath(texturePath) as TextureImporter;
             if (importer == null)
                 throw new InvalidOperationException($"No TextureImporter at {texturePath}.");
@@ -277,8 +328,8 @@ namespace RuralRumble.EditorTooling
             var settings = new TextureImporterSettings();
             importer.ReadTextureSettings(settings);
             settings.spriteMeshType = SpriteMeshType.FullRect;
-            settings.spriteAlignment = (int)SpriteAlignment.BottomCenter;
-            settings.spritePivot = new Vector2(0.5f, 0f);
+            settings.spriteAlignment = (int)alignment;
+            settings.spritePivot = pivot;
             importer.SetTextureSettings(settings);
             importer.SaveAndReimport();
 
@@ -307,8 +358,8 @@ namespace RuralRumble.EditorTooling
                     rect.name = name;
                     // Texture rects are bottom-up: the top row of cells is at y = height - cellHeight.
                     rect.rect = new Rect(col * cellWidth, height - (row + 1) * cellHeight, cellWidth, cellHeight);
-                    rect.alignment = SpriteAlignment.BottomCenter;
-                    rect.pivot = new Vector2(0.5f, 0f);
+                    rect.alignment = alignment;
+                    rect.pivot = pivot;
                     rect.border = Vector4.zero;
                     rects.Add(rect);
                 }
@@ -319,7 +370,7 @@ namespace RuralRumble.EditorTooling
                 nameIds.SetNameFileIdPairs(rects.Select(r => new UnityEditor.SpriteNameFileIdPair(r.name, r.spriteID)));
             provider.Apply();
             importer.SaveAndReimport();
-            return $"{texturePath}: {width}x{height}, {rects.Count} sprites of {cellWidth}x{cellHeight}.";
+            return $"{texturePath}: {width}x{height}, {rects.Count} sprites of {cellWidth}x{cellHeight}, pivot ({pivot.x:0.####}, {pivot.y}).";
         }
 
         /// <summary>Builds (or updates) the shared controller, the wrestler's clips and override, and its prefab. Returns a summary.</summary>
@@ -475,8 +526,18 @@ namespace RuralRumble.EditorTooling
 
         // ---------- lock-up slice stand-ins (PLACEHOLDER) ----------
 
-        /// <summary>Lock Up / Locked Up hold loop length (SourceFps frames): a 0.5 s push-pull.</summary>
+        /// <summary>Lock Up / Locked Up PLACEHOLDER hold loop length (SourceFps frames): a 0.5 s push-pull.</summary>
         public const int LockUpHoldLoopFrames = 12;
+
+        /// <summary>
+        /// Approved Lock Up / Locked Up clips (D-032, ASSET_REGISTRY gen-*-lockup-5 / -lockedup-5): designer timing
+        /// f1 330 ms, f2 530 ms, f3 held to the end of the lock-up, played once (not looped). Rounded per frame to
+        /// 24 fps like the strikes: 8 / 13 samples = 333 / 542 ms, f3 from sample 21 (875 ms) and held by the
+        /// non-looping clip. The holds have no MoveAnimationTable entry, so WrestlerView plays them at native
+        /// speed (MoveSpeed 1).
+        /// </summary>
+        public static readonly int[] LockUpHoldKeyFrames = { 0, 8, 21 };
+        public const int LockUpHoldLengthFrames = 22;
         /// <summary>Whiff and break stand-in length (SourceFps frames, 0.417 s native). WrestlerView fits them to the
         /// move's total time (whiff 0.4 s, break 0.2 + 0.2 s by default), so no contact frame is recorded.</summary>
         public const int LockUpOneShotFrames = 10;
@@ -487,6 +548,8 @@ namespace RuralRumble.EditorTooling
         /// Authored for left-facing art: -x = toward the opponent, +rotation = leaning forward. The pair stands
         /// lockUpPairSpacing apart (Combat, 1.2 units = 72 px by default), which already overlaps the two bodies, so
         /// the hold keeps A at rest and B leaning back 6-8 px; the break shoves both further apart before settling.
+        /// Lock Up / Locked Up below are used only when the wrestler has no lock-up art (spec.LockUp / LockedUp null);
+        /// Barry and Peaux have approved art (D-032), written as {Name}_LockUp.anim / {Name}_LockedUp.anim.
         ///   Lock Up (A, hold, loops): Strike 1 contact frame (arm reaching forward), leaning in, pushing on beat 2.
         ///   Locked Up (B, hold, loops): Strike 2 first frame (fists up, braced), leaning back, rocked back on beat 2.
         ///   Break (A): reach frame for 2 frames, then the stand sprite stepping back 8 px and settling.
@@ -503,18 +566,36 @@ namespace RuralRumble.EditorTooling
             Sprite windUp = spec.Strike1 != null ? spec.Strike1.Sprites[0] : stand;
             Sprite braced = spec.Strike2 != null ? spec.Strike2.Sprites[0] : stand;
 
-            AnimationClip hold = WriteSpriteClip(P(WrestlerView.LockUpStateName), new[] { reach }, new[] { 0 },
-                LockUpHoldLoopFrames, loop: true, new[]
-                {
-                    new PoseKey(0, 0, 0, 4),
-                    new PoseKey(6, -2, 0, 6),
-                });
-            AnimationClip held = WriteSpriteClip(P(WrestlerView.LockedUpStateName), new[] { braced }, new[] { 0 },
-                LockUpHoldLoopFrames, loop: true, new[]
-                {
-                    new PoseKey(0, 6, 0, -6),
-                    new PoseKey(6, 8, -2, -8),
-                });
+            var names = new List<string>();
+            // Approved art (D-032): played once with the last frame held (non-looping clip), rest pose (no offset or
+            // lean; the pair spacing lives in the sprite pivots). The old _PLACEHOLDER hold files stay, unreferenced.
+            AnimationClip hold, held;
+            if (spec.LockUp != null)
+                hold = WriteSpriteClip($"{folder}/{spec.Name}_{WrestlerView.LockUpStateName}.anim", spec.LockUp,
+                    LockUpHoldKeyFrames, LockUpHoldLengthFrames, loop: false);
+            else
+            {
+                hold = WriteSpriteClip(P(WrestlerView.LockUpStateName), new[] { reach }, new[] { 0 },
+                    LockUpHoldLoopFrames, loop: true, new[]
+                    {
+                        new PoseKey(0, 0, 0, 4),
+                        new PoseKey(6, -2, 0, 6),
+                    });
+                names.Add(WrestlerView.LockUpStateName);
+            }
+            if (spec.LockedUp != null)
+                held = WriteSpriteClip($"{folder}/{spec.Name}_{WrestlerView.LockedUpStateName}.anim", spec.LockedUp,
+                    LockUpHoldKeyFrames, LockUpHoldLengthFrames, loop: false);
+            else
+            {
+                held = WriteSpriteClip(P(WrestlerView.LockedUpStateName), new[] { braced }, new[] { 0 },
+                    LockUpHoldLoopFrames, loop: true, new[]
+                    {
+                        new PoseKey(0, 6, 0, -6),
+                        new PoseKey(6, 8, -2, -8),
+                    });
+                names.Add(WrestlerView.LockedUpStateName);
+            }
 
             AnimationClip breakA = WriteSpriteClip(P(WrestlerView.BreakLockUpStateName), new[] { reach, stand }, new[] { 0, 2 },
                 LockUpOneShotFrames, loop: false, new[]
@@ -558,7 +639,9 @@ namespace RuralRumble.EditorTooling
             bySlot[SlotBreakLockUp] = breakA;
             bySlot[SlotBreakLockUpReceiver] = breakB;
             bySlot[SlotLockUpWhiff] = whiff;
-            return "LockUp LockedUp BreakLockUp BreakLockUpReceiver LockUpWhiff";
+            names.AddRange(new[] { WrestlerView.BreakLockUpStateName, WrestlerView.BreakLockUpReceiverStateName,
+                WrestlerView.LockUpWhiffStateName });
+            return string.Join(" ", names);
         }
 
         /// <summary>
@@ -1157,6 +1240,10 @@ namespace RuralRumble.EditorTooling
             CheckMove("Strike1", spec.Strike1);
             CheckMove("Strike2", spec.Strike2);
             CheckMove("Strike3", spec.Strike3);
+            if (spec.LockUp != null)
+                CheckSheet("LockUp", spec.LockUp, LockUpHoldKeyFrames, LockUpHoldLengthFrames);
+            if (spec.LockedUp != null)
+                CheckSheet("LockedUp", spec.LockedUp, LockUpHoldKeyFrames, LockUpHoldLengthFrames);
         }
 
         private static void CheckMove(string label, MoveClipSpec move)

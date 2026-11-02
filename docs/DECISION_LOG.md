@@ -300,6 +300,18 @@ Agents: read this before starting work. If a task conflicts with a decision here
 - **Why:** COMBAT_SPEC's Lock Up state covers "attempting to trigger" a lock-up but never said what a miss does, or which buttons work during a lock-up. Found when starting the lock-up slice.
 - **Affects:** docs/COMBAT_SPEC.md (Lock Up/Grappling/Irish Whip Rules, Tuning Values), docs/CONTROLS.md, CombatTuning.
 
+## D-032: Lock-up art in game
+
+- **Date:** 2026-11-02
+- **Decided by:** Designer
+- **Decision:**
+  - The v5 Lock Up and Locked Up sheets for Barry and Peaux (gen-*-lockup-5, gen-*-lockedup-5) are approved and go into the game.
+  - The art is drawn for hips 2.2 units apart, but combat's `lockUpPairSpacing` stays 1.2. The lock-up sprites' pivots are moved 30 px toward the opponent so the drawn pair lines up. This is presentation only: no gameplay change.
+  - Lock-up whiff and break keep their stand-in clips until they get art.
+  - All three frames of all four sheets are scaled to 90% of the original art (both partners together, around the point where they meet), because in game the wrestlers seemed to grow after frame 1. This replaces an earlier try that scaled only frames 2 and 3 to 85%.
+- **Why:** The art needs the wider spacing, and widening the combat spacing would push the receiver about 1.2 units back on every lock-up.
+- **Affects:** docs/ASSET_REGISTRY.csv, WrestlerAnimationBuilder, Barry and Peaux lock-up clips.
+
 ---
 
 ## Open Questions

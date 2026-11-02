@@ -34,6 +34,7 @@ namespace RuralRumble.Tests.EditMode
         public readonly List<(WrestlerId id, MoveId move, MoveTiming timing)> MovesStarted = new List<(WrestlerId, MoveId, MoveTiming)>();
         public readonly List<(WrestlerId id, MoveId move, MovePhase phase)> PhaseChanges = new List<(WrestlerId, MoveId, MovePhase)>();
         public readonly List<(WrestlerId id, Vector2 contact)> ObstacleHits = new List<(WrestlerId, Vector2)>();
+        public readonly List<PairedMoveInfo> PairedMoves = new List<PairedMoveInfo>();
 
         /// <summary>When true the CPU reads IdleInput (the slice's stand-in opponent) instead of CpuInput.</summary>
         public bool CpuIdle = true;
@@ -41,11 +42,17 @@ namespace RuralRumble.Tests.EditMode
         public IWrestlerInput CpuSource;
 
         public MatchHarness(Vector2 playerStart, Vector2? cpuStart = null, ArenaGeometry arena = null,
-            Action<CombatTuning> configure = null)
+            Action<CombatTuning> configure = null, Func<float> random01 = null)
         {
             Tuning = ScriptableObject.CreateInstance<CombatTuning>();
             configure?.Invoke(Tuning);
-            Match = new CombatMatch(Tuning, arena ?? SliceArena.Build(), playerStart, cpuStart ?? DefaultCpuStart);
+            // Deterministic by default: a fixed-seed source for chance rules (D-028 simultaneous lock-up).
+            if (random01 == null)
+            {
+                var rng = new System.Random(12345);
+                random01 = () => (float)rng.NextDouble();
+            }
+            Match = new CombatMatch(Tuning, arena ?? SliceArena.Build(), playerStart, cpuStart ?? DefaultCpuStart, random01);
             Match.Events.StateChanged += (id, from, to) => StateChanges.Add((id, from, to));
             Match.Events.FacingChanged += (id, f) => FacingChanges.Add((id, f));
             Match.Events.HitLanded += hit => Hits.Add(hit);
@@ -55,6 +62,7 @@ namespace RuralRumble.Tests.EditMode
             Match.Events.MoveStarted += (id, m, t) => MovesStarted.Add((id, m, t));
             Match.Events.MovePhaseChanged += (id, m, ph) => PhaseChanges.Add((id, m, ph));
             Match.Events.ObstacleHit += (id, c) => ObstacleHits.Add((id, c));
+            Match.Events.PairedMoveStarted += info => PairedMoves.Add(info);
         }
 
         public IWrestlerView Player => Match.Player;

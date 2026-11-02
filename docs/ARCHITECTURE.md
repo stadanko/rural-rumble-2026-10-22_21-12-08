@@ -107,7 +107,7 @@ Screen flow (D-003): **Start → CharacterSelect → Match → Victory**. No mod
   | Pool footprint | x 1100–1660, rows 580–640 | 18.3333 – 27.6667 (18.3333 – 26.6667 inside) | −10.6667 – −9.6667 |
 - **Camera rig (built).** `Match.unity` root `MatchCamera` (component `MatchCamera`, moves) with child `Main Camera` (orthographic `Camera`, `UniversalAdditionalCameraData`, `AudioListener`). Juice shakes the child's local position. The default orthographic size is derived from `defaultVisibleWidthFraction` and the camera aspect (exactly 4.5 at 16:9); the maximum from `maxVisibleWidthFraction` (7.5 at 16:9, the whole 1600×900 arena). Vertical framing is centered on canvas row 570 (rows 300–840) at default zoom and is clamped to the arena art while zoomed out. Position is snapped to 1/60 unit only while the size equals the default. `MatchCamera.SetTargets(Transform, Transform)` takes the two wrestler roots; `CombatMatchRunner` writes those roots from `IWrestlerView.Position`, so the camera follows the same positions without referencing Combat.
 - **Player settings (applied):** default window 1920×1080, Fullscreen Window.
-- **Sprite import (applied to `Assets/Art/Wrestlers/Barry/barry_stand_front.png`):** Point filter, uncompressed, no mipmaps, PPU 60, pivot Bottom Center (feet), Full Rect mesh. Unity Animation & Tooling applies the same to every wrestler sprite and sheet it imports.
+- **Sprite import (applied to `Assets/Art/Wrestlers/Barry/barry_stand_front.png`):** Point filter, uncompressed, no mipmaps, PPU 60, pivot Bottom Center (feet), Full Rect mesh. Unity Animation & Tooling applies the same to every wrestler sprite and sheet it imports. Exception (D-032): the Lock Up / Locked Up pair sheets have their pivot 30 px toward the opponent from bottom-centre ((132 px art spacing − `lockUpPairSpacing` × 60) ÷ 2), so roots 1.2 units apart draw the hips 2.2 units apart; `SpriteRenderer.flipX` mirrors around the pivot, so this holds for either facing.
 - UI canvases scale against 1920×1080 (UI & Match Flow's call on Canvas Scaler settings).
 
 ## 4. Seams
@@ -161,7 +161,7 @@ public sealed class CombatEvents {
     event Action<WrestlerId, Vector2> FacingChanged;  // new 8-way Facing (movement slice); read HorizontalFacing for the flip
     event Action<WrestlerId, MoveId, MoveTiming> MoveStarted;      // move enters Startup; timing read from tuning now
     event Action<WrestlerId, MoveId, MovePhase> MovePhaseChanged;  // Startup -> Active -> Recovery -> None; an interrupted move goes to None
-    event Action<PairedMoveInfo> PairedMoveStarted;   // lock-up, bodyslam, Irish Whip, break (lock-up slice; not declared yet)
+    event Action<PairedMoveInfo> PairedMoveStarted;   // lock-up, break (built, lock-up step 1); bodyslam, Irish Whip (steps 2, 3)
     event Action<HitInfo> HitLanded;                  // attacker, defender, move, damage, contact point; every hit, incl. Struck restarts
     event Action<WrestlerId, Vector2> ObstacleHit;    // running/whipped wrestler hits the truck or pool (contact point); not the back wall or ends
     event Action<WrestlerId, float> HealthChanged;    // new health (damage and Recovering regen)
@@ -173,6 +173,9 @@ public sealed class CombatEvents {
 [Serializable] public struct MoveTiming { public float Startup, Active, Recovery; float Total; }
 // Combat.
 public readonly struct HitInfo { WrestlerId Attacker, Defender; MoveId Move; float Damage; Vector2 ContactPoint; }
+// Combat (built, lock-up step 1). Field names follow HitInfo (Move, Timing) rather than section 6's type names.
+public readonly struct PairedMoveInfo { WrestlerId Initiator, Receiver; MoveId Move; Vector2 Anchor; int Facing; MoveTiming Timing; }
+//   Anchor = midpoint of the two snapped feet points; Facing = initiator's left/right (+1/-1), receiver faces the other way.
 ```
 
 `MoveId` values are explicit (`None = 0` … `Strike3 = 3`, `Stomp = 4`, `LockUp = 5`, `Bodyslam = 6`, `IrishWhip = 7`, `BreakLockUp = 8`) because they are serialized in the Animator's `Move` parameter and in `MoveAnimationTable`. Append new values; never renumber.
@@ -254,7 +257,7 @@ public static class GameSession { MatchSetup Setup; MatchResult LastResult; bool
 ## 5. Combat tuning asset
 
 - Type: `CombatTuning : ScriptableObject` in `Assets/Scripts/Combat/Tuning/`. Asset: `Assets/Data/Tuning/CombatTuning.asset`. One asset shared by both wrestlers and the CPU.
-- **Built so far:** movement and combat-core fields. Movement: `walkSpeedHorizontal`, `walkSpeedDepth` (vertical walk speed), `walkSpeedDiagonal` (D-029), `recoveringWalkSpeedMultiplier`, `runSpeed`, `moveDeadzone`, `feetHalfWidth`, `feetHalfDepth` (arena bounds), `wrestlerBlockHalfDepth` (wrestler-vs-wrestler blocking), `maxTickStep`. Combat-core: the Timing, Health and Damage (incl. `runCollisionDamage`, D-029), Recovery and Knockdown groups below, strike reaches and hurt box, stomp range, and the CPU values. Lock-up, grapple and whip values come with the lock-up slice.
+- **Built so far:** movement and combat-core fields. Movement: `walkSpeedHorizontal`, `walkSpeedDepth` (vertical walk speed), `walkSpeedDiagonal` (D-029), `recoveringWalkSpeedMultiplier`, `runSpeed`, `moveDeadzone`, `feetHalfWidth`, `feetHalfDepth` (arena bounds), `wrestlerBlockHalfDepth` (wrestler-vs-wrestler blocking), `maxTickStep`. Combat-core: the Timing, Health and Damage (incl. `runCollisionDamage`, D-029), Recovery and Knockdown groups below, strike reaches and hurt box, stomp range, and the CPU values. Lock-up step 1: `lockUpTimer` (2.0), `lockUpWhiffTime` (0.4, D-031), `lockUpReach` (1.0), `lockUpPairSpacing` (1.2), `breakLockUpTiming` (0.2 / 0 / 0.2), `cpuLockUpChance` (0.25). Bodyslam and whip values come with steps 2 and 3.
 - Rules hold a reference to the asset and read fields at the moment of use. Never copy values into fields in constructors, `Awake`, or `Start`. Inspector edits in Play Mode apply on the next use.
 - Edits to a ScriptableObject in Play Mode persist after exiting Play Mode. Agents must not reset or overwrite tuned values in the asset; field initializers carry the COMBAT_SPEC defaults and apply only to new instances.
 - Fields, grouped as in COMBAT_SPEC Tuning Values:
@@ -269,8 +272,15 @@ public static class GameSession { MatchSetup Setup; MatchResult LastResult; bool
 
 Lock-up, bodyslam, Irish Whip, and break lock-up.
 
+**Built (lock-up slice step 1): lock-up, whiff, break.** `LockUpController` (Combat, plain C#), run by `CombatMatch.Tick` right after both wrestlers think:
+- A Lock Up press from Standing, Walking or Recovering is resolved after both think, against the opponent's state that tick. Valid target: Standing, Walking, Recovering, or Striking with a combo strike still in Startup (`LockUpController.CanBeLockedUp`); a wrestler who pressed Lock Up on the same tick counts as valid. Reach is the strike test with `lockUpReach` against the hurt box, depth within `strikeDepthTolerance`. Both pressing and both in reach: 50/50 (D-028) from the `random01` source passed to `CombatMatch` (time-seeded `System.Random` when null; tests inject a fixed source). Only one in reach: that one wins.
+- Success: the receiver's strike (if any) is cancelled (`MovePhaseChanged` None), the initiator stays put and the receiver is snapped `lockUpPairSpacing` in front at the initiator's depth (if that spot is outside the arena or in the truck/pool, the initiator is placed behind the receiver instead; if both fail, neither moves), both face each other, A = LockUp, B = LockedUp, `CurrentMove` = LockUp for both, then `PairedMoveStarted(LockUp)`. The LockUp move's timing is (0, `lockUpTimer`, 0): Active is the window for Grapple / Irish Whip. When it ends: `PairedMoveStarted(BreakLockUp)` with `breakLockUpTiming`; when that ends both return to Standing or Recovering by health. Movement and blocking are skipped while the pair plays.
+- Paired moves raise `PairedMoveStarted` instead of `MoveStarted`; `MovePhaseChanged` fires for both wrestlers (LockUp Active, Recovery, None; BreakLockUp Active, Recovery, None).
+- During the lock-up B ignores every input; A's Strike and movement are ignored (D-031). A's Grapple and Irish Whip presses reach `LockUpController.OnGrapplePressed` / `OnIrishWhipPressed`, which do nothing until steps 2 and 3.
+- Whiff (D-031): no valid target in reach. One-wrestler move: state LockUp, `CurrentMove` LockUp, `MoveStarted(LockUp, (0, lockUpWhiffTime, 0))`, no `PairedMoveStarted`, rooted, can be struck (strikes land on Lock Up), then Standing or Recovering. Presentation tells a whiff from a lock-up by the missing `PairedMoveStarted` (or the opponent not being Locked Up); `CombatWrestler.IsWhiffing` exposes it for tests.
+
 - **Combat owns positioning and timing.** On a successful lock-up, Combat snaps both wrestler positions to a pair anchor (initiator position plus a tuned offset, facing each other), sets LockUp / LockedUp, and raises `PairedMoveStarted(PairedMoveInfo { Initiator, Receiver, MoveId, Anchor, Facing, MoveTiming })`. During the move, Combat writes both root positions every tick (including where the receiver lands after a bodyslam and the whip run direction). Damage, Knocked Down, and the lock-up timer are applied by Combat at the times defined in `MoveTiming`.
-- **Presentation owns visuals.** On `PairedMoveStarted`, each `WrestlerView` plays its side of the paired clip (Lock Up / Locked Up, Bodyslam / Bodyslammed, Irish Whip, Break) starting the same tick. Visual offsets inside the move (lifting the receiver overhead) are child-sprite animation within the clip, never root movement. Presentation may adjust sorting order for the pair while the move plays.
+- **Presentation owns visuals.** On `PairedMoveStarted`, each `WrestlerView` plays its side of the paired clip (Lock Up / Locked Up, Bodyslam / Bodyslammed, Irish Whip, Break) starting the same tick. Visual offsets inside the move (lifting the receiver overhead) are child-sprite animation within the clip, never root movement. Presentation may adjust sorting order for the pair while the move plays. Lock Up / Locked Up play once (f1 0.333 s, f2 0.542 s, then f3 held until the lock-up ends) at native speed; whiff and break are still stand-ins (D-032).
 - Neither side waits for the other: Combat does not wait for animations to finish; presentation follows Combat's timing per 4.2.
 
 ## 7. Integration rules

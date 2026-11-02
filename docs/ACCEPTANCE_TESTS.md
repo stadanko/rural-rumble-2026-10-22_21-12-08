@@ -158,7 +158,7 @@ Last run: 2026-10-31. EditMode 233/234 (1 known failure, C1.4). PlayMode 15/15.
 | C1.6 | There is no Strike 4: after Strike 3 the next press is Strike 1 | Spec | `ComboTimingTests.AfterStrike3_NextPressInsideWindow_IsStrike1` | Auto |
 | C1.7 | Wrestlers can't move while Striking | D-024 | `StrikeTests.Striking_IsRooted` | Auto |
 | C1.8 | The attacker may strike from Standing, Walking, Running (ends the run, Strike 1), Striking (combo), Recovering; not while Struck or Knocked Down | Spec allowed-state list, D-029 | `RunRulesTests.StrikeWhileRunning_*`, `ComboTimingTests.StrikeFromRun_InsideComboWindow_IsStrike1`, `RecoveringTests.Recovering_CanStrike_ReturnsToRecovering`, `StrikeAllowedStatesTests.Struck_CannotStrikeOrMove`, `KnockedDown_StrikeIsMashNotAMove_AndCannotMove` | Auto |
-| C1.9 | A strike lands on a defender who is Standing, Walking, Running, Striking, Struck, Lock Up or Recovering; on Knocked Down only as a Stomp; never on Locked Up, Grappling, Grappled, Knocked Out | Spec allowed-state list, D-024, D-025 | `StrikeAllowedStatesTests.CanBeStruck_MatchesSpecList` (12 cases), `StrikeTests.Strike_LandsOnRunningWrestler`, `KnockdownTests.KnockedDown_ComboStrikeDoesNotLand_*` | Auto (Lock Up cases at the rule level only until the lock-up slice) |
+| C1.9 | A strike lands on a defender who is Standing, Walking, Running, Striking, Struck, Lock Up or Recovering; on Knocked Down only as a Stomp; never on Locked Up, Grappling, Grappled, Knocked Out | Spec allowed-state list, D-024, D-025 | `StrikeAllowedStatesTests.CanBeStruck_MatchesSpecList` (12 cases), `StrikeTests.Strike_LandsOnRunningWrestler`, `KnockdownTests.KnockedDown_ComboStrikeDoesNotLand_*`, `LockUpTests.Whiff_CanBeStruck`, `LockUp_PressedAsOpponentHitWindowOpens_Whiffs_AndTheStrikeLands` | Auto (Locked Up at the rule level only: nobody can strike a Locked Up wrestler while B has no control and A's Strike is ignored) |
 | C1.10 | Reach and depth: hits only in front, within reach + hurt box and the depth tolerance; a strike hits at most once | Combat starting points | `StrikeTests.Strike_FacingAway_Whiffs`, `Strike_DepthTolerance`, `Strike1_Reach_*`, `Strike_HitsOnlyOnce` | Auto |
 
 ### C2. Strike trades (COMBAT_SPEC Striking, D-030)
@@ -295,3 +295,56 @@ Last run: 2026-10-31. EditMode 233/234 (1 known failure, C1.4). PlayMode 15/15.
 13. Flipped art: when facing right, falls and knock-backs go the right way. (C13.4)
 14. Edit `CombatTuning.asset` during Play Mode (damage, combo window, Struck duration) and confirm the change applies at once. (C12.3)
 15. Strike 1's extended arm near the arena ends can pass the art edge by about 26 px (ARCHITECTURE 3.1). Is that acceptable?
+
+---
+
+## Lock-Up Slice
+
+Step 1: the standing lock-up, the whiff and the break (COMBAT_SPEC Lock Up/Grappling/Irish Whip Rules, CONTROLS A button, D-028, D-031, ARCHITECTURE 6). Bodyslam (step 2) and Irish Whip (step 3) add their own sections. Tests: `Assets/Tests/EditMode/Combat/LockUpTests.cs`, `Assets/Tests/EditMode/AI/OpponentBrainLockUpTests.cs`.
+
+### L1. Lock-up success (COMBAT_SPEC, D-028, ARCHITECTURE 6)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| L1.1 | Lock Up from Standing, Walking or Recovering on an opponent who is Standing, Walking or Recovering, in reach and in front: A = Lock Up, B = Locked Up | Spec allowed list, D-028 | `LockUpTests.LockUp_FromStanding_OnStandingOpponent_*`, `LockUp_FromWalking_OnWalkingOpponent`, `LockUp_OnRecoveringOpponent`, `LockUp_FromRecovering`, `LockUp_PlayerAndCpuRoles_Swapped_SameRules` | Auto |
+| L1.2 | Both snapped to the pair anchor (A stays, B `lockUpPairSpacing` in front at A's depth; A placed behind B if B's spot is off the arena), facing each other; `PairedMoveStarted` carries initiator, receiver, LockUp, anchor, facing and the timing (Active = lock-up timer) | ARCHITECTURE 6 | `LockUpTests.LockUp_FromStanding_OnStandingOpponent_SnapsAndRaisesPairedMoveStarted`, `Snap_ReceiverSpotOutsideArena_InitiatorIsPlacedInstead` | Auto |
+| L1.3 | A strike still winding up (before its hit window opens) is cancelled by the lock-up and never lands; once its hit window is open the lock-up whiffs and the strike lands | Spec Striking (Wrestler B only) | `LockUpTests.LockUp_OnOpponentStrikeWindingUp_CancelsTheStrike`, `LockUp_SameTickOpponentStartsStrike_CancelsTheStrike`, `LockUp_PressedAsOpponentHitWindowOpens_Whiffs_AndTheStrikeLands` | Auto |
+| L1.4 | Not on an opponent who is Running, Struck, Lock Up (whiffing), Knocked Down or Knocked Out (whiff instead); not out of reach, beyond the depth tolerance or facing away; Lock Up does nothing while Running, Striking or Struck | Spec, D-029 | `LockUpTests.CanBeLockedUp_MatchesSpecList` (17 cases), `LockUp_OnRunningOpponent_Whiffs`, `LockUp_OnStruckOpponent_Whiffs`, `LockUp_OnKnockedDownOpponent_Whiffs`, `LockUp_OnWhiffingOpponent_Whiffs`, `LockUp_OutOfReach_Whiffs`, `LockUp_BeyondDepthTolerance_Whiffs`, `LockUp_FacingAway_Whiffs`, `LockUp_WhileStruck_DoesNothing`, `LockUp_WhileStriking_DoesNothing`, `RunRulesTests.LockUpWhileRunning_DoesNothing` | Auto |
+| L1.5 | Both press Lock Up in reach on the same tick: 50/50 winner from the injected random source; same seed, same winner; if only one reaches, that one wins | D-028 | `LockUpTests.Simultaneous_InReach_WinnerFromRandomSource` (2), `Simultaneous_SeededRandom_IsFiftyFifty_AndRepeatable`, `Simultaneous_OnlyOneReaches_ThatOneWins_NoRandom` | Auto |
+
+### L2. Whiff (D-031)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| L2.1 | No valid target in reach: Lock Up state for the whiff time (0.4 s, read at use), rooted, `MoveStarted(LockUp)` and no `PairedMoveStarted`, then Standing (or Recovering at low health) | D-031 | `LockUpTests.Whiff_LastsWhiffTime_Rooted_ThenStanding`, `Whiff_PositionUnchangedThroughout`, `Whiff_ReturnsToRecovering_WhenLowHealth`, `Whiff_TimeIsReadAtUse` | Auto |
+| L2.2 | A whiffing wrestler can be struck; the whiff is cut short | D-031, C1.9 | `LockUpTests.Whiff_CanBeStruck` | Auto |
+
+### L3. During the lock-up and the break (D-031, COMBAT_SPEC)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| L3.1 | Wrestler B has no control: no moves, no movement, no strikes | D-031 | `LockUpTests.DuringLockUp_LockedUpWrestler_HasNoControl` | Auto |
+| L3.2 | Wrestler A's Strike and movement are ignored | D-031 | `LockUpTests.DuringLockUp_InitiatorStrikeAndMovement_AreIgnored` | Auto |
+| L3.3 | Step 1: A's Grapple and Irish Whip presses do nothing yet; the timer still runs | Slice plan | `LockUpTests.DuringLockUp_InitiatorGrappleAndWhipPresses_DoNothingYet` | Auto |
+| L3.4 | Timer (2.0 s, read at use) runs out: `PairedMoveStarted(BreakLockUp)`; when the break's timing ends both return to Standing or Recovering by health and have normal control | Spec | `LockUpTests.Timer_Expires_BreakLockUp_ThenBothStanding`, `Break_ReturnsLowHealthWrestlerToRecovering`, `AfterBreak_BothHaveNormalControl`, `LockUpTimer_IsReadAtUse` | Auto |
+| L3.5 | New tuning carries lock-up timer 2.0 s and whiff time 0.4 s | Spec table | `LockUpTests.NewTuning_HasLockUpDefaults` | Auto |
+
+### L4. CPU (COMBAT_SPEC CPU AI Lock Up/Grapple)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| L4.1 | When it would strike a lockable player, the CPU goes for a lock-up at `cpuLockUpChance` (stepping into lock-up reach first if needed, never whiffing on purpose); at 0 it never does | Spec CPU AI | `OpponentBrainLockUpTests.LockUpChanceCertain_ApproachesAndLocksUpThePlayer`, `LockUpChanceZero_NeverLocksUp_Strikes` | Auto |
+| L4.2 | In Lock Up the CPU holds (no input) until the break, then decides again; Locked Up gives no input | Spec, D-031 | `OpponentBrainLockUpTests.InLockUp_CpuHoldsUntilTheBreak_ThenActsAgain`, `LockedUpCpu_GivesNoInput_UntilTheBreak` | Auto |
+| L4.3 | Same seed, same choices | Spec CPU AI | `OpponentBrainLockUpTests.LockUpChoice_IsRepeatableWithTheSameSeed` | Auto |
+
+### Lock-Up Slice step 1: human playtest checklist
+
+Needs the presentation stand-ins (Lock Up, Locked Up, whiff and Break clips) before it can be judged visually.
+
+1. Press K / A next to the CPU: does the lock-up range (feet about 1.7 apart or closer, same depth within 0.4) feel right? Too grabby or too fussy? (L1)
+2. The snap: does the CPU visibly jump to 1.2 units in front of you? Is that spacing right for the art? (L1.2)
+3. Lock up the CPU while it winds up a punch: is it clear the lock-up beat the punch? Try it a fraction later: the punch should win. (L1.3)
+4. Whiff with nobody near: does 0.4 s of grabbing at air read as a mistake and feel punishable without being sluggish? (L2)
+5. The 2.0 s hold with nothing to do (step 1): is the break (0.4 s) readable? (L3.4)
+6. The CPU: how often does it go for a lock-up (25% of its strike choices)? Does stepping in for one look natural? (L4)
+7. Both press K / A at once: does the coin flip feel fair? (L1.5)

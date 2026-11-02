@@ -13,6 +13,11 @@ namespace RuralRumble.Presentation
     /// Entries are keyed by clip, so one table serves every wrestler (each wrestler's override controller
     /// supplies its own clip for a move). Asset: Assets/Animation/MoveAnimationTable.asset, written by
     /// WrestlerAnimationBuilder (Animation &amp; Tooling).
+    ///
+    /// Moves with no contact frame (the lock-up whiff and both sides of BreakLockUp) are recorded with
+    /// ContactTime 0, meaning the whole clip is stretched to the move's Startup + Active + Recovery. The looping
+    /// Lock Up / Locked Up holds have no entry (native speed). The lock-up slice clips are PLACEHOLDER stand-ins
+    /// built from the approved stand and strike sprites (WrestlerAnimationBuilder.WriteLockUpStandIns).
     /// </summary>
     [CreateAssetMenu(menuName = "Rural Rumble/Move Animation Table", fileName = "MoveAnimationTable")]
     public sealed class MoveAnimationTable : ScriptableObject
@@ -24,7 +29,8 @@ namespace RuralRumble.Presentation
             public MoveId Move;
             [Tooltip("The wrestler's own clip (the override for the move's shared slot).")]
             public AnimationClip Clip;
-            [Tooltip("Seconds from clip start to the first frame of the contact pose, at native (1x) speed.")]
+            [Tooltip("Seconds from clip start to the first frame of the contact pose, at native (1x) speed. " +
+                     "0 = no contact frame: the whole clip is fitted to the move's total time (lock-up whiff, break).")]
             public float ContactTime;
         }
 

@@ -109,6 +109,16 @@ Sprite Examples are from the Hulk Hogan character in WWF Wrestlefest. These are 
     - ![](images/style-guide-24.png)
 - Locked Up(Lock Up Animation Triggered by Opponent)
     - ![](images/style-guide-25.png)
+- Lock Up in motion (both wrestlers; the same clip at two speeds)
+    - ![](images/style-guide-33.gif)
+        - Half speed
+    - ![](images/style-guide-34.gif)
+        - Not half speed
+- Lock Up contact, frames 1-3 in order (the target for how the two wrestlers connect)
+    - Hulk Hogan (yellow trunks, golden-brown skin) is the initiator (Lock Up). Jake Roberts (green pants, reddish-white skin) is the receiver (Locked Up).
+    - Frames 1-2: chest to chest, heads together, each wrestler's near hand cupping the back of the other's neck, forearms and elbows pressed together, shoulders driving into each other, legs staggered and braced.
+    - Frame 3: the initiator stands tall and leans over, both hands clamped at the receiver's neck and collar. The receiver is on one knee, head tilted back, gripping the initiator's forearms.
+    - ![](images/style-guide-35.png) ![](images/style-guide-36.png) ![](images/style-guide-37.png)
 - Irish Whip(Receiver of Irish Whip Begins Running Animation)
     - ![](images/style-guide-26.png)
     - ![](images/style-guide-27.gif)

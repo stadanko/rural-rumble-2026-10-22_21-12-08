@@ -1,3 +1,4 @@
+using System;
 using RuralRumble.Core;
 using UnityEngine;
 
@@ -13,7 +14,9 @@ namespace RuralRumble.Combat
     /// <list type="number">
     /// <item>Think: timers and buttons. Each wrestler sees a snapshot of the opponent's state and
     /// position taken before either thinks.</item>
-    /// <item>Movement: each wrestler moves through the arena on its own, then <see cref="WrestlerBlocking"/>
+    /// <item>Lock-ups (<see cref="LockUpController"/>): this tick's Lock Up presses are resolved against the
+    /// opponent's state after thinking (lock up, simultaneous 50/50, or whiff), or the active pair advances.</item>
+    /// <item>Movement (skipped while a paired move plays: Combat holds both at the pair anchor): each wrestler moves through the arena on its own, then <see cref="WrestlerBlocking"/>
     /// resolves the two feet boxes symmetrically. Obstacle hits, run ends and run collisions follow.</item>
     /// <item>Hits: each strike whose hit window was open this tick is checked against the other's hurt
     /// box. The one whose window opened earlier lands; the other is cancelled. An exact tie is a trade
@@ -27,8 +30,12 @@ namespace RuralRumble.Combat
 
         private readonly CombatWrestler player;
         private readonly CombatWrestler cpu;
+        private readonly LockUpController lockUps;
 
-        public CombatMatch(CombatTuning tuning, ArenaGeometry arena, Vector2 playerStartFeet, Vector2 cpuStartFeet)
+        /// <param name="random01">Random source in [0, 1) for rules that are decided by chance (D-028: who wins
+        /// a simultaneous lock-up). Null = a time-seeded System.Random. Tests pass a fixed sequence.</param>
+        public CombatMatch(CombatTuning tuning, ArenaGeometry arena, Vector2 playerStartFeet, Vector2 cpuStartFeet,
+            Func<float> random01 = null)
         {
             Tuning = tuning;
             Arena = arena ?? ArenaGeometry.Unbounded();
@@ -40,6 +47,13 @@ namespace RuralRumble.Combat
             cpu = new CombatWrestler(WrestlerId.Cpu, tuning, Events, cpuStartFeet, -playerFacing);
             player.PlaceAt(Arena.ClampToBounds(playerStartFeet, player.FeetHalfExtents));
             cpu.PlaceAt(Arena.ClampToBounds(cpuStartFeet, cpu.FeetHalfExtents));
+
+            if (random01 == null)
+            {
+                var rng = new System.Random();
+                random01 = () => (float)rng.NextDouble();
+            }
+            lockUps = new LockUpController(tuning, Events, Arena, random01);
         }
 
         public CombatTuning Tuning { get; }
@@ -47,6 +61,8 @@ namespace RuralRumble.Combat
         public CombatEvents Events { get; }
         public IWrestlerView Player => player;
         public IWrestlerView Cpu => cpu;
+        /// <summary>The lock-up rules and the active paired move, read-only from outside Combat.</summary>
+        public LockUpController LockUps => lockUps;
         /// <summary>Seconds of combat simulated so far (sum of clamped dt). Stops when the match ends.</summary>
         public float ElapsedSeconds { get; private set; }
         /// <summary>True once a knockout has ended the match. Tick changes nothing afterwards.</summary>
@@ -74,13 +90,18 @@ namespace RuralRumble.Combat
             player.Think(dt, playerIntent, cpuStateBefore, cpuPosBefore);
             cpu.Think(dt, cpuIntent, playerStateBefore, playerPosBefore);
 
-            // 2. Movement.
-            ResolveMovement();
+            // 2. Lock-ups.
+            lockUps.Tick(dt, player, cpu, playerIntent, cpuIntent);
 
-            // 3. Hits.
+            // 3. Movement. A paired move holds both wrestlers at the pair anchor (ARCHITECTURE 6), exempt from
+            // blocking; neither has any movement of its own while it plays.
+            if (!lockUps.IsActive)
+                ResolveMovement();
+
+            // 4. Hits.
             ResolveHits();
 
-            // 4. Knockout.
+            // 5. Knockout.
             CheckKnockout();
         }
 

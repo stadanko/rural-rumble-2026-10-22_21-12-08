@@ -5,9 +5,11 @@ namespace RuralRumble.Combat
 {
     /// <summary>
     /// One wrestler's combat state. Plain C#; ticked only by <see cref="CombatMatch"/>, which runs the
-    /// same rules for both wrestlers. Combat-core slice states: Standing, Walking, Running, Striking,
-    /// Struck, Knocked Down, Recovering, Knocked Out (COMBAT_SPEC State Definitions; lock-up states come
-    /// with the lock-up slice).
+    /// same rules for both wrestlers. States: Standing, Walking, Running, Striking, Struck, Lock Up,
+    /// Locked Up, Knocked Down, Recovering, Knocked Out (COMBAT_SPEC State Definitions; Grappling and
+    /// Grappled come with lock-up slice step 2). A Lock Up press is only recorded here
+    /// (<see cref="LockUpRequested"/>); <see cref="LockUpController"/> resolves it after both wrestlers
+    /// think and drives the paired lock-up for both.
     ///
     /// A tick has three steps, each run for both wrestlers before the next (see CombatMatch.Tick):
     /// <list type="number">
@@ -86,6 +88,12 @@ namespace RuralRumble.Combat
         internal MoveId HitCandidateMove { get; private set; }
         /// <summary>Seconds since the candidate's hit window opened, at the end of this tick. Larger = opened earlier.</summary>
         internal float HitCandidateAge { get; private set; }
+        /// <summary>Lock Up was pressed from Standing, Walking or Recovering this tick (resolved by LockUpController).</summary>
+        internal bool LockUpRequested { get; private set; }
+        /// <summary>In a paired move (Lock Up / Locked Up with a partner); LockUpController drives it.</summary>
+        internal bool InPairedMove { get; private set; }
+        /// <summary>In Lock Up with no partner: a whiff (D-031).</summary>
+        public bool IsWhiffing => state == CombatState.LockUp && !InPairedMove;
 
         internal Vector2 FeetHalfExtents => new Vector2(tuning.feetHalfWidth, tuning.feetHalfDepth);
         internal bool IsRunning => state == CombatState.Running;
@@ -108,6 +116,7 @@ namespace RuralRumble.Combat
         {
             PendingDelta = Vector2.zero;
             HasHitCandidate = false;
+            LockUpRequested = false;
 
             if (sinceComboStrike < float.MaxValue) sinceComboStrike += dt;
             stompCooldownLeft = Mathf.Max(0f, stompCooldownLeft - dt);
@@ -147,7 +156,15 @@ namespace RuralRumble.Combat
                     ThinkKnockedDown(dt, intent);
                     return;
 
-                // KnockedOut: nothing. Lock-up states: lock-up slice.
+                case CombatState.LockUp:
+                    // A whiff runs on its own timing, rooted, ignoring every button (D-031). A paired lock-up
+                    // is driven by LockUpController (Wrestler A's Strike and movement are ignored there).
+                    if (!InPairedMove)
+                        AdvanceMove(dt);
+                    return;
+
+                // LockedUp: Wrestler B has no control (D-031); LockUpController drives the pair.
+                // KnockedOut: nothing.
             }
         }
 
@@ -172,6 +189,15 @@ namespace RuralRumble.Combat
                     StartComboStrike();
                     return;
                 }
+            }
+
+            if (intent.LockUpGrapple.Pressed)
+            {
+                // COMBAT_SPEC Lock Up: allowed from Standing, Walking and Recovering. Rooted this tick; whether
+                // it locks up or whiffs is decided after both wrestlers think (LockUpController), so the
+                // opponent's state this tick (e.g. a strike still winding up) is taken into account.
+                LockUpRequested = true;
+                return;
             }
 
             if (intent.RunWhip.Pressed && !recovering)
@@ -284,7 +310,7 @@ namespace RuralRumble.Combat
             // Loop so a very large dt (or a zero-length phase) still passes through every phase in order.
             for (int guard = 0; guard < 8 && move != MoveId.None; guard++)
             {
-                MoveTiming t = tuning.TimingFor(move);
+                MoveTiming t = CurrentTiming();
                 if (phase == MovePhase.Startup)
                 {
                     if (phaseTime < t.Startup) break;
@@ -293,7 +319,8 @@ namespace RuralRumble.Combat
                 }
                 else if (phase == MovePhase.Active)
                 {
-                    MarkHitCandidate();
+                    if (move != MoveId.LockUp)
+                        MarkHitCandidate();
                     if (phaseTime < t.Active) break;
                     phaseTime -= t.Active;
                     SetPhase(MovePhase.Recovery);
@@ -305,6 +332,10 @@ namespace RuralRumble.Combat
                 }
             }
         }
+
+        /// <summary>Timing of the wrestler's own (non-paired) move. The only LockUp move run here is a whiff.</summary>
+        private MoveTiming CurrentTiming() =>
+            move == MoveId.LockUp ? tuning.LockUpWhiffTiming : tuning.TimingFor(move);
 
         private void MarkHitCandidate()
         {
@@ -367,6 +398,77 @@ namespace RuralRumble.Combat
             phaseTime = 0f;
             events.RaiseMovePhaseChanged(Id, cut, MovePhase.None);
         }
+
+        // ================================================================ Lock-up (LockUpController)
+
+        /// <summary>D-031: a Lock Up press with no valid opponent in range grabs at air, rooted and hittable.</summary>
+        internal void StartWhiff()
+        {
+            LockUpRequested = false;
+            bufferedStrike = false;
+            comboStep = 0; // a lock-up attempt is another action: the next strike starts a new combo
+            move = MoveId.LockUp;
+            phase = MovePhase.Startup;
+            phaseTime = 0f;
+            moveHasHit = false;
+            SetState(CombatState.LockUp);
+            events.RaiseMoveStarted(Id, move, tuning.LockUpWhiffTiming);
+        }
+
+        /// <summary>
+        /// Enters a paired move as Wrestler A (<paramref name="pairState"/> = LockUp) or B (LockedUp): cancels
+        /// any move (a strike still winding up, COMBAT_SPEC), snaps to <paramref name="feet"/>, faces
+        /// <paramref name="faceX"/>. LockUpController raises PairedMoveStarted afterwards.
+        /// </summary>
+        internal void BeginPaired(MoveId pairedMove, CombatState pairState, Vector2 feet, int faceX)
+        {
+            InterruptMove();
+            LockUpRequested = false;
+            InPairedMove = true;
+            PendingDelta = Vector2.zero;
+            position = feet;
+            SetFacing(new Vector2Int(faceX >= 0 ? 1 : -1, 0));
+            move = pairedMove;
+            phase = MovePhase.Startup;
+            phaseTime = 0f;
+            moveHasHit = false;
+            SetState(pairState);
+        }
+
+        /// <summary>The paired move moves on to the next one (lock-up -> break) without leaving the pair.</summary>
+        internal void SwitchPairedMove(MoveId next)
+        {
+            MoveId ended = move;
+            move = next;
+            phase = MovePhase.Startup;
+            events.RaiseMovePhaseChanged(Id, ended, MovePhase.None);
+        }
+
+        internal void SetPairedPhase(MovePhase next)
+        {
+            if (phase == next)
+                return;
+            phase = next;
+            events.RaiseMovePhaseChanged(Id, move, next);
+        }
+
+        /// <summary>The paired move is over: back to Standing or Recovering by health (COMBAT_SPEC break).</summary>
+        internal void EndPaired()
+        {
+            InPairedMove = false;
+            MoveId ended = move;
+            move = MoveId.None;
+            phase = MovePhase.None;
+            phaseTime = 0f;
+            if (ended != MoveId.None)
+                events.RaiseMovePhaseChanged(Id, ended, MovePhase.None);
+            SetState(BaseState);
+        }
+
+        /// <summary>Leaves the pair without changing state (the wrestler already left Lock Up / Locked Up).</summary>
+        internal void LeavePair() => InPairedMove = false;
+
+        internal void ClearLockUpRequest() => LockUpRequested = false;
 
         // ================================================================ Movement
 

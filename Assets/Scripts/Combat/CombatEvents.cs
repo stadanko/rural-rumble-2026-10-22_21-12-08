@@ -9,7 +9,7 @@ namespace RuralRumble.Combat
     /// All events fire inside <see cref="CombatMatch.Tick"/>. Subscribers never change combat state.
     /// Combat-core slice contracts: MoveStarted, MovePhaseChanged, HitLanded, ObstacleHit, HealthChanged,
     /// KnockedDown and MatchEnded are declared here; Combat raises them as it implements each rule.
-    /// PairedMoveStarted comes with the lock-up slice.
+    /// Lock-up slice: PairedMoveStarted (ARCHITECTURE 6).
     /// </summary>
     public sealed class CombatEvents
     {
@@ -33,6 +33,15 @@ namespace RuralRumble.Combat
         /// (the attacker is hit) goes straight to None.</summary>
         public event Action<WrestlerId, MoveId, MovePhase> MovePhaseChanged;
 
+        /// <summary>
+        /// A two-wrestler synchronized move started (ARCHITECTURE 6): lock-up, break lock-up (lock-up slice
+        /// step 1), bodyslam and Irish Whip (later steps). Both positions are already snapped to the pair
+        /// anchor and both states set (Lock Up / Locked Up). Paired moves raise this instead of
+        /// <see cref="MoveStarted"/>; <see cref="MovePhaseChanged"/> still fires for each wrestler.
+        /// A lock-up whiff (D-031) is a one-wrestler move and raises <see cref="MoveStarted"/> (LockUp) only.
+        /// </summary>
+        public event Action<PairedMoveInfo> PairedMoveStarted;
+
         /// <summary>A move connected: attacker, defender, move, damage, contact point. Fires on every hit,
         /// including a hit that restarts Struck.</summary>
         public event Action<HitInfo> HitLanded;
@@ -54,6 +63,7 @@ namespace RuralRumble.Combat
         internal void RaiseFacingChanged(WrestlerId id, Vector2 facing) => FacingChanged?.Invoke(id, facing);
         internal void RaiseMoveStarted(WrestlerId id, MoveId move, MoveTiming timing) => MoveStarted?.Invoke(id, move, timing);
         internal void RaiseMovePhaseChanged(WrestlerId id, MoveId move, MovePhase phase) => MovePhaseChanged?.Invoke(id, move, phase);
+        internal void RaisePairedMoveStarted(in PairedMoveInfo info) => PairedMoveStarted?.Invoke(info);
         internal void RaiseHitLanded(in HitInfo hit) => HitLanded?.Invoke(hit);
         internal void RaiseObstacleHit(WrestlerId id, Vector2 contactPoint) => ObstacleHit?.Invoke(id, contactPoint);
         internal void RaiseHealthChanged(WrestlerId id, float health) => HealthChanged?.Invoke(id, health);

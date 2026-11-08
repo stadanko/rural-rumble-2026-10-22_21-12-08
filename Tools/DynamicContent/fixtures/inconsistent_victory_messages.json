@@ -1,0 +1,9 @@
+{
+  "_fixture_note": "TEST FIXTURE, hand-written, not model output. messages[0] is a deliberately inconsistent line (submission win + championship) used by consistency_check.py. The other lines are plain filler so the draft is structurally complete.",
+  "messages": [
+    {"winner": "barry", "text": "Barry defeated Peaux by submission to win the world championship."},
+    {"winner": "barry", "text": "Barry knocked Peaux out cold."},
+    {"winner": "peaux", "text": "Peaux knocked Barry out cold."},
+    {"winner": "peaux", "text": "Peaux left Barry flat in the dirt."}
+  ]
+}

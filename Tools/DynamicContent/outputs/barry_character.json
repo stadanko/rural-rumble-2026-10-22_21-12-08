@@ -1,0 +1,48 @@
+{
+  "id": "barry",
+  "display_name": "Barry \"Hot Potato\" Lankford",
+  "tagline": "Retired trucker. Active ass-kicker.",
+  "description": "Years of long-haul trucking left Barry with a dirt track in Hoon and a bad attitude. He spends his free time beating up punks who won't pick up their cigarette butts.",
+  "provenance": {
+    "origin": "AI-generated",
+    "review_status": "designer-approved (2026-11-08)",
+    "pipeline": "Tools/DynamicContent/pipeline.py",
+    "model": "claude-sonnet-5-5",
+    "backend": "claude-cli",
+    "generated_at": "2026-11-08T21:50:36+00:00",
+    "revision_attempts": 1,
+    "source_docs": [
+      {
+        "path": "docs/GDD.md",
+        "sha256": "312dd9b36e63f2d6d200b9071fa59b15aea7aa927412fb48c6482e7c68703373",
+        "sections": [
+          "Executive Summary",
+          "Design Pillars: What is Central to the Experience?",
+          "MVP Scope",
+          "Core Gameplay",
+          "Character Designs",
+          "Setting & World",
+          "Tone & Aesthetics",
+          "Narrative"
+        ]
+      },
+      {
+        "path": "docs/STYLE_GUIDE.md",
+        "sha256": "c3e8a6baf212c1ebc02892be6d09f92a467c6870321d924201d6beaa0b878699",
+        "sections": [
+          "Overall Game Style",
+          "Characters",
+          "UI"
+        ]
+      },
+      {
+        "path": "docs/DECISION_LOG.md",
+        "sha256": "305c1901b68967148a93dadbbd8dae6b1a7a6a788ed18fbea4b969c0dc1d23da",
+        "sections": [
+          "D-003",
+          "D-026"
+        ]
+      }
+    ]
+  }
+}

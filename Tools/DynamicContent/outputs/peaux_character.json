@@ -1,0 +1,49 @@
+{
+  "id": "peaux",
+  "display_name": "Peaux Strange",
+  "tagline": "Eyeliner on. Rednecks beware.",
+  "description": "Expelled at sixteen, Peaux turned to backyard wrestling. His football-playing brothers made him hard to hurt. He picked eyeliner over eye black, and Duckville's rednecks can choke on it.",
+  "provenance": {
+    "origin": "mixed",
+    "review_status": "designer-approved (2026-11-08)",
+    "pipeline": "Tools/DynamicContent/pipeline.py",
+    "model": "claude-sonnet-5-5",
+    "backend": "claude-cli",
+    "generated_at": "2026-11-08T21:51:05+00:00",
+    "revision_attempts": 1,
+    "source_docs": [
+      {
+        "path": "docs/GDD.md",
+        "sha256": "312dd9b36e63f2d6d200b9071fa59b15aea7aa927412fb48c6482e7c68703373",
+        "sections": [
+          "Executive Summary",
+          "Design Pillars: What is Central to the Experience?",
+          "MVP Scope",
+          "Core Gameplay",
+          "Character Designs",
+          "Setting & World",
+          "Tone & Aesthetics",
+          "Narrative"
+        ]
+      },
+      {
+        "path": "docs/STYLE_GUIDE.md",
+        "sha256": "c3e8a6baf212c1ebc02892be6d09f92a467c6870321d924201d6beaa0b878699",
+        "sections": [
+          "Overall Game Style",
+          "Characters",
+          "UI"
+        ]
+      },
+      {
+        "path": "docs/DECISION_LOG.md",
+        "sha256": "305c1901b68967148a93dadbbd8dae6b1a7a6a788ed18fbea4b969c0dc1d23da",
+        "sections": [
+          "D-003",
+          "D-026"
+        ]
+      }
+    ],
+    "human_edits": "Designer changed one word in the description (\"picks\" -> \"picked\")."
+  }
+}

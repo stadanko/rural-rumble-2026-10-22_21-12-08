@@ -1,0 +1,3 @@
+# No third-party Python packages. Python 3.10+ standard library only.
+# Runtime requirement (not pip-installable): the Claude Code CLI (`claude`) on PATH,
+# logged in. The pipeline calls it headlessly with `claude -p`.

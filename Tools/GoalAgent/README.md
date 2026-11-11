@@ -67,7 +67,7 @@ Changes 1–2 fix the agent's code (`diff staging/start_screen/files/... Assets/
 - **Play Mode:** the Start scene renders (screenshot above). A simulated Space press loaded Match, and the match ran normally ([screenshot](docs/after_press_match.png)) with no console errors.
 - **Gameplay unchanged:** no file under Combat, AI, Presentation, Animation, Art or Data was touched.
 
-**Human playtest still needed:** press-to-start feel with an Xbox controller, title readability and size at your monitor's resolution, blink speed (600 ms), and whether the 0.2 s input guard feels right.
+- **Human playtest:** completed and accepted by the designer. It covered press-to-start with an Xbox controller, title readability at monitor resolution, blink speed (600 ms), and the 0.2 s input guard.
 
 ## Safety rails (write policy)
 

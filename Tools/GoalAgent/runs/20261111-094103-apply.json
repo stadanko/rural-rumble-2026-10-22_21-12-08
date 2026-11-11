@@ -1,0 +1,153 @@
+{
+  "command": "apply",
+  "goal": "start_screen",
+  "at": "2026-11-11T15:41:03+00:00",
+  "manifest": {
+    "goal": "start_screen",
+    "staged_at": "2026-11-11T15:36:00+00:00",
+    "files": [
+      {
+        "path": "Assets/Scripts/UI/StartScreenFlow.cs",
+        "purpose": "Pure decision: which scene follows the Start screen.",
+        "lines": 17,
+        "status": "applied",
+        "policy": "ok"
+      },
+      {
+        "path": "Assets/Scripts/UI/StartScreenController.cs",
+        "purpose": "Thin MonoBehaviour: blinks the prompt and loads the next scene on any button.",
+        "lines": 62,
+        "status": "applied",
+        "policy": "ok"
+      },
+      {
+        "path": "Assets/UI/StartScreen.uxml",
+        "purpose": "Start screen layout: backdrop, title, prompt.",
+        "lines": 10,
+        "status": "applied",
+        "policy": "ok"
+      },
+      {
+        "path": "Assets/UI/StartScreen.uss",
+        "purpose": "Start screen styles using the style guide palette.",
+        "lines": 42,
+        "status": "applied",
+        "policy": "ok"
+      },
+      {
+        "path": "Assets/Tests/EditMode/UI/StartScreenFlowTests.cs",
+        "purpose": "EditMode tests for StartScreenFlow.",
+        "lines": 31,
+        "status": "applied",
+        "policy": "ok"
+      }
+    ],
+    "integration_notes": [
+      "Create Assets/Scenes/Start.unity (build index 0) with a GameObject 'StartScreen' holding UIDocument (Source Asset = Assets/UI/StartScreen.uxml, PanelSettings with Scale With Screen Size, reference 1920x1080) and StartScreenController.",
+      "Add Start (0), CharacterSelect (1), Match (2), Victory (3) to Build Settings; the flow falls back to Match when CharacterSelect is absent.",
+      "RuralRumble.UI asmdef must reference RuralRumble.Core, Unity.InputSystem; the EditMode test asmdef must reference RuralRumble.UI and RuralRumble.Core.",
+      "Ensure Assets/Art/Arena/arena_backdrop.png exists (referenced by the USS); UI Toolkit needs a default/runtime theme on the PanelSettings.",
+      "Optional: assign an arcade font via PanelSettings theme or USS -unity-font-definition."
+    ],
+    "assumptions": [
+      "The arena backdrop (1600x900) serves as the trailer-park background, scaled and cropped to fill.",
+      "No dedicated title logo art exists, so the title is styled text in palette colors.",
+      "A 0.2 s input delay after scene load prevents carry-over presses; adjustable in the inspector.",
+      "Blink interval is 600 ms."
+    ],
+    "applied_at": "2026-11-11T15:41:03+00:00"
+  },
+  "after": "needs_integration",
+  "next_ranking": [
+    {
+      "goal": "match_end_handoff",
+      "score": 23.0,
+      "breakdown": {
+        "impact": 6,
+        "unblocks": 10,
+        "testability": 8,
+        "effort": -1
+      },
+      "gate": null
+    },
+    {
+      "goal": "match_hud",
+      "score": 23.0,
+      "breakdown": {
+        "impact": 15,
+        "unblocks": 2,
+        "testability": 8,
+        "effort": -2
+      },
+      "gate": null
+    },
+    {
+      "goal": "character_select",
+      "score": 19.0,
+      "breakdown": {
+        "impact": 12,
+        "unblocks": 4,
+        "testability": 6,
+        "effort": -3
+      },
+      "gate": null
+    },
+    {
+      "goal": "screen_shake_juice",
+      "score": 11.0,
+      "breakdown": {
+        "impact": 9,
+        "unblocks": 0,
+        "testability": 4,
+        "effort": -2
+      },
+      "gate": null
+    },
+    {
+      "goal": "tuning_overlay",
+      "score": 10.0,
+      "breakdown": {
+        "impact": 6,
+        "unblocks": 0,
+        "testability": 6,
+        "effort": -2
+      },
+      "gate": null
+    },
+    {
+      "goal": "pause_menu",
+      "score": 10.0,
+      "breakdown": {
+        "impact": 9,
+        "unblocks": 0,
+        "testability": 4,
+        "effort": -3
+      },
+      "gate": null
+    },
+    {
+      "goal": "match_timer",
+      "score": 0.0,
+      "breakdown": {},
+      "gate": "blocked: needs 'match_hud' first"
+    },
+    {
+      "goal": "victory_screen",
+      "score": 0.0,
+      "breakdown": {},
+      "gate": "blocked: needs 'match_end_handoff' first"
+    },
+    {
+      "goal": "sound_effects",
+      "score": 0.0,
+      "breakdown": {},
+      "gate": "blocked: no assets in Assets/Audio/ yet"
+    },
+    {
+      "goal": "anim_speed_tuning",
+      "score": 0.0,
+      "breakdown": {},
+      "gate": "unsafe: would modify protected 'Assets/Editor/Tooling/WrestlerAnimationBuilder.cs'"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="project://database/Assets/UI/CharacterSelect.uss" />
+    <ui:VisualElement name="root" class="root">
+        <ui:VisualElement name="overlay" class="overlay" picking-mode="Ignore" />
+        <ui:Label name="title" class="title" text="CHOOSE YOUR WRESTLER" />
+        <ui:VisualElement name="row" class="row">
+            <ui:VisualElement name="panel-0" class="panel">
+                <ui:VisualElement name="card-0" class="card" />
+                <ui:Label name="name-0" class="name" />
+                <ui:Label name="tagline-0" class="tagline" />
+            </ui:VisualElement>
+            <ui:VisualElement name="panel-1" class="panel panel--right">
+                <ui:VisualElement name="card-1" class="card" />
+                <ui:Label name="name-1" class="name" />
+                <ui:Label name="tagline-1" class="tagline" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label name="hint" class="hint" text="LEFT / RIGHT  Choose      A / ENTER  Select      B / ESC  Back" />
+    </ui:VisualElement>
+</ui:UXML>

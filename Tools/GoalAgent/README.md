@@ -138,6 +138,35 @@ None of these art swaps touched code: the HUD reads `WrestlerDefinition.Portrait
 
 The agent can only create **new** files under `Assets/Scripts/UI/`, `Assets/UI/`, `Assets/Scripts/Juice/`, and `Assets/Tests/{EditMode,PlayMode}/UI/`. Forbidden patterns always win: Combat, AI, Presentation, Core, Match, Animation, Art, Data, ProjectSettings, Packages, and any `.unity`, `.prefab`, `.controller`, `.anim`, `.asmdef`, `.meta` or `.inputactions` file. Policy is checked when files are staged and checked again when they are applied. Every file needs designer approval before it reaches `Assets/`.
 
+## Run 5: Character Select
+
+![Character Select](docs/character_select.png)
+
+**Selected because:** once the HUD and timer were built, `character_select` ranked first at 19 (impact 4; it unblocks the real screen flow). No override was needed. Run log: `runs/20261111-115549-run.json`.
+
+**Designer decisions:** the profile image is the designer's trading cards; the text under each card is the full name plus the approved Assignment 4 tagline; the controls are Left/Right to choose, A/Enter to pick, and B/Esc to go back to Start.
+
+**Architect prep (before generating; the agent may not touch Core, Data or Art):**
+- `WrestlerDefinition` gained `FullName` (falls back to `DisplayName`), `Tagline` and `SelectCard`, documented in ARCHITECTURE §4.4. Data only; no gameplay change.
+- The cards were copied unchanged to `Assets/Art/UI/Cards/`, and their registry rows were set to `approved` (AI placeholder, flagged for review).
+- Barry and Peaux got their full names, their Assignment 4 taglines ("Retired trucker. Active ass-kicker." / "Eyeliner on. Rednecks beware.") and their cards.
+- The goal entry spelled out the exact visual spec, controls and data sources as text, applying the Run 3 lesson.
+
+**What it built:** `CharacterSelectController.cs` uses the project-wide `UI` input map (Navigate/Submit/Cancel) and a 0.2 s guard measured from `OnEnable`. Submit sets `GameSession.Setup` (the CPU gets the other wrestler, per D-021) and loads Match; Cancel loads Start. `CharacterSelectRules.cs` is the pure highlight and match-setup logic, with 5 EditMode tests. Layout and styles are in `CharacterSelect.uxml`/`.uss`.
+
+**Manual changes:** one, after designer playtest feedback ("the portraits feel slightly too far right"). In Play Mode the cards' midpoint measured 1010 px against a 960 px screen center. Barry's full name (639 px) made his panel wider than Peaux's, and centering the two unequal panels pushed both cards right. The fix in `CharacterSelect.uss` gives both panels a fixed `width: 660px` with no gap margin, which puts the cards at 630 and 1290 px (midpoint 960). The agent's spec had fixed the card size but not the panel width, so a long name broke the symmetry; the lesson is to specify container widths for centered rows. Integration: `CharacterSelect.unity` (camera, UIDocument, controller with the roster assigned), placed in Build Settings as Start → CharacterSelect → Match. `StartScreenFlow` now routes to Character Select automatically, which is what Run 1's fallback was built for.
+
+**Integration lesson:** the first scene-building script loaded the assets *before* `NewScene`, which unloads unreferenced assets, so the saved references came out empty. It was fixed by loading the assets after the scene switch. The agent still reported the goal as `done`, because `component_in_scene` only checks that the component is present, not that its references are filled in. A future check could flag empty serialized references.
+
+**Verified:** compile is clean. EditMode is 343/344, including all 5 `CharacterSelectRulesTests`; the only failure is the known `ComboTimingTests` one. In Play Mode with simulated keys:
+- Start → Space → Character Select, with Barry highlighted and the names, taglines and cards loaded.
+- Right → Peaux highlighted.
+- Enter → Match with player Peaux and CPU Barry, confirmed in `GameSession.Setup` and `MatchBootstrap.Setup`.
+- Esc → Start, and Space → Character Select again, which confirms the Run 1 input-delay fix on re-entry.
+- No console errors or warnings.
+
+**Human playtest:** completed and accepted by the designer. It covered controller feel (stick, B to go back), card and text readability, and centering after the layout fix.
+
 ## Running it
 
 ```

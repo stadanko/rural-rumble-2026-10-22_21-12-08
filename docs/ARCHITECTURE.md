@@ -57,7 +57,7 @@ Runtime code is split so EditMode tests reference combat rules without scenes.
 
 Dependency direction: Core ← Combat ← (AI, Presentation, UI, Juice). Combat never references Presentation, UI, AI, or Juice. Nothing references Tests.
 
-Created so far: `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.Presentation`, `RuralRumble.Match` (Core, Combat, AI, Presentation), `RuralRumble.Tests.EditMode` (Core, Combat, AI), `RuralRumble.Tests.PlayMode` (Core, Combat, AI, Presentation, Match) from the movement slice; `RuralRumble.AI` (Core, Combat; holds a placeholder `AIAssembly.cs` until Combat State & AI adds `OpponentBrain`) and `RuralRumble.Editor.Tooling` (before this, `WrestlerAnimationBuilder` compiled into `Assembly-CSharp-Editor`) in combat-core step 1. `RuralRumble.UI` (Core, Combat, Match, InputSystem) was created for the Start screen (Assignment 5), and `RuralRumble.Tests.EditMode` now also references it. `RuralRumble.Juice` and `RuralRumble.Editor.Build` are created when first needed.
+Created so far: `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.Presentation`, `RuralRumble.Match` (Core, Combat, AI, Presentation), `RuralRumble.Tests.EditMode` (Core, Combat, AI), `RuralRumble.Tests.PlayMode` (Core, Combat, AI, Presentation, Match) from the movement slice; `RuralRumble.AI` (Core, Combat; holds a placeholder `AIAssembly.cs` until Combat State & AI adds `OpponentBrain`) and `RuralRumble.Editor.Tooling` (before this, `WrestlerAnimationBuilder` compiled into `Assembly-CSharp-Editor`) in combat-core step 1. `RuralRumble.UI` (Core, Combat, Match, InputSystem) was created for the Start screen (Assignment 5), and `RuralRumble.Tests.EditMode` now also references it. `RuralRumble.Editor.Build` (editor only, no references) holds `PlayFromStartScene`. `RuralRumble.Juice` is created when first needed.
 
 **Scripts outside an asmdef.** `Assets/Animation/` holds assets only (clips, controllers, `MoveAnimationTable.asset`). Scripts there would compile into `Assembly-CSharp`, which no asmdef can reference, so runtime presentation types live in `Assets/Scripts/Presentation/` even when their assets live in `Assets/Animation/`. `MoveAnimationTable.cs` is in `Assets/Scripts/Presentation/` for this reason (confirmed, combat-core step 1).
 
@@ -74,6 +74,7 @@ Screen flow (D-003): **Start → CharacterSelect → Match → Victory**. No mod
 
 - **Loading:** `SceneLoader.Load(SceneId)` (Core) calls `SceneManager.LoadScene(name, LoadSceneMode.Single)`. Scene names live only in `SceneNames` constants. No persistent bootstrap scene, no additive loading, no Addressables. **Approved (D-021).** Reason: four small scenes need nothing more.
 - UI & Match Flow calls `SceneLoader`; it never hard-codes scene names.
+- **Editor Play starts at Start (designer request, 2026-11-11).** `Assets/Editor/Build/PlayFromStartScene.cs` (`RuralRumble.Editor.Build`, editor only) sets `EditorSceneManager.playModeStartScene` to the first enabled Build Settings scene, so pressing Play runs the full loop whatever scene is open. Toggle: **Rural Rumble > Play From Start Screen** (on by default; per-user EditorPrefs). Turn it off to play an open scene directly, e.g. Match.unity for combat testing. Builds are unaffected.
 - `Match.unity` and the other screens are created new and the Build Settings list is replaced with the four scenes above. `SampleScene.unity` is deleted when the Architect creates the new scenes (designer authorized, D-021). **Status:** `Start.unity` (index 0) and `Match.unity` (index 1) are in Build Settings; CharacterSelect and Victory are added when built. Until CharacterSelect exists, the Start screen loads Match directly (designer decision, Assignment 5, 2026-11-11). UI Toolkit panels use `Assets/UI/RuralRumblePanelSettings.asset` (scale with screen size, 1920×1080) and theme `Assets/UI/RuralRumbleRuntimeTheme.tss`. `SampleScene.unity` is deleted.
 - What follows the Victory screen is not defined (see Gaps).
 
@@ -231,6 +232,7 @@ UI reads `IWrestlerView.Health / MaxHealth` (bars only, never numbers), subscrib
 // Core
 public sealed class WrestlerDefinition : ScriptableObject {
     string DisplayName; Sprite Portrait; GameObject Prefab; // Prefab = presentation prefab
+    string FullName; string Tagline; Sprite SelectCard;     // Character Select (Assignment 5); FullName falls back to DisplayName
 }
 public sealed class WrestlerRoster : ScriptableObject { WrestlerDefinition[] Wrestlers; } // exactly 2 in MVP
 public readonly struct MatchSetup { WrestlerDefinition Player; WrestlerDefinition Cpu; }

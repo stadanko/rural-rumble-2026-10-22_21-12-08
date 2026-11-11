@@ -15,3 +15,6 @@ MonoBehaviour:
   displayName: Barry
   portrait: {fileID: 21300000, guid: 7e5b18ef3407ead409c5d2514bca425e, type: 3}
   prefab: {fileID: 5517463594095365211, guid: 2a82fdd1d377057439f663eb5468a5ed, type: 3}
+  fullName: Barry "Hot Potato" Lankford
+  tagline: Retired trucker. Active ass-kicker.
+  selectCard: {fileID: 21300000, guid: 448475fb73659fb43b840e02f4babefa, type: 3}

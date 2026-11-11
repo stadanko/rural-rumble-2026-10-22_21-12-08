@@ -172,11 +172,13 @@
         "section": "MVP Scope",
         "match": "character selection"
       },
-      "description": "Shows both wrestlers with names; the pick becomes GameSession.Setup (CPU gets the other) and Match loads.",
+      "description": "Character Select screen (own scene, UI Toolkit). The player picks one of the two wrestlers; the CPU gets the other (D-021). DATA: a [SerializeField] WrestlerRoster roster (Assets/Data/Wrestlers/WrestlerRoster.asset, assigned at integration). Panel 0 (left) = roster.Wrestlers[0] (Barry), panel 1 (right) = roster.Wrestlers[1] (Peaux). Each panel shows WrestlerDefinition.SelectCard (trading-card image, portrait aspect 1060:1484), then FullName, then Tagline under it. CONTROLS (designer decision): use the project-wide Input Actions (InputSystem.actions) map 'UI' - 'Navigate' (Vector2): x <= -0.5 selects the left panel, x >= 0.5 the right (no wrap); 'Submit' confirms: set GameSession.Setup = new MatchSetup(player: chosen, cpu: the other) and SceneLoader.Load(SceneId.Match); 'Cancel' returns to the Start screen (SceneLoader.Load(SceneId.Start)). Enable the UI map if it is not enabled; subscribe to performed in OnEnable and unsubscribe in OnDisable. Ignore input for a [SerializeField] 0.2 s after OnEnable (measure from OnEnable with unscaled time, NOT from app start). Load only once. Default highlight: panel 0. Put the index/setup logic in a pure static class (e.g. CharacterSelectRules.Move(int index, float x, int count) and BuildSetup(IReadOnlyList<WrestlerDefinition>, int)) with EditMode tests (WrestlerDefinition instances via ScriptableObject.CreateInstance). EXACT VISUAL SPEC (text, matching the Start screen): root fills the screen with the arena backdrop url(\"project://database/Assets/Art/Arena/arena_backdrop.png\") scale-and-crop, plus a full-screen overlay rgba(16, 21, 26, 0.70). Title 'CHOOSE YOUR WRESTLER' top center (top 48px): 72px bold, color #FFD65A, -unity-text-outline-width 4px, outline #A74727, text-shadow 6px 6px 0 #10151A. Two panels in a centered row, 120px apart. Card element 400px wide x 560px tall, background-image from the sprite, scale-to-fit, border-width 8px. Unselected panel: border color #10151A, opacity 0.55. Selected panel: border color #FFD65A, scale 1.05, opacity 1 (toggle a USS class from C#). Name under the card: 40px bold #E6DFCC, outline 3px #10151A, centered, margin-top 20px. Tagline under the name: 28px italic #E19A36, centered. Controls hint at bottom center (bottom 40px): 'LEFT / RIGHT  Choose      A / ENTER  Select      B / ESC  Back', 28px bold #E6DFCC, outline 3px #10151A. Use plain ASCII text (no arrow glyphs). Never change gameplay or Time.timeScale.",
       "outputs": [
         "Assets/Scripts/UI/CharacterSelectController.cs",
+        "Assets/Scripts/UI/CharacterSelectRules.cs",
         "Assets/UI/CharacterSelect.uxml",
-        "Assets/UI/CharacterSelect.uss"
+        "Assets/UI/CharacterSelect.uss",
+        "Assets/Tests/EditMode/UI/CharacterSelectRulesTests.cs"
       ],
       "touches": [],
       "requires_assets": [],
@@ -184,7 +186,8 @@
         "start_screen"
       ],
       "code_checks": [
-        "class:CharacterSelectController"
+        "class:CharacterSelectController",
+        "file:Assets/UI/CharacterSelect.uxml"
       ],
       "integration_checks": [
         "file:Assets/Scenes/CharacterSelect.unity",
@@ -198,11 +201,12 @@
         "effort": 3
       },
       "context_files": [
-        "Assets/Scripts/Core/Session/GameSession.cs",
-        "Assets/Scripts/Core/Session/MatchSetup.cs",
-        "Assets/Scripts/Core/Session/WrestlerRoster.cs",
         "Assets/Scripts/Core/Session/WrestlerDefinition.cs",
-        "Assets/Scripts/Core/Session/SceneLoader.cs"
+        "Assets/Scripts/Core/Session/WrestlerRoster.cs",
+        "Assets/Scripts/Core/Session/MatchSetup.cs",
+        "Assets/Scripts/Core/Session/GameSession.cs",
+        "Assets/Scripts/Core/Session/SceneLoader.cs",
+        "Assets/Scripts/UI/StartScreenController.cs"
       ],
       "context_sections": [
         {

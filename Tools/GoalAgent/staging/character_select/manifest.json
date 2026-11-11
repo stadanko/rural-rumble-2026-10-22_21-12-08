@@ -1,0 +1,55 @@
+{
+  "goal": "character_select",
+  "staged_at": "2026-11-11T17:55:49+00:00",
+  "files": [
+    {
+      "path": "Assets/Scripts/UI/CharacterSelectRules.cs",
+      "purpose": "Pure selection index and match-setup logic",
+      "lines": 32,
+      "status": "applied",
+      "policy": "ok"
+    },
+    {
+      "path": "Assets/Scripts/UI/CharacterSelectController.cs",
+      "purpose": "Character Select screen controller (UI Toolkit + Input System UI map)",
+      "lines": 96,
+      "status": "applied",
+      "policy": "ok"
+    },
+    {
+      "path": "Assets/UI/CharacterSelect.uxml",
+      "purpose": "Character Select layout",
+      "lines": 21,
+      "status": "applied",
+      "policy": "ok"
+    },
+    {
+      "path": "Assets/UI/CharacterSelect.uss",
+      "purpose": "Character Select styles",
+      "lines": 97,
+      "status": "applied",
+      "policy": "ok"
+    },
+    {
+      "path": "Assets/Tests/EditMode/UI/CharacterSelectRulesTests.cs",
+      "purpose": "EditMode tests for CharacterSelectRules",
+      "lines": 55,
+      "status": "applied",
+      "policy": "ok"
+    }
+  ],
+  "integration_notes": [
+    "Create scene CharacterSelect.unity; add a GameObject with UIDocument (Source Asset = Assets/UI/CharacterSelect.uxml, Panel Settings = Assets/UI/RuralRumblePanelSettings.asset) and CharacterSelectController.",
+    "Assign Assets/Data/Wrestlers/WrestlerRoster.asset to the controller's Roster field.",
+    "Project-wide Input Actions (InputSystem.actions) must contain a 'UI' map with Navigate (Vector2), Submit, Cancel actions.",
+    "Add CharacterSelect scene to Build Settings between Start and Match (names must match SceneNames).",
+    "Tests assembly (EditMode) needs references to RuralRumble.UI and RuralRumble.Core."
+  ],
+  "assumptions": [
+    "Selected-state scale uses USS 'scale' property (Unity 6 supports it).",
+    "BuildSetup picks the other index (0<->1); falls back to the same wrestler if roster has only one.",
+    "Overlay is a first child of root with picking ignored; title/row/hint render above it due to document order.",
+    "Navigate performed fires on each stick/key actuation; keyboard arrows/WASD and d-pad composites supply x of +/-1."
+  ],
+  "applied_at": "2026-11-11T17:56:42+00:00"
+}

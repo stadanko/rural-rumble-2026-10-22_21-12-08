@@ -1,0 +1,96 @@
+.root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("project://database/Assets/Art/Arena/arena_backdrop.png");
+    -unity-background-scale-mode: scale-and-crop;
+    align-items: center;
+    justify-content: center;
+}
+
+.overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(16, 21, 26, 0.70);
+}
+
+.title {
+    position: absolute;
+    top: 48px;
+    left: 0;
+    right: 0;
+    -unity-text-align: upper-center;
+    font-size: 72px;
+    -unity-font-style: bold;
+    color: #FFD65A;
+    -unity-text-outline-width: 4px;
+    -unity-text-outline-color: #A74727;
+    text-shadow: 6px 6px 0 #10151A;
+}
+
+.row {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.panel {
+    align-items: center;
+    opacity: 0.55;
+}
+
+.panel--right {
+    margin-left: 120px;
+}
+
+.panel--selected {
+    opacity: 1;
+    scale: 1.05 1.05;
+}
+
+.card {
+    width: 400px;
+    height: 560px;
+    -unity-background-scale-mode: scale-to-fit;
+    border-width: 8px;
+    border-color: #10151A;
+}
+
+.panel--selected .card {
+    border-color: #FFD65A;
+}
+
+.name {
+    margin-top: 20px;
+    font-size: 40px;
+    -unity-font-style: bold;
+    color: #E6DFCC;
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: #10151A;
+    -unity-text-align: upper-center;
+}
+
+.tagline {
+    font-size: 28px;
+    -unity-font-style: italic;
+    color: #E19A36;
+    -unity-text-align: upper-center;
+}
+
+.hint {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    -unity-text-align: lower-center;
+    font-size: 28px;
+    -unity-font-style: bold;
+    color: #E6DFCC;
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: #10151A;
+}

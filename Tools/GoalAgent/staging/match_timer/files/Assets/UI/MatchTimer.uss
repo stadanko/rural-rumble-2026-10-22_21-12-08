@@ -1,0 +1,23 @@
+.timer-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.timer {
+    position: absolute;
+    top: 16px;
+    left: 0;
+    right: 0;
+    -unity-text-align: upper-center;
+    color: #E6DFCC;
+    font-size: 72px;
+    -unity-font-style: bold;
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: #10151A;
+    text-shadow: 4px 4px 0 #10151A;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}

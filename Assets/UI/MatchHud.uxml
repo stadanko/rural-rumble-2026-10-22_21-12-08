@@ -1,0 +1,31 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="project://database/Assets/UI/MatchHud.uss" />
+    <ui:VisualElement name="hud-root" picking-mode="Ignore" class="hud-root">
+        <ui:VisualElement name="player-block" picking-mode="Ignore" class="hud-block hud-block--player">
+            <ui:VisualElement name="player-diamond" picking-mode="Ignore" class="diamond">
+                <ui:VisualElement name="player-portrait" picking-mode="Ignore" class="diamond__image" />
+                <ui:Label name="player-initial" picking-mode="Ignore" class="diamond__initial" text="" />
+            </ui:VisualElement>
+            <ui:VisualElement name="player-info" picking-mode="Ignore" class="hud-info">
+                <ui:Label name="player-name" picking-mode="Ignore" class="hud-name hud-name--player" text="" />
+                <ui:VisualElement name="player-bar" picking-mode="Ignore" class="bar">
+                    <ui:VisualElement name="player-trail" picking-mode="Ignore" class="bar__trail bar__trail--player" />
+                    <ui:VisualElement name="player-fill" picking-mode="Ignore" class="bar__fill bar__fill--player" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="cpu-block" picking-mode="Ignore" class="hud-block hud-block--cpu">
+            <ui:VisualElement name="cpu-diamond" picking-mode="Ignore" class="diamond">
+                <ui:VisualElement name="cpu-portrait" picking-mode="Ignore" class="diamond__image" />
+                <ui:Label name="cpu-initial" picking-mode="Ignore" class="diamond__initial" text="" />
+            </ui:VisualElement>
+            <ui:VisualElement name="cpu-info" picking-mode="Ignore" class="hud-info">
+                <ui:Label name="cpu-name" picking-mode="Ignore" class="hud-name hud-name--cpu" text="" />
+                <ui:VisualElement name="cpu-bar" picking-mode="Ignore" class="bar">
+                    <ui:VisualElement name="cpu-trail" picking-mode="Ignore" class="bar__trail bar__trail--cpu" />
+                    <ui:VisualElement name="cpu-fill" picking-mode="Ignore" class="bar__fill bar__fill--cpu" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

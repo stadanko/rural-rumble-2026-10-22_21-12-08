@@ -1,12 +1,15 @@
 {
   "_comment": "Goal catalog. Each feature cites the design doc that requires it, says how to detect it in the codebase, and carries designer-set 0-5 ratings for priority_score(). Edit ratings here to change the agent's ordering.",
-
   "features": [
     {
       "id": "start_screen",
       "title": "Start Screen",
       "owner_role": "UI & Match Flow",
-      "requirement": {"doc": "docs/GDD.md", "section": "MVP Scope", "match": "Start screen"},
+      "requirement": {
+        "doc": "docs/GDD.md",
+        "section": "MVP Scope",
+        "match": "Start screen"
+      },
       "description": "Title screen shown first. 'RURAL RUMBLE' title over the trailer-park arena backdrop with a blinking 'Press Any Button to Start' prompt. Any keyboard or gamepad button loads Character Select if that scene is in Build Settings, otherwise Match (designer decision, Assignment 5 planning, 2026-11-11).",
       "outputs": [
         "Assets/Scripts/UI/StartScreenController.cs",
@@ -26,70 +29,174 @@
       "integration_checks": [
         "file:Assets/Scripts/UI/RuralRumble.UI.asmdef",
         "file:Assets/Scenes/Start.unity",
-        "scene_in_build:Assets/Scenes/Start.unity"
+        "scene_in_build:Assets/Scenes/Start.unity",
+        "component_in_scene:Assets/Scenes/Start.unity:StartScreenController"
       ],
-      "ratings": {"impact": 3, "unblocks": 4, "testability": 4, "effort": 1},
-      "context_files": ["Assets/Scripts/Core/Session/SceneLoader.cs"],
+      "ratings": {
+        "impact": 3,
+        "unblocks": 4,
+        "testability": 4,
+        "effort": 1
+      },
+      "context_files": [
+        "Assets/Scripts/Core/Session/SceneLoader.cs"
+      ],
       "context_sections": [
-        {"doc": "docs/STYLE_GUIDE.md", "section": "UI"},
-        {"doc": "docs/STYLE_GUIDE.md", "section": "Color Palette"},
-        {"doc": "docs/ARCHITECTURE.md", "section": "3. Scenes and flow"}
+        {
+          "doc": "docs/STYLE_GUIDE.md",
+          "section": "UI"
+        },
+        {
+          "doc": "docs/STYLE_GUIDE.md",
+          "section": "Color Palette"
+        },
+        {
+          "doc": "docs/ARCHITECTURE.md",
+          "section": "3. Scenes and flow"
+        }
       ]
     },
     {
       "id": "match_end_handoff",
       "title": "Match-end handoff (MatchFlow)",
       "owner_role": "UI & Match Flow",
-      "requirement": {"doc": "docs/ARCHITECTURE.md", "section": "4.3 Combat → UI", "match": "MatchFlow"},
-      "description": "On CombatEvents.MatchEnded, store the MatchResult in GameSession.LastResult and load the Victory scene.",
-      "outputs": ["Assets/Scripts/UI/MatchFlow.cs"],
+      "requirement": {
+        "doc": "docs/ARCHITECTURE.md",
+        "section": "4.3 Combat → UI",
+        "match": "MatchFlow"
+      },
+      "description": "A MonoBehaviour placed in Match.unity. In Start (not OnEnable: MatchBootstrap.Current.Match is valid only from default-order Start), subscribe to MatchBootstrap.Current.Match.Events.MatchEnded; unsubscribe in OnDestroy. On MatchEnded: store the MatchResult in GameSession.LastResult, wait the knockout hold (D-026: about 1.5 s; a [SerializeField] float in seconds so the designer can tune it in the Inspector; use unscaled time), then load Victory if it is in Build Settings, otherwise the Start screen (designer decision, Assignment 5, 2026-11-11). Load only once. Put the scene choice in a pure static method (like StartScreenFlow) with EditMode tests. Display/flow only: never change combat state or Time.timeScale.",
+      "outputs": [
+        "Assets/Scripts/UI/MatchFlow.cs",
+        "Assets/Scripts/UI/MatchFlowRules.cs",
+        "Assets/Tests/EditMode/UI/MatchFlowRulesTests.cs"
+      ],
       "touches": [],
       "requires_assets": [],
       "depends_on": [],
-      "code_checks": ["class:MatchFlow"],
-      "integration_checks": ["file:Assets/Scripts/UI/RuralRumble.UI.asmdef"],
-      "ratings": {"impact": 2, "unblocks": 5, "testability": 4, "effort": 1},
+      "code_checks": [
+        "class:MatchFlow"
+      ],
+      "integration_checks": [
+        "file:Assets/Scripts/UI/RuralRumble.UI.asmdef",
+        "component_in_scene:Assets/Scenes/Match.unity:MatchFlow"
+      ],
+      "ratings": {
+        "impact": 2,
+        "unblocks": 5,
+        "testability": 4,
+        "effort": 1
+      },
       "context_files": [
         "Assets/Scripts/Combat/CombatEvents.cs",
         "Assets/Scripts/Core/Session/GameSession.cs",
         "Assets/Scripts/Core/Session/MatchSetup.cs",
-        "Assets/Scripts/Core/Session/SceneLoader.cs"
+        "Assets/Scripts/Core/Session/SceneLoader.cs",
+        "Assets/Scripts/Match/MatchBootstrap.cs",
+        "Assets/Scripts/UI/StartScreenFlow.cs"
       ],
-      "context_sections": [{"doc": "docs/ARCHITECTURE.md", "section": "4.3 Combat → UI"}]
+      "context_sections": [
+        {
+          "doc": "docs/ARCHITECTURE.md",
+          "section": "4.3 Combat → UI"
+        },
+        {
+          "doc": "docs/DECISION_LOG.md",
+          "section": "D-026: Match start and end"
+        }
+      ]
     },
     {
       "id": "match_hud",
       "title": "In-Match HUD (health bars, portraits, names)",
       "owner_role": "UI & Match Flow",
-      "requirement": {"doc": "docs/STYLE_GUIDE.md", "section": "UI", "match": "health bar"},
-      "description": "Clean Retro HUD: player bar top-left, CPU bar top-right, names above bars, white damage trail. Reads IWrestlerView.Health/MaxHealth through MatchBootstrap.Current.Match.",
-      "outputs": ["Assets/Scripts/UI/MatchHud.cs", "Assets/UI/MatchHud.uxml", "Assets/UI/MatchHud.uss"],
+      "requirement": {
+        "doc": "docs/STYLE_GUIDE.md",
+        "section": "UI",
+        "match": "health bar"
+      },
+      "description": "Clean Retro HUD (D-016) in Match.unity, UI Toolkit, display only. Player block top-left; CPU block top-right, mirrored. Each block: wrestler name ABOVE a chunky health bar, and a diamond-framed portrait beside the bar on the outer side. Portrait: show WrestlerDefinition.Portrait when assigned (designer is supplying art); when null, show the wrestler's first initial in the diamond instead (designer decision, Assignment 5). Bars only, never numbers (ARCHITECTURE 4.3). White damage trail: on a hit the fill drops immediately and a white trail shows the lost amount, holds briefly, then drains to the new value; hold and drain durations are [SerializeField] floats so the designer can tune them in the Inspector (start at 0.4 s hold, 0.5 s drain; unscaled time). Put the trail math in a small pure class with EditMode tests. Get the match in Start (not OnEnable) via MatchBootstrap.Current.Match; names and portraits from MatchBootstrap.Current.Setup (Player / Cpu WrestlerDefinition). Initialize bars from IWrestlerView.Health / MaxHealth, update on CombatEvents.HealthChanged; unsubscribe in OnDestroy. Leave the top-middle free for the future match timer (separate goal). No versus banner (designer: out of scope). Never change combat state or Time.timeScale. Use the Style Guide palette.",
+      "outputs": [
+        "Assets/Scripts/UI/MatchHud.cs",
+        "Assets/Scripts/UI/HealthTrail.cs",
+        "Assets/UI/MatchHud.uxml",
+        "Assets/UI/MatchHud.uss",
+        "Assets/Tests/EditMode/UI/HealthTrailTests.cs"
+      ],
       "touches": [],
       "requires_assets": [],
       "depends_on": [],
-      "code_checks": ["class:MatchHud", "file:Assets/UI/MatchHud.uxml"],
-      "integration_checks": ["file:Assets/Scripts/UI/RuralRumble.UI.asmdef"],
-      "ratings": {"impact": 5, "unblocks": 1, "testability": 4, "effort": 2},
-      "context_files": ["Assets/Scripts/Core/IWrestlerView.cs", "Assets/Scripts/Combat/CombatEvents.cs"],
+      "code_checks": [
+        "class:MatchHud",
+        "file:Assets/UI/MatchHud.uxml"
+      ],
+      "integration_checks": [
+        "file:Assets/Scripts/UI/RuralRumble.UI.asmdef",
+        "component_in_scene:Assets/Scenes/Match.unity:MatchHud"
+      ],
+      "ratings": {
+        "impact": 5,
+        "unblocks": 1,
+        "testability": 4,
+        "effort": 2
+      },
+      "context_files": [
+        "Assets/Scripts/Core/IWrestlerView.cs",
+        "Assets/Scripts/Combat/CombatEvents.cs",
+        "Assets/Scripts/Match/MatchBootstrap.cs",
+        "Assets/Scripts/Core/Session/MatchSetup.cs",
+        "Assets/Scripts/Core/Session/WrestlerDefinition.cs",
+        "Assets/Scripts/UI/MatchFlow.cs"
+      ],
       "context_sections": [
-        {"doc": "docs/STYLE_GUIDE.md", "section": "UI"},
-        {"doc": "docs/STYLE_GUIDE.md", "section": "Color Palette"},
-        {"doc": "docs/ARCHITECTURE.md", "section": "4.3 Combat → UI"}
+        {
+          "doc": "docs/STYLE_GUIDE.md",
+          "section": "UI"
+        },
+        {
+          "doc": "docs/STYLE_GUIDE.md",
+          "section": "Color Palette"
+        },
+        {
+          "doc": "docs/ARCHITECTURE.md",
+          "section": "4.3 Combat → UI"
+        }
       ]
     },
     {
       "id": "character_select",
       "title": "Character Select",
       "owner_role": "UI & Match Flow",
-      "requirement": {"doc": "docs/GDD.md", "section": "MVP Scope", "match": "character selection"},
+      "requirement": {
+        "doc": "docs/GDD.md",
+        "section": "MVP Scope",
+        "match": "character selection"
+      },
       "description": "Shows both wrestlers with names; the pick becomes GameSession.Setup (CPU gets the other) and Match loads.",
-      "outputs": ["Assets/Scripts/UI/CharacterSelectController.cs", "Assets/UI/CharacterSelect.uxml", "Assets/UI/CharacterSelect.uss"],
+      "outputs": [
+        "Assets/Scripts/UI/CharacterSelectController.cs",
+        "Assets/UI/CharacterSelect.uxml",
+        "Assets/UI/CharacterSelect.uss"
+      ],
       "touches": [],
       "requires_assets": [],
-      "depends_on": ["start_screen"],
-      "code_checks": ["class:CharacterSelectController"],
-      "integration_checks": ["file:Assets/Scenes/CharacterSelect.unity", "scene_in_build:Assets/Scenes/CharacterSelect.unity"],
-      "ratings": {"impact": 4, "unblocks": 2, "testability": 3, "effort": 3},
+      "depends_on": [
+        "start_screen"
+      ],
+      "code_checks": [
+        "class:CharacterSelectController"
+      ],
+      "integration_checks": [
+        "file:Assets/Scenes/CharacterSelect.unity",
+        "scene_in_build:Assets/Scenes/CharacterSelect.unity",
+        "component_in_scene:Assets/Scenes/CharacterSelect.unity:CharacterSelectController"
+      ],
+      "ratings": {
+        "impact": 4,
+        "unblocks": 2,
+        "testability": 3,
+        "effort": 3
+      },
       "context_files": [
         "Assets/Scripts/Core/Session/GameSession.cs",
         "Assets/Scripts/Core/Session/MatchSetup.cs",
@@ -97,85 +204,210 @@
         "Assets/Scripts/Core/Session/WrestlerDefinition.cs",
         "Assets/Scripts/Core/Session/SceneLoader.cs"
       ],
-      "context_sections": [{"doc": "docs/STYLE_GUIDE.md", "section": "UI"}, {"doc": "docs/ARCHITECTURE.md", "section": "4.4 Character selection → match"}]
+      "context_sections": [
+        {
+          "doc": "docs/STYLE_GUIDE.md",
+          "section": "UI"
+        },
+        {
+          "doc": "docs/ARCHITECTURE.md",
+          "section": "4.4 Character selection → match"
+        }
+      ]
     },
     {
       "id": "victory_screen",
       "title": "Victory Screen",
       "owner_role": "UI & Match Flow",
-      "requirement": {"doc": "docs/GDD.md", "section": "MVP Scope", "match": "victory/defeat"},
+      "requirement": {
+        "doc": "docs/GDD.md",
+        "section": "MVP Scope",
+        "match": "victory/defeat"
+      },
       "description": "'Victory! {Winner} knocked out {Loser} in {timer}' plus Congratulations!/Game Over!, built from GameSession.LastResult.",
-      "outputs": ["Assets/Scripts/UI/VictoryScreenController.cs", "Assets/UI/VictoryScreen.uxml", "Assets/UI/VictoryScreen.uss"],
+      "outputs": [
+        "Assets/Scripts/UI/VictoryScreenController.cs",
+        "Assets/UI/VictoryScreen.uxml",
+        "Assets/UI/VictoryScreen.uss"
+      ],
       "touches": [],
       "requires_assets": [],
-      "depends_on": ["match_end_handoff"],
-      "code_checks": ["class:VictoryScreenController"],
-      "integration_checks": ["file:Assets/Scenes/Victory.unity", "scene_in_build:Assets/Scenes/Victory.unity"],
-      "ratings": {"impact": 4, "unblocks": 1, "testability": 3, "effort": 2},
-      "context_files": ["Assets/Scripts/Core/Session/GameSession.cs", "Assets/Scripts/Core/Session/MatchSetup.cs"],
-      "context_sections": [{"doc": "docs/STYLE_GUIDE.md", "section": "UI"}]
+      "depends_on": [
+        "match_end_handoff"
+      ],
+      "code_checks": [
+        "class:VictoryScreenController"
+      ],
+      "integration_checks": [
+        "file:Assets/Scenes/Victory.unity",
+        "scene_in_build:Assets/Scenes/Victory.unity",
+        "component_in_scene:Assets/Scenes/Victory.unity:VictoryScreenController"
+      ],
+      "ratings": {
+        "impact": 4,
+        "unblocks": 1,
+        "testability": 3,
+        "effort": 2
+      },
+      "context_files": [
+        "Assets/Scripts/Core/Session/GameSession.cs",
+        "Assets/Scripts/Core/Session/MatchSetup.cs"
+      ],
+      "context_sections": [
+        {
+          "doc": "docs/STYLE_GUIDE.md",
+          "section": "UI"
+        }
+      ]
     },
     {
       "id": "match_timer",
       "title": "Match timer",
       "owner_role": "UI & Match Flow",
-      "requirement": {"doc": "docs/STYLE_GUIDE.md", "section": "UI", "match": "timer"},
-      "description": "Large plain count-up timer, top middle of the HUD; reads CombatMatch.ElapsedSeconds. Display only.",
-      "outputs": ["Assets/Scripts/UI/MatchTimerView.cs"],
+      "requirement": {
+        "doc": "docs/STYLE_GUIDE.md",
+        "section": "UI",
+        "match": "timer"
+      },
+      "description": "Large plain match timer, top center of the screen between the two HUD blocks (D-016 'Clean Retro', D-026). Display only. Counts up from 0:00 and shows m:ss (minutes not zero-padded, seconds always two digits: 0:07, 1:23, 12:05); no time limit; there is no versus banner, so it shows CombatMatch.ElapsedSeconds from the first frame. It stops by itself at the knockout because ElapsedSeconds stops (ARCHITECTURE 4.3). Get the match in Start (not OnEnable) via MatchBootstrap.Current.Match and read ElapsedSeconds in Update; only rewrite the label text when the displayed second changes. Put formatting in a pure static method (floor to whole seconds, negative -> 0:00) with EditMode tests. This is its OWN UIDocument and layout (do not modify MatchHud.uxml/.uss): Assets/UI/MatchTimer.uxml + MatchTimer.uss, a root that fills the screen with picking-mode Ignore, and one Label named 'timer' absolutely positioned top center (top 16px, horizontally centered, e.g. left 0 / right 0 with -unity-text-align: upper-center). EXACT VISUAL SPEC (sampled from the approved mockup): text color #E6DFCC, font-size 72px, bold, -unity-text-outline-width 3px, -unity-text-outline-color #10151A, text-shadow 4px 4px 0 #10151A, no background box or border. Initial text '0:00'. Never change combat state or Time.timeScale.",
+      "outputs": [
+        "Assets/Scripts/UI/MatchTimerView.cs",
+        "Assets/Scripts/UI/MatchTimerFormat.cs",
+        "Assets/UI/MatchTimer.uxml",
+        "Assets/UI/MatchTimer.uss",
+        "Assets/Tests/EditMode/UI/MatchTimerFormatTests.cs"
+      ],
       "touches": [],
       "requires_assets": [],
-      "depends_on": ["match_hud"],
-      "code_checks": ["class:MatchTimerView"],
-      "integration_checks": [],
-      "ratings": {"impact": 2, "unblocks": 0, "testability": 4, "effort": 1},
-      "context_files": [],
-      "context_sections": [{"doc": "docs/ARCHITECTURE.md", "section": "4.3 Combat → UI"}]
+      "depends_on": [
+        "match_hud"
+      ],
+      "code_checks": [
+        "class:MatchTimerView",
+        "file:Assets/UI/MatchTimer.uxml"
+      ],
+      "integration_checks": [
+        "component_in_scene:Assets/Scenes/Match.unity:MatchTimerView"
+      ],
+      "ratings": {
+        "impact": 2,
+        "unblocks": 0,
+        "testability": 4,
+        "effort": 1
+      },
+      "context_files": [
+        "Assets/Scripts/Match/MatchBootstrap.cs",
+        "Assets/Scripts/UI/MatchHud.cs"
+      ],
+      "context_sections": [
+        {
+          "doc": "docs/ARCHITECTURE.md",
+          "section": "4.3 Combat → UI"
+        },
+        {
+          "doc": "docs/DECISION_LOG.md",
+          "section": "D-026: Match start and end"
+        }
+      ]
     },
     {
       "id": "screen_shake_juice",
       "title": "Screen-shake juice",
       "owner_role": "Juice Agent",
-      "requirement": {"doc": "docs/ARCHITECTURE.md", "section": "4.2 Combat → Presentation", "match": "camera shake"},
+      "requirement": {
+        "doc": "docs/ARCHITECTURE.md",
+        "section": "4.2 Combat → Presentation",
+        "match": "camera shake"
+      },
       "description": "Shake a child offset of the match camera on HitLanded / ObstacleHit / KnockedDown. Never changes combat or Time.timeScale.",
-      "outputs": ["Assets/Scripts/Juice/CameraShake.cs"],
+      "outputs": [
+        "Assets/Scripts/Juice/CameraShake.cs"
+      ],
       "touches": [],
       "requires_assets": [],
       "depends_on": [],
-      "code_checks": ["class:CameraShake"],
-      "integration_checks": ["file:Assets/Scripts/Juice/RuralRumble.Juice.asmdef"],
-      "ratings": {"impact": 3, "unblocks": 0, "testability": 2, "effort": 2},
-      "context_files": ["Assets/Scripts/Combat/CombatEvents.cs"],
+      "code_checks": [
+        "class:CameraShake"
+      ],
+      "integration_checks": [
+        "file:Assets/Scripts/Juice/RuralRumble.Juice.asmdef",
+        "component_in_scene:Assets/Scenes/Match.unity:CameraShake"
+      ],
+      "ratings": {
+        "impact": 3,
+        "unblocks": 0,
+        "testability": 2,
+        "effort": 2
+      },
+      "context_files": [
+        "Assets/Scripts/Combat/CombatEvents.cs"
+      ],
       "context_sections": []
     },
     {
       "id": "tuning_overlay",
       "title": "Tuning debug overlay",
       "owner_role": "UI & Match Flow",
-      "requirement": {"designer": "Approved as a candidate during Assignment 5 planning, 2026-11-11"},
+      "requirement": {
+        "designer": "Approved as a candidate during Assignment 5 planning, 2026-11-11"
+      },
       "description": "Toggleable on-screen readout of live health, combat states and key CombatTuning values while tuning in the Inspector. Read-only.",
-      "outputs": ["Assets/Scripts/UI/TuningOverlay.cs"],
+      "outputs": [
+        "Assets/Scripts/UI/TuningOverlay.cs"
+      ],
       "touches": [],
       "requires_assets": [],
       "depends_on": [],
-      "code_checks": ["class:TuningOverlay"],
-      "integration_checks": [],
-      "ratings": {"impact": 2, "unblocks": 0, "testability": 3, "effort": 2},
-      "context_files": ["Assets/Scripts/Combat/Tuning/CombatTuning.cs", "Assets/Scripts/Core/IWrestlerView.cs"],
-      "context_sections": [{"doc": "docs/GDD.md", "section": "Inspector-Tunable Values"}]
+      "code_checks": [
+        "class:TuningOverlay"
+      ],
+      "integration_checks": [
+        "component_in_scene:Assets/Scenes/Match.unity:TuningOverlay"
+      ],
+      "ratings": {
+        "impact": 2,
+        "unblocks": 0,
+        "testability": 3,
+        "effort": 2
+      },
+      "context_files": [
+        "Assets/Scripts/Combat/Tuning/CombatTuning.cs",
+        "Assets/Scripts/Core/IWrestlerView.cs"
+      ],
+      "context_sections": [
+        {
+          "doc": "docs/GDD.md",
+          "section": "Inspector-Tunable Values"
+        }
+      ]
     },
     {
       "id": "pause_menu",
       "title": "Pause menu (stretch)",
       "owner_role": "UI & Match Flow",
-      "requirement": {"designer": "Stretch goal; approved as a candidate during Assignment 5 planning, 2026-11-11"},
+      "requirement": {
+        "designer": "Stretch goal; approved as a candidate during Assignment 5 planning, 2026-11-11"
+      },
       "description": "Pause/resume and quit-to-title during a match.",
-      "outputs": ["Assets/Scripts/UI/PauseMenu.cs", "Assets/UI/PauseMenu.uxml"],
+      "outputs": [
+        "Assets/Scripts/UI/PauseMenu.cs",
+        "Assets/UI/PauseMenu.uxml"
+      ],
       "touches": [],
       "requires_assets": [],
       "depends_on": [],
-      "code_checks": ["class:PauseMenu"],
-      "integration_checks": [],
-      "ratings": {"impact": 3, "unblocks": 0, "testability": 2, "effort": 3},
+      "code_checks": [
+        "class:PauseMenu"
+      ],
+      "integration_checks": [
+        "component_in_scene:Assets/Scenes/Match.unity:PauseMenu"
+      ],
+      "ratings": {
+        "impact": 3,
+        "unblocks": 0,
+        "testability": 2,
+        "effort": 3
+      },
       "context_files": [],
       "context_sections": []
     },
@@ -183,15 +415,30 @@
       "id": "sound_effects",
       "title": "Sound effects and music",
       "owner_role": "Sound Wrangler",
-      "requirement": {"doc": "docs/STYLE_GUIDE.md", "section": "Music & Sounds", "match": ""},
+      "requirement": {
+        "doc": "docs/STYLE_GUIDE.md",
+        "section": "Music & Sounds",
+        "match": ""
+      },
       "description": "Play hit, slam and crowd sounds on combat events and music per screen.",
-      "outputs": ["Assets/Scripts/Juice/CombatAudio.cs"],
+      "outputs": [
+        "Assets/Scripts/Juice/CombatAudio.cs"
+      ],
       "touches": [],
-      "requires_assets": ["Assets/Audio"],
+      "requires_assets": [
+        "Assets/Audio"
+      ],
       "depends_on": [],
-      "code_checks": ["class:CombatAudio"],
+      "code_checks": [
+        "class:CombatAudio"
+      ],
       "integration_checks": [],
-      "ratings": {"impact": 4, "unblocks": 0, "testability": 2, "effort": 3},
+      "ratings": {
+        "impact": 4,
+        "unblocks": 0,
+        "testability": 2,
+        "effort": 3
+      },
       "context_files": [],
       "context_sections": []
     },
@@ -199,15 +446,29 @@
       "id": "anim_speed_tuning",
       "title": "Per-frame animation speed in the Inspector",
       "owner_role": "Unity Animation & Tooling",
-      "requirement": {"doc": "docs/GDD.md", "section": "Inspector-Tunable Values", "match": "Animation speed"},
+      "requirement": {
+        "doc": "docs/GDD.md",
+        "section": "Inspector-Tunable Values",
+        "match": "Animation speed"
+      },
       "description": "Expose per-frame hold times for wrestler clips. Requires editing the clip builder and animation assets.",
       "outputs": [],
-      "touches": ["Assets/Editor/Tooling/WrestlerAnimationBuilder.cs", "Assets/Animation/**"],
+      "touches": [
+        "Assets/Editor/Tooling/WrestlerAnimationBuilder.cs",
+        "Assets/Animation/**"
+      ],
       "requires_assets": [],
       "depends_on": [],
-      "code_checks": ["class:FrameTimingTable"],
+      "code_checks": [
+        "class:FrameTimingTable"
+      ],
       "integration_checks": [],
-      "ratings": {"impact": 1, "unblocks": 0, "testability": 2, "effort": 4},
+      "ratings": {
+        "impact": 1,
+        "unblocks": 0,
+        "testability": 2,
+        "effort": 4
+      },
       "context_files": [],
       "context_sections": []
     }

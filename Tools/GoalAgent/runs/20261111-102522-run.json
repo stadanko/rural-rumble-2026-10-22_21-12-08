@@ -1,0 +1,150 @@
+{
+  "command": "run",
+  "started_at": "2026-11-11T16:25:08+00:00",
+  "iterations": [
+    {
+      "ranking": [
+        {
+          "goal": "match_end_handoff",
+          "score": 23.0,
+          "breakdown": {
+            "impact": 6,
+            "unblocks": 10,
+            "testability": 8,
+            "effort": -1
+          },
+          "gate": null
+        },
+        {
+          "goal": "match_hud",
+          "score": 23.0,
+          "breakdown": {
+            "impact": 15,
+            "unblocks": 2,
+            "testability": 8,
+            "effort": -2
+          },
+          "gate": null
+        },
+        {
+          "goal": "character_select",
+          "score": 19.0,
+          "breakdown": {
+            "impact": 12,
+            "unblocks": 4,
+            "testability": 6,
+            "effort": -3
+          },
+          "gate": null
+        },
+        {
+          "goal": "screen_shake_juice",
+          "score": 11.0,
+          "breakdown": {
+            "impact": 9,
+            "unblocks": 0,
+            "testability": 4,
+            "effort": -2
+          },
+          "gate": null
+        },
+        {
+          "goal": "tuning_overlay",
+          "score": 10.0,
+          "breakdown": {
+            "impact": 6,
+            "unblocks": 0,
+            "testability": 6,
+            "effort": -2
+          },
+          "gate": null
+        },
+        {
+          "goal": "pause_menu",
+          "score": 10.0,
+          "breakdown": {
+            "impact": 9,
+            "unblocks": 0,
+            "testability": 4,
+            "effort": -3
+          },
+          "gate": null
+        },
+        {
+          "goal": "match_timer",
+          "score": 0.0,
+          "breakdown": {},
+          "gate": "blocked: needs 'match_hud' first"
+        },
+        {
+          "goal": "victory_screen",
+          "score": 0.0,
+          "breakdown": {},
+          "gate": "blocked: needs 'match_end_handoff' first"
+        },
+        {
+          "goal": "sound_effects",
+          "score": 0.0,
+          "breakdown": {},
+          "gate": "blocked: no assets in Assets/Audio/ yet"
+        },
+        {
+          "goal": "anim_speed_tuning",
+          "score": 0.0,
+          "breakdown": {},
+          "gate": "unsafe: would modify protected 'Assets/Editor/Tooling/WrestlerAnimationBuilder.cs'"
+        }
+      ],
+      "selected": "match_end_handoff",
+      "llm": {
+        "backend": "claude-cli",
+        "role": "codegen",
+        "model": "claude-sonnet-5-5",
+        "session_id": "0282e8df-a7de-4338-9927-f90b7fbfc0da",
+        "cost_usd": 0.07019349999999999,
+        "duration_ms": 12079
+      },
+      "staged": {
+        "goal": "match_end_handoff",
+        "staged_at": "2026-11-11T16:25:22+00:00",
+        "files": [
+          {
+            "path": "Assets/Scripts/UI/MatchFlowRules.cs",
+            "purpose": "Pure decision: which scene follows a finished match.",
+            "lines": 17,
+            "status": "pending",
+            "policy": "ok"
+          },
+          {
+            "path": "Assets/Scripts/UI/MatchFlow.cs",
+            "purpose": "Match-scene MonoBehaviour: stores the result on MatchEnded, holds, then loads Victory (or Start).",
+            "lines": 70,
+            "status": "pending",
+            "policy": "ok"
+          },
+          {
+            "path": "Assets/Tests/EditMode/UI/MatchFlowRulesTests.cs",
+            "purpose": "EditMode tests for MatchFlowRules.",
+            "lines": 29,
+            "status": "pending",
+            "policy": "ok"
+          }
+        ],
+        "integration_notes": [
+          "Add the MatchFlow component to a GameObject in Match.unity (default execution order; not under MatchBootstrap's order).",
+          "Tune 'Knockout Hold Seconds' in the Inspector (default 1.5).",
+          "RuralRumble.UI.asmdef must reference RuralRumble.Match (MatchBootstrap) in addition to Core/Combat; the Match assembly must not reference UI.",
+          "The EditMode test assembly needs a reference to RuralRumble.UI and RuralRumble.Core.",
+          "Add Victory to Build Settings once it exists; until then MatchFlow falls back to Start (which must be in Build Settings)."
+        ],
+        "assumptions": [
+          "CombatEvents lives in namespace RuralRumble.Combat, referenced as Combat.CombatEvents from within RuralRumble.UI (resolves to RuralRumble.Combat).",
+          "MatchEnded fires at most once, but a guard still prevents a double load.",
+          "The hold is unscaled time as requested; combat freezing is Combat's job, so Time.timeScale is untouched."
+        ]
+      },
+      "stop": "awaiting approval"
+    }
+  ],
+  "finished_at": "2026-11-11T16:25:22+00:00"
+}

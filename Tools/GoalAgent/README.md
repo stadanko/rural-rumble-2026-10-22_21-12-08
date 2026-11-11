@@ -111,7 +111,7 @@ Changes 1–2 fix the agent's code (`diff staging/start_screen/files/... Assets/
 - In Play Mode, 5 real strikes moved the CPU's fill from 462 px to 323 px (70%), anchored to the outer edge. The trail held at 462 px, then drained to 323 px within 1.5 s. Names showed as PEAUX/BARRY, initials as P/B, with no console errors.
 - **Testing note:** the first screenshots showed the Start screen over the match because Start.unity was also open in the Editor's Hierarchy. That's an Editor-only situation (a build loads one scene at a time). It was fixed by closing the extra scene; no code was involved.
 
-**Human playtest:** pending. Check bar thickness and name readability at full screen, and the trail timing.
+**Human playtest:** completed and accepted by the designer. It covered the HUD at full screen: bar thickness, name readability, trail timing, and portrait framing.
 
 **Portraits (added after the HUD run):** the HUD shows each wrestler's in-game standing sprite (`*_stand_front.png`), cropped to the head and upper torso. Both are centered on the face with the eyes at 42% height. Crop squares are 106 px (Barry) and 97 px (Peaux), set by the designer as 20% and 10% wider than the original 88 px framing, and enlarged with nearest-neighbor scaling to 256 px so the pixels stay sharp, and a diamond-shaped transparency mask baked in. The files are `Assets/Art/UI/Portraits/{barry,peaux}_hud_portrait.png`, assigned to `Barry.asset` / `Peaux.asset`. The registry records them as derived from the approved sprite rows.
 
@@ -132,7 +132,7 @@ None of these art swaps touched code: the HUD reads `WrestlerDefinition.Portrait
 
 **Manual changes:** none to the agent's code. With an explicit text spec, the agent matched the mockup on the first try, which confirms the Run 3 lesson. The only manual step was integration: a `MatchTimer` GameObject in Match.unity, added through the Editor (additive only).
 
-**Verified:** compile is clean. EditMode is 338/339, including all 11 timer tests; the only failure is the known `ComboTimingTests` one. In Play Mode the label read `0:01` at 1.39 s and `0:04` at 4.27 s, and `0:05` with the match over after a forced KO, followed by the normal handoff to Start. No console errors.
+**Verified:** compile is clean. EditMode is 338/339, including all 11 timer tests; the only failure is the known `ComboTimingTests` one. In Play Mode the label read `0:01` at 1.39 s and `0:04` at 4.27 s, and `0:05` with the match over after a forced KO, followed by the normal handoff to Start. No console errors. Human playtest: completed and accepted by the designer, together with the HUD.
 
 ## Safety rails (write policy)
 

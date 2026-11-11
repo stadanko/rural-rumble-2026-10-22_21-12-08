@@ -167,6 +167,30 @@ The agent can only create **new** files under `Assets/Scripts/UI/`, `Assets/UI/`
 
 **Human playtest:** completed and accepted by the designer. It covered controller feel (stick, B to go back), card and text readability, and centering after the layout fix.
 
+## Run 6: Victory screen (MVP screen flow complete)
+
+![Victory screen: player win, CPU win, draw](docs/victory_screen.png)
+
+**Selected because:** after Character Select, `victory_screen` ranked first at 18. It had been gated until `match_end_handoff` existed (Run 2). Run log: `runs/20261111-122815-run.json`.
+
+**Designer decisions:** show a random line for the winner from the approved Assignment 4 `victory_messages.json`; use short names in the headline; for a draw, "Double Knockout! … knocked each other out in …" / "Nobody Wins!"; show the winner's trading card (both cards on a draw).
+
+**Architect prep:** `WrestlerDefinition` gained `VictoryLines` (data only, ARCHITECTURE §4.4), filled with the 4 approved lines per wrestler copied verbatim from the Assignment 4 output. The goal entry spelled out the text rules, controls (D-026: any button returns to Start, with a 1.0 s guard because players are often still mashing at the KO) and the visual spec, including a **fixed-width content column**, which applies the Run 5 centering lesson up front.
+
+**What it built:** `VictoryText.cs` is a pure class that builds the headline, outcome, outcome kind, quote and cards from the `MatchResult`, with a preview fallback when the scene is opened directly. `VictoryScreenController.cs` fills the layout, picks the line at random and handles the guarded any-button return. `VictoryScreen.uxml`/`.uss` hold the layout and styles, and `VictoryTextTests.cs` has 6 EditMode tests.
+
+**Manual changes:** none to the agent's code; it compiled on the first try and was approved as generated. Integration: `Victory.unity`, built with the Run 5 fix (assets loaded *after* `NewScene`), so all references saved on the first try. Build Settings are now Start → CharacterSelect → Match → Victory. `MatchFlow` (Run 2) now routes to Victory automatically, which completes the MVP loop.
+
+**Verified:** compile is clean. EditMode is 349/350, including all 6 `VictoryTextTests`; the only failure is the known `ComboTimingTests` one. In Play Mode, through the full loop with simulated keys and real knockouts via `ReceiveHit`:
+- **Player win:** "Victory! Barry knocked out Peaux in 0:01" / "Congratulations!" (yellow) / "Watch your cigarette butts!"
+- **CPU win:** "Victory! Peaux knocked out Barry in 0:03" / "Game Over!" (red) / one of Peaux's lines
+- **Draw** (both KO'd in the same tick): "Double Knockout! Barry and Peaux knocked each other out in 0:02" / "Nobody Wins!", no quote, both cards
+- The content is centered (midpoint 960 px). A press within 1.0 s of Victory loading was ignored; a later press returned to Start. No console errors.
+
+**Gap report after this run:** all six MVP UI goals are `done`. The remaining goals are optional extras (screen shake, tuning overlay, pause menu) or gated (sound: no assets; per-frame animation speed: unsafe).
+
+**Human playtest:** completed and accepted by the designer. It covered the full loop on a controller, the KO hold and 1.0 s guard timing, text readability, and the quotes.
+
 ## Running it
 
 ```

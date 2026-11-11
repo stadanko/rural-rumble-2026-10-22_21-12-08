@@ -21,6 +21,10 @@ namespace RuralRumble.Core
         [Tooltip("Profile image (trading card) shown on Character Select.")]
         [SerializeField] private Sprite selectCard;
 
+        [Header("Victory")]
+        [Tooltip("Gloat lines; the Victory screen shows one at random when this wrestler wins.")]
+        [SerializeField] private string[] victoryLines = new string[0];
+
         public string DisplayName => displayName;
         public Sprite Portrait => portrait;
         public GameObject Prefab => prefab;
@@ -28,5 +32,7 @@ namespace RuralRumble.Core
         public string FullName => string.IsNullOrEmpty(fullName) ? displayName : fullName;
         public string Tagline => tagline;
         public Sprite SelectCard => selectCard;
+        /// <summary>Victory gloat lines (may be empty).</summary>
+        public System.Collections.Generic.IReadOnlyList<string> VictoryLines => victoryLines ?? new string[0];
     }
 }

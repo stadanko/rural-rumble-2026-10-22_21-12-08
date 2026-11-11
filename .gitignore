@@ -125,3 +125,9 @@ InitTestScene*.unity*
 
 # Local Unity CLI / editor-pipeline connection settings (per machine)
 /ProjectSettings/Packages/com.unity.pipeline/EditorPipelineConfig.json
+
+# Unity Asset Store audio (D-034 amendment): licensed to the designer, not redistributable in this public repo.
+/Assets/Audio/ThirdParty/
+/Assets/Audio/ThirdParty.meta
+/Assets/Gamemaster Audio - Pro Sound Collection/
+/Assets/Gamemaster Audio - Pro Sound Collection.meta

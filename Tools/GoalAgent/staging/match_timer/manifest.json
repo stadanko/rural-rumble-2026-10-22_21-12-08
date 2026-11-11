@@ -1,0 +1,53 @@
+{
+  "goal": "match_timer",
+  "staged_at": "2026-11-11T16:52:24+00:00",
+  "files": [
+    {
+      "path": "Assets/Scripts/UI/MatchTimerFormat.cs",
+      "purpose": "Pure m:ss formatter for the match timer",
+      "lines": 31,
+      "status": "applied",
+      "policy": "ok"
+    },
+    {
+      "path": "Assets/Scripts/UI/MatchTimerView.cs",
+      "purpose": "Thin MonoBehaviour that shows CombatMatch.ElapsedSeconds in the timer label",
+      "lines": 53,
+      "status": "applied",
+      "policy": "ok"
+    },
+    {
+      "path": "Assets/UI/MatchTimer.uxml",
+      "purpose": "Timer layout: full-screen click-through root with one label",
+      "lines": 7,
+      "status": "applied",
+      "policy": "ok"
+    },
+    {
+      "path": "Assets/UI/MatchTimer.uss",
+      "purpose": "Timer styles per approved mockup",
+      "lines": 24,
+      "status": "applied",
+      "policy": "ok"
+    },
+    {
+      "path": "Assets/Tests/EditMode/UI/MatchTimerFormatTests.cs",
+      "purpose": "EditMode tests for MatchTimerFormat",
+      "lines": 31,
+      "status": "applied",
+      "policy": "ok"
+    }
+  ],
+  "integration_notes": [
+    "Create a UI GameObject (e.g. prefab Assets/Prefabs/UI/MatchTimer) in the Match scene with UIDocument (source asset Assets/UI/MatchTimer.uxml, PanelSettings RuralRumblePanelSettings) and MatchTimerView.",
+    "Give it a sort order above or equal to the MatchHud document; the root ignores picking so it never blocks input.",
+    "Keep default script execution order (0) so Start runs after MatchBootstrap.",
+    "Tests assembly must reference RuralRumble.UI."
+  ],
+  "assumptions": [
+    "Style tag USS selectors use classes; the root fills the screen via absolute positioning.",
+    "MatchTimerView relies on CombatMatch.ElapsedSeconds being a float property (as used in MatchBootstrap).",
+    "If the shared PanelSettings theme lacks the default font, bold uses the theme's default font."
+  ],
+  "applied_at": "2026-11-11T16:56:49+00:00"
+}

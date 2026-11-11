@@ -150,14 +150,28 @@ class RankingTests(unittest.TestCase):
         cs = next(r for r in ranked if r.goal.id == "character_select")
         self.assertIsNone(cs.gate_reason)
 
-    def test_fully_integrated_goal_is_done(self):
+    GUID = "0123456789abcdef0123456789abcdef"
+
+    def _start_screen_code_and_scene(self, scene_text):
         self.repo.add("Assets/Scripts/UI/StartScreenController.cs", "public sealed class StartScreenController {}")
+        self.repo.add("Assets/Scripts/UI/StartScreenController.cs.meta", f"fileFormatVersion: 2\nguid: {self.GUID}\n")
         self.repo.add("Assets/UI/StartScreen.uxml")
         self.repo.add("Assets/Scripts/UI/RuralRumble.UI.asmdef", "{}")
-        self.repo.add("Assets/Scenes/Start.unity")
+        self.repo.add("Assets/Scenes/Start.unity", scene_text)
         self.repo.set_build_scenes(["Assets/Scenes/Start.unity", "Assets/Scenes/Match.unity"])
+
+    def test_fully_integrated_goal_is_done(self):
+        self._start_screen_code_and_scene(f"  m_Script: {{fileID: 11500000, guid: {self.GUID}, type: 3}}\n")
         statuses, _ = self.repo.ranked()
         self.assertEqual(next(s for s in statuses if s.id == "start_screen").status, ga.STATUS_DONE)
+
+    def test_scene_without_component_needs_integration(self):
+        self._start_screen_code_and_scene("--- !u!1 &1\nGameObject:\n  m_Name: Empty\n")
+        statuses, _ = self.repo.ranked()
+        start = next(s for s in statuses if s.id == "start_screen")
+        self.assertEqual(start.status, ga.STATUS_NEEDS_INTEGRATION)
+        self.assertEqual(start.failed_integration,
+                         ["component_in_scene:Assets/Scenes/Start.unity:StartScreenController"])
 
     def test_assets_present_lifts_sound_gate(self):
         self.repo.add("Assets/Audio/hit.wav", "x")

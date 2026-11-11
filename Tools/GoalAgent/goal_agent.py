@@ -18,6 +18,7 @@ Usage (from the repo root or anywhere):
   python Tools/GoalAgent/goal_agent.py plan                 # passes 1-4 only, no writes
   python Tools/GoalAgent/goal_agent.py run                  # full loop with interactive per-file approval
   python Tools/GoalAgent/goal_agent.py run --stage-only     # generate + stage, approve later with `apply`
+  python Tools/GoalAgent/goal_agent.py run --goal match_timer   # designer override of the ranking (gates still apply)
   python Tools/GoalAgent/goal_agent.py apply start_screen --approve all
   python Tools/GoalAgent/goal_agent.py apply start_screen --approve Assets/UI/StartScreen.uss --reject Assets/UI/StartScreen.uxml
 
@@ -139,6 +140,7 @@ class CodebaseScan:
     files: set[str] = field(default_factory=set)            # repo-relative posix paths under Assets/
     types: dict[str, str] = field(default_factory=dict)     # C# type name -> file
     build_scenes: list[str] = field(default_factory=list)   # enabled Build Settings scenes, in order
+    repo: Path = REPO
 
     def has_file(self, rel: str) -> bool:
         return rel in self.files
@@ -149,7 +151,7 @@ class CodebaseScan:
 
 
 def scan_codebase(repo: Path = REPO) -> CodebaseScan:
-    scan = CodebaseScan()
+    scan = CodebaseScan(repo=repo)
     assets = repo / "Assets"
     if assets.exists():
         for path in assets.rglob("*"):
@@ -177,7 +179,27 @@ def eval_check(check: str, scan: CodebaseScan) -> bool:
         return arg in scan.types
     if kind == "scene_in_build":
         return arg in scan.build_scenes
+    if kind == "component_in_scene":
+        scene, _, type_name = arg.rpartition(":")
+        return component_in_scene(scan, scene, type_name)
     raise ValueError(f"unknown check kind '{kind}' in '{check}'")
+
+
+_META_GUID = re.compile(r"^guid:\s*([0-9a-f]{32})", re.MULTILINE)
+
+
+def component_in_scene(scan: CodebaseScan, scene: str, type_name: str) -> bool:
+    """True if the scene file references the MonoBehaviour script that declares `type_name`
+    (matched by the script's .meta GUID, the way Unity serializes m_Script references)."""
+    script = scan.types.get(type_name)
+    scene_path = scan.repo / scene
+    if not script or not scene_path.exists():
+        return False
+    meta = scan.repo / (script + ".meta")
+    if not meta.exists():
+        return False
+    m = _META_GUID.search(meta.read_text(encoding="utf-8"))
+    return bool(m) and f"guid: {m.group(1)}" in scene_path.read_text(encoding="utf-8", errors="replace")
 
 
 @dataclass
@@ -516,6 +538,20 @@ def cmd_run(args) -> int:
             it["stop"] = msg
             break
         top = actionable[0]
+        if args.goal:
+            chosen = next((r for r in ranked if r.goal.id == args.goal), None)
+            if chosen is None:
+                print(f"\nStop: '{args.goal}' is not a missing goal (already built, unknown, or not required).")
+                it["stop"] = "override goal not missing"
+                break
+            if not chosen.actionable:
+                print(f"\nStop: designer override '{args.goal}' is gated: {chosen.gate_reason}")
+                it["stop"] = "override goal gated"
+                break
+            print(f"\nDesigner override: '{args.goal}' (score {chosen.score:g}) instead of the top-ranked "
+                  f"'{top.goal.id}' (score {top.score:g}). Gates and write policy still apply.")
+            it["override"] = {"chosen": args.goal, "ranked_top": top.goal.id}
+            top = chosen
         print(f"\nSelected '{top.goal.id}' (score {top.score:g}).")
         it["selected"] = top.goal.id
         proposal, meta = generate(top.goal, scan, config)
@@ -562,6 +598,8 @@ def main(argv=None) -> int:
     sub.add_parser("plan", help="read docs, scan, detect gaps, score; no writes")
     p_run = sub.add_parser("run", help="plan, generate the top goal, approve, write, re-scan")
     p_run.add_argument("--stage-only", action="store_true", help="stop after staging; approve later with apply")
+    p_run.add_argument("--goal", help="designer override: build this goal instead of the top-ranked one "
+                                      "(gates and write policy still apply)")
     p_apply = sub.add_parser("apply", help="copy approved staged files into the project and re-scan")
     p_apply.add_argument("goal")
     p_apply.add_argument("--approve", help="'all' or comma-separated paths")

@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="project://database/Assets/UI/MatchTimer.uss" />
+    <ui:VisualElement name="timer-root" picking-mode="Ignore" class="timer-root">
+        <ui:Label name="timer" text="0:00" picking-mode="Ignore" class="timer" />
+    </ui:VisualElement>
+</ui:UXML>

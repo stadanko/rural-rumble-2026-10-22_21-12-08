@@ -1,0 +1,40 @@
+{
+  "goal": "match_end_handoff",
+  "staged_at": "2026-11-11T16:25:22+00:00",
+  "files": [
+    {
+      "path": "Assets/Scripts/UI/MatchFlowRules.cs",
+      "purpose": "Pure decision: which scene follows a finished match.",
+      "lines": 17,
+      "status": "applied",
+      "policy": "ok"
+    },
+    {
+      "path": "Assets/Scripts/UI/MatchFlow.cs",
+      "purpose": "Match-scene MonoBehaviour: stores the result on MatchEnded, holds, then loads Victory (or Start).",
+      "lines": 70,
+      "status": "applied",
+      "policy": "ok"
+    },
+    {
+      "path": "Assets/Tests/EditMode/UI/MatchFlowRulesTests.cs",
+      "purpose": "EditMode tests for MatchFlowRules.",
+      "lines": 29,
+      "status": "applied",
+      "policy": "ok"
+    }
+  ],
+  "integration_notes": [
+    "Add the MatchFlow component to a GameObject in Match.unity (default execution order; not under MatchBootstrap's order).",
+    "Tune 'Knockout Hold Seconds' in the Inspector (default 1.5).",
+    "RuralRumble.UI.asmdef must reference RuralRumble.Match (MatchBootstrap) in addition to Core/Combat; the Match assembly must not reference UI.",
+    "The EditMode test assembly needs a reference to RuralRumble.UI and RuralRumble.Core.",
+    "Add Victory to Build Settings once it exists; until then MatchFlow falls back to Start (which must be in Build Settings)."
+  ],
+  "assumptions": [
+    "CombatEvents lives in namespace RuralRumble.Combat, referenced as Combat.CombatEvents from within RuralRumble.UI (resolves to RuralRumble.Combat).",
+    "MatchEnded fires at most once, but a guard still prevents a double load.",
+    "The hold is unscaled time as requested; combat freezing is Combat's job, so Time.timeScale is untouched."
+  ],
+  "applied_at": "2026-11-11T16:26:41+00:00"
+}

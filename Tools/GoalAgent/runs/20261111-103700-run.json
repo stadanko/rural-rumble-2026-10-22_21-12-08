@@ -1,0 +1,161 @@
+{
+  "command": "run",
+  "started_at": "2026-11-11T16:35:59+00:00",
+  "iterations": [
+    {
+      "ranking": [
+        {
+          "goal": "match_hud",
+          "score": 23.0,
+          "breakdown": {
+            "impact": 15,
+            "unblocks": 2,
+            "testability": 8,
+            "effort": -2
+          },
+          "gate": null
+        },
+        {
+          "goal": "character_select",
+          "score": 19.0,
+          "breakdown": {
+            "impact": 12,
+            "unblocks": 4,
+            "testability": 6,
+            "effort": -3
+          },
+          "gate": null
+        },
+        {
+          "goal": "victory_screen",
+          "score": 18.0,
+          "breakdown": {
+            "impact": 12,
+            "unblocks": 2,
+            "testability": 6,
+            "effort": -2
+          },
+          "gate": null
+        },
+        {
+          "goal": "screen_shake_juice",
+          "score": 11.0,
+          "breakdown": {
+            "impact": 9,
+            "unblocks": 0,
+            "testability": 4,
+            "effort": -2
+          },
+          "gate": null
+        },
+        {
+          "goal": "tuning_overlay",
+          "score": 10.0,
+          "breakdown": {
+            "impact": 6,
+            "unblocks": 0,
+            "testability": 6,
+            "effort": -2
+          },
+          "gate": null
+        },
+        {
+          "goal": "pause_menu",
+          "score": 10.0,
+          "breakdown": {
+            "impact": 9,
+            "unblocks": 0,
+            "testability": 4,
+            "effort": -3
+          },
+          "gate": null
+        },
+        {
+          "goal": "match_timer",
+          "score": 0.0,
+          "breakdown": {},
+          "gate": "blocked: needs 'match_hud' first"
+        },
+        {
+          "goal": "sound_effects",
+          "score": 0.0,
+          "breakdown": {},
+          "gate": "blocked: no assets in Assets/Audio/ yet"
+        },
+        {
+          "goal": "anim_speed_tuning",
+          "score": 0.0,
+          "breakdown": {},
+          "gate": "unsafe: would modify protected 'Assets/Editor/Tooling/WrestlerAnimationBuilder.cs'"
+        }
+      ],
+      "selected": "match_hud",
+      "llm": {
+        "backend": "claude-cli",
+        "role": "codegen",
+        "model": "claude-sonnet-5-5",
+        "session_id": "0bc6fb9c-4de9-4dae-b76c-21c1bf8f4589",
+        "cost_usd": 0.1495933,
+        "duration_ms": 58778
+      },
+      "staged": {
+        "goal": "match_hud",
+        "staged_at": "2026-11-11T16:37:00+00:00",
+        "files": [
+          {
+            "path": "Assets/Scripts/UI/HealthTrail.cs",
+            "purpose": "Pure math for the white damage trail behind a health bar.",
+            "lines": 74,
+            "status": "pending",
+            "policy": "ok"
+          },
+          {
+            "path": "Assets/Scripts/UI/MatchHud.cs",
+            "purpose": "Thin MonoBehaviour that shows names, portraits and health bars with damage trails in the match.",
+            "lines": 140,
+            "status": "pending",
+            "policy": "ok"
+          },
+          {
+            "path": "Assets/UI/MatchHud.uxml",
+            "purpose": "HUD layout: player block top-left, CPU block top-right, middle free.",
+            "lines": 32,
+            "status": "pending",
+            "policy": "ok"
+          },
+          {
+            "path": "Assets/UI/MatchHud.uss",
+            "purpose": "Clean Retro HUD styles using the Style Guide palette.",
+            "lines": 126,
+            "status": "pending",
+            "policy": "ok"
+          },
+          {
+            "path": "Assets/Tests/EditMode/UI/HealthTrailTests.cs",
+            "purpose": "EditMode tests for the damage-trail math.",
+            "lines": 114,
+            "status": "pending",
+            "policy": "ok"
+          }
+        ],
+        "integration_notes": [
+          "Create a HUD prefab (Assets/Prefabs/UI/MatchHud.prefab) or scene object in Match.unity with UIDocument (Source Asset = Assets/UI/MatchHud.uxml, PanelSettings = Assets/UI/RuralRumblePanelSettings.asset) and the MatchHud component. Default execution order (do not set it earlier than MatchBootstrap).",
+          "Tune Trail Hold Seconds (0.4) and Trail Drain Seconds (0.5) in the MatchHud Inspector.",
+          "HealthTrailTests need the EditMode test assembly to reference RuralRumble.UI (and UnityEngine for Mathf via the default engine reference).",
+          "MatchHud.cs needs RuralRumble.UI to reference RuralRumble.Core, Combat, and Match (already listed). UI Toolkit modules are referenced by default.",
+          "Sort order: if other UIDocuments are in the Match scene (timer, versus banner), give each its own sort order; this HUD's root ignores pointer picking."
+        ],
+        "assumptions": [
+          "CombatMatch.Player and CombatMatch.Cpu are typed as or convertible to IWrestlerView, and CombatMatch.Events is a CombatEvents (as used by MatchFlow/MatchBootstrap).",
+          "The white trail uses pure #FFFFFF rather than the palette off-white #E6DFCC so it reads as white.",
+          "Player bar is blue (#2872B8) and CPU bar red (#C7352C); designer should confirm.",
+          "The bars are sized by a percent width on the fill and trail; the CPU bar drains toward the right (mirrored).",
+          "Diamond portraits are made by rotating a square 45 degrees; the portrait is cropped to fill (scale-and-crop) and may clip its corners.",
+          "Initial fallback uses the first character of DisplayName in uppercase in palette yellow."
+        ]
+      },
+      "stop": "awaiting approval"
+    }
+  ],
+  "finished_at": "2026-11-11T16:37:00+00:00"
+}

@@ -324,6 +324,14 @@ Agents: read this before starting work. If a task conflicts with a decision here
 - **Why:** Designer approval of the v3 sheets and previews (ASSET_REGISTRY rows). Reusing the lock-up spacing means combat does not have to move either wrestler when the bodyslam starts from the lock-up.
 - **Affects:** docs/ASSET_REGISTRY.csv, docs/ARCHITECTURE.md (3.1, 6), WrestlerAnimationBuilder, WrestlerView, Barry and Peaux bodyslam clips, Wrestler.controller.
 
+## D-034: Audio sourcing policy; Sound Wrangler and Juice Agent created
+
+- **Date:** 2026-11-11
+- **Decided by:** Designer
+- **Decision:** Audio (sound effects and music) may come from Freesound.org, OpenGameArt.org, Kenney.nl, and itch.io free assets. Accepted licenses: CC0 and CC-BY (exact attribution recorded); NonCommercial, NoDerivs, and unstated licenses are not allowed. When sourcing finds nothing suitable, AI-generated audio is allowed as a marked placeholder that the designer must review; prompts describe genre and feel and never name real artists, songs, or lyrics. Ripped or copyrighted commercial music and sound effects are never allowed. The Sound Wrangler and Juice Agent are created now (`.claude/agents/sound-wrangler.md`, `.claude/agents/juice-agent.md`); D-021's split stands: the Sound Wrangler provides files, the Juice Agent plays them.
+- **Why:** D-008 covered art only, and CLAUDE.md requires permitted sources for every asset. Sound effects are blocked until audio files exist (goal agent: `sound_effects` gated on `Assets/Audio/`).
+- **Affects:** .claude/agents/sound-wrangler.md, .claude/agents/juice-agent.md, docs/ARCHITECTURE.md (folder ownership no longer "future"), docs/ASSET_REGISTRY.csv (new `audio` category).
+
 ---
 
 ## Open Questions

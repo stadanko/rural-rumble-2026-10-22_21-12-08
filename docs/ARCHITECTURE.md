@@ -27,8 +27,8 @@ Only the owner creates or edits files in a folder. Others request changes throug
 | `Assets/Scripts/UI/`, `Assets/UI/` (layouts, styles), `Assets/Prefabs/UI/`, import settings for `Assets/Art/UI/` | UI & Match Flow |
 | `Assets/Tests/EditMode/`, `Assets/Tests/PlayMode/`, `docs/ACCEPTANCE_TESTS.md` | QA & Testing |
 | Adding approved art files to `Assets/Art/**`; `Staging/Art/`; `Assets/Art/_Generated/` (AI generation working folder, never referenced by the game, D-010); `Tools/ArtPipeline/` (Python cleanup scripts, outside Unity) | Art Wrangler |
-| `Assets/Audio/` (files and import settings); `Staging/Audio/` | Sound Wrangler (future) |
-| `Assets/Scripts/Juice/`, `Assets/Prefabs/Effects/` | Juice Agent (future) |
+| `Assets/Audio/` (files and import settings); `Staging/Audio/` | Sound Wrangler (`.claude/agents/sound-wrangler.md`, D-034) |
+| `Assets/Scripts/Juice/`, `Assets/Prefabs/Effects/` | Juice Agent (`.claude/agents/juice-agent.md`, D-034) |
 | `docs/ASSET_REGISTRY.csv` | Provenance Clerk (future). Until the Clerk exists, whoever adds an asset adds its row. |
 | `docs/DECISION_LOG.md`, `docs/GDD.md`, `docs/COMBAT_SPEC.md`, `docs/CONTROLS.md`, `docs/STYLE_GUIDE.md` | Designer. Agents edit only with designer approval. |
 
@@ -49,7 +49,7 @@ Runtime code is split so EditMode tests reference combat rules without scenes.
 | `RuralRumble.Presentation` | `Assets/Scripts/Presentation/` | `RuralRumble.Core`, `RuralRumble.Combat` | Animation drivers. |
 | `RuralRumble.Match` | `Assets/Scripts/Match/` | `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.AI`, `RuralRumble.Presentation` | `MatchBootstrap` only: builds the match from `GameSession` (D-022). Systems Architect. |
 | `RuralRumble.UI` | `Assets/Scripts/UI/` | `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.Match`, `Unity.InputSystem` | Screens, HUD, match flow. The HUD reaches the match through `MatchBootstrap.Current` (4.3), so UI references `RuralRumble.Match`; Match never references UI. |
-| `RuralRumble.Juice` (future) | `Assets/Scripts/Juice/` | `RuralRumble.Core`, `RuralRumble.Combat` | Feedback only. |
+| `RuralRumble.Juice` (created when first needed) | `Assets/Scripts/Juice/` | `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.Match` | Feedback and audio playback only. Reaches the running match through `MatchBootstrap.Current` (like UI), so it references `RuralRumble.Match`; nothing references Juice. |
 | `RuralRumble.Editor.Build` | `Assets/Editor/Build/` | runtime assemblies as needed | Editor platform only. |
 | `RuralRumble.Editor.Tooling` | `Assets/Editor/Tooling/` | `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.Presentation`, `Unity.2D.Sprite.Editor` | Editor platform only. Namespace `RuralRumble.EditorTooling` (a `.Editor` namespace segment would shadow `UnityEditor` lookups). `Unity.2D.Sprite.Editor` (2D Sprite package, already installed) gives the builder the sprite data provider API. |
 | `RuralRumble.Tests.EditMode` | `Assets/Tests/EditMode/` | `RuralRumble.Core`, `RuralRumble.Combat`, `RuralRumble.AI`, `UnityEngine.TestRunner`, `UnityEditor.TestRunner`; `nunit.framework.dll` | Editor platform only; define constraint `UNITY_INCLUDE_TESTS`. |
@@ -215,7 +215,7 @@ Both wrestlers share one Animator controller; each wrestler gets an `AnimatorOve
 
 **Where the shared types live.** `IWrestlerView`, `WrestlerId`, `CombatState`, `MoveId`, `MovePhase` and `MatchResult` are in Core (`Assets/Scripts/Core/`), because Core consumers (`MatchCamera`, `GameSession`) and every higher assembly need them and Core cannot reference Combat. Combat implements `IWrestlerView`; `CombatEvents`, `MoveTiming`, `HitInfo` and `PairedMoveInfo` stay in Combat.
 
-**Juice (future).** Subscribes to `HitLanded`, `ObstacleHit`, `KnockedDown`, `MatchEnded`. Never sets `Time.timeScale` or changes combat. Hitstop would need a pause hook in `CombatMatchRunner` that the Architect adds only with designer approval. Camera shake applies to a child offset of the camera, not the camera the Architect places.
+**Juice.** Subscribes to `HitLanded`, `ObstacleHit`, `KnockedDown`, `MatchEnded`. Never sets `Time.timeScale` or changes combat. Hitstop would need a pause hook in `CombatMatchRunner` that the Architect adds only with designer approval. Camera shake applies to a child offset of the camera, not the camera the Architect places.
 
 ### 4.3 Combat → UI
 

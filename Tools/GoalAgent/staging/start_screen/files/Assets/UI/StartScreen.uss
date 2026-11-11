@@ -1,0 +1,41 @@
+.start-root {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    background-color: #10151A;
+    background-image: url("project://database/Assets/Art/Arena/arena_backdrop.png");
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.title-block {
+    align-items: center;
+    padding: 24px 64px;
+    margin-bottom: 120px;
+    background-color: rgba(16, 21, 26, 0.55);
+    border-width: 6px;
+    border-color: #795037;
+}
+
+.title {
+    font-size: 160px;
+    -unity-font-style: bold;
+    color: #FFD65A;
+    -unity-text-outline-width: 6px;
+    -unity-text-outline-color: #A74727;
+    text-shadow: 8px 8px 0 #10151A;
+    letter-spacing: 8px;
+}
+
+.prompt {
+    position: absolute;
+    bottom: 140px;
+    font-size: 48px;
+    -unity-font-style: bold;
+    color: #E6DFCC;
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: #10151A;
+}
+
+.prompt--hidden {
+    opacity: 0;
+}

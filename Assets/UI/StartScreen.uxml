@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="project://database/Assets/UI/StartScreen.uss" />
+    <ui:VisualElement name="root" class="start-root">
+        <ui:VisualElement name="title-block" class="title-block">
+            <ui:Label name="title" text="RURAL RUMBLE" class="title" />
+        </ui:VisualElement>
+        <ui:Label name="prompt" text="Press Any Button to Start" class="prompt" />
+    </ui:VisualElement>
+</ui:UXML>

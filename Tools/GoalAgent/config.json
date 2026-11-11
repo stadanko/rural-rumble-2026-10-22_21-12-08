@@ -1,0 +1,51 @@
+{
+  "_comment": "Designer-editable settings for the goal-oriented agent. Weights feed priority_score(); write_policy is the agent's sandbox.",
+
+  "weights": {
+    "impact": 3,
+    "unblocks": 2,
+    "testability": 2,
+    "effort": -1
+  },
+
+  "loop": {
+    "max_features_per_run": 1
+  },
+
+  "codegen": {
+    "model": "claude-sonnet-5-5",
+    "timeout_seconds": 900
+  },
+
+  "write_policy": {
+    "_comment": "A proposed file must match an allowed prefix, must not match any forbidden pattern, and must not already exist. Forbidden always wins.",
+    "allowed_prefixes": [
+      "Assets/Scripts/UI/",
+      "Assets/UI/",
+      "Assets/Scripts/Juice/",
+      "Assets/Tests/EditMode/UI/",
+      "Assets/Tests/PlayMode/UI/"
+    ],
+    "forbidden_patterns": [
+      "Assets/Scripts/Combat/**",
+      "Assets/Scripts/AI/**",
+      "Assets/Scripts/Presentation/**",
+      "Assets/Scripts/Core/**",
+      "Assets/Scripts/Match/**",
+      "Assets/Animation/**",
+      "Assets/Art/**",
+      "Assets/Prefabs/Wrestlers/**",
+      "Assets/Editor/Tooling/**",
+      "Assets/Data/**",
+      "ProjectSettings/**",
+      "Packages/**",
+      "**/*.unity",
+      "**/*.prefab",
+      "**/*.controller",
+      "**/*.anim",
+      "**/*.asmdef",
+      "**/*.meta",
+      "**/*.inputactions"
+    ]
+  }
+}

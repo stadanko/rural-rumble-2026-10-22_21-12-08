@@ -5,6 +5,7 @@
         "RuralRumble.Core",
         "RuralRumble.Combat",
         "RuralRumble.AI",
+        "RuralRumble.UI",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

@@ -66,6 +66,38 @@ The initial playable version of *Rural Rumble* will include:
 - Strikes will provide opportunities to inflict consistent damage, while successful grapples will deliver greater damage at the cost of requiring closer positioning and leaving the wrestler vulnerable if unsuccessful.
 - The initial version will not include manual reversals or parries. These mechanics may be introduced in future versions.
 
+### Inspector-Tunable Values
+
+To support fast iteration during playtesting, the following gameplay values must be editable in the Unity Inspector without changing code or requesting changes from Claude. Changes should take effect during Play Mode, and both wrestlers and the computer-controlled opponent must read the same values so a single edit applies to the whole match. Current default values are recorded in docs/COMBAT_SPEC.md (Tuning Values).
+
+**Animation**
+
+| Value | Governs |
+|---|---|
+| Animation speed at each step of an animation | How long each individual frame of a wrestler animation is held, adjustable per frame rather than only per clip |
+
+**Movement**
+
+| Value | Governs |
+|---|---|
+| Walk speed — horizontal | Movement speed when walking left or right |
+| Walk speed — vertical | Movement speed when walking up or down the arena |
+| Walk speed — diagonal | Movement speed when walking diagonally |
+| Run speed | Movement speed while running |
+
+**Damage (health points removed)**
+
+| Value | Governs |
+|---|---|
+| Strike 1 damage | First hit of the punch/kick combination |
+| Strike 2 damage | Second hit of the combination |
+| Strike 3 damage | Combination finisher |
+| Bodyslam damage | Health removed from the slammed wrestler |
+| Run-collision damage | Health removed from both wrestlers when a running wrestler runs into the opponent |
+| Stomp damage | Health removed by a stomp on a knocked-down opponent |
+
+Changing a strike's animation speed may move its contact frame away from the combat hit window, so animation and combat timing should be checked together when either is adjusted.
+
 ### Opponent Finite State Machine
 
 The computer-controlled opponent will use a deterministic finite-state machine (FSM) to simulate basic wrestling behavior without requiring runtime AI or external API calls. The opponent will evaluate its distance from the player, current combat state, and available actions to determine whether to approach, strike, attempt a grapple, or recover.

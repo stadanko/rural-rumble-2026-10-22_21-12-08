@@ -1,0 +1,19 @@
+{
+    "name": "RuralRumble.UI",
+    "rootNamespace": "RuralRumble.UI",
+    "references": [
+        "RuralRumble.Core",
+        "RuralRumble.Combat",
+        "RuralRumble.Match",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

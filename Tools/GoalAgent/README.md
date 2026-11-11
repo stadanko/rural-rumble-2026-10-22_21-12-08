@@ -165,7 +165,7 @@ The agent can only create **new** files under `Assets/Scripts/UI/`, `Assets/UI/`
 - Esc → Start, and Space → Character Select again, which confirms the Run 1 input-delay fix on re-entry.
 - No console errors or warnings.
 
-**Human playtest:** pending. Check the controller feel (stick sensitivity, B to go back), card readability, and the text styling: names and taglines render in the default font, so "bold" has little visible effect.
+**Human playtest:** completed and accepted by the designer. It covered controller feel (stick, B to go back), card and text readability, and centering after the layout fix.
 
 ## Running it
 

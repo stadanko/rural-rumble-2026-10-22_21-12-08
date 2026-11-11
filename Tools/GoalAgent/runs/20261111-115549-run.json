@@ -1,0 +1,142 @@
+{
+  "command": "run",
+  "started_at": "2026-11-11T17:55:21+00:00",
+  "iterations": [
+    {
+      "ranking": [
+        {
+          "goal": "character_select",
+          "score": 19.0,
+          "breakdown": {
+            "impact": 12,
+            "unblocks": 4,
+            "testability": 6,
+            "effort": -3
+          },
+          "gate": null
+        },
+        {
+          "goal": "victory_screen",
+          "score": 18.0,
+          "breakdown": {
+            "impact": 12,
+            "unblocks": 2,
+            "testability": 6,
+            "effort": -2
+          },
+          "gate": null
+        },
+        {
+          "goal": "screen_shake_juice",
+          "score": 11.0,
+          "breakdown": {
+            "impact": 9,
+            "unblocks": 0,
+            "testability": 4,
+            "effort": -2
+          },
+          "gate": null
+        },
+        {
+          "goal": "tuning_overlay",
+          "score": 10.0,
+          "breakdown": {
+            "impact": 6,
+            "unblocks": 0,
+            "testability": 6,
+            "effort": -2
+          },
+          "gate": null
+        },
+        {
+          "goal": "pause_menu",
+          "score": 10.0,
+          "breakdown": {
+            "impact": 9,
+            "unblocks": 0,
+            "testability": 4,
+            "effort": -3
+          },
+          "gate": null
+        },
+        {
+          "goal": "sound_effects",
+          "score": 0.0,
+          "breakdown": {},
+          "gate": "blocked: no assets in Assets/Audio/ yet"
+        },
+        {
+          "goal": "anim_speed_tuning",
+          "score": 0.0,
+          "breakdown": {},
+          "gate": "unsafe: would modify protected 'Assets/Editor/Tooling/WrestlerAnimationBuilder.cs'"
+        }
+      ],
+      "selected": "character_select",
+      "llm": {
+        "backend": "claude-cli",
+        "role": "codegen",
+        "model": "claude-sonnet-5-5",
+        "session_id": "7c2407b7-b91d-44ef-844d-39d35967c746",
+        "cost_usd": 0.154996,
+        "duration_ms": 25922
+      },
+      "staged": {
+        "goal": "character_select",
+        "staged_at": "2026-11-11T17:55:49+00:00",
+        "files": [
+          {
+            "path": "Assets/Scripts/UI/CharacterSelectRules.cs",
+            "purpose": "Pure selection index and match-setup logic",
+            "lines": 32,
+            "status": "pending",
+            "policy": "ok"
+          },
+          {
+            "path": "Assets/Scripts/UI/CharacterSelectController.cs",
+            "purpose": "Character Select screen controller (UI Toolkit + Input System UI map)",
+            "lines": 96,
+            "status": "pending",
+            "policy": "ok"
+          },
+          {
+            "path": "Assets/UI/CharacterSelect.uxml",
+            "purpose": "Character Select layout",
+            "lines": 21,
+            "status": "pending",
+            "policy": "ok"
+          },
+          {
+            "path": "Assets/UI/CharacterSelect.uss",
+            "purpose": "Character Select styles",
+            "lines": 97,
+            "status": "pending",
+            "policy": "ok"
+          },
+          {
+            "path": "Assets/Tests/EditMode/UI/CharacterSelectRulesTests.cs",
+            "purpose": "EditMode tests for CharacterSelectRules",
+            "lines": 55,
+            "status": "pending",
+            "policy": "ok"
+          }
+        ],
+        "integration_notes": [
+          "Create scene CharacterSelect.unity; add a GameObject with UIDocument (Source Asset = Assets/UI/CharacterSelect.uxml, Panel Settings = Assets/UI/RuralRumblePanelSettings.asset) and CharacterSelectController.",
+          "Assign Assets/Data/Wrestlers/WrestlerRoster.asset to the controller's Roster field.",
+          "Project-wide Input Actions (InputSystem.actions) must contain a 'UI' map with Navigate (Vector2), Submit, Cancel actions.",
+          "Add CharacterSelect scene to Build Settings between Start and Match (names must match SceneNames).",
+          "Tests assembly (EditMode) needs references to RuralRumble.UI and RuralRumble.Core."
+        ],
+        "assumptions": [
+          "Selected-state scale uses USS 'scale' property (Unity 6 supports it).",
+          "BuildSetup picks the other index (0<->1); falls back to the same wrestler if roster has only one.",
+          "Overlay is a first child of root with picking ignored; title/row/hint render above it due to document order.",
+          "Navigate performed fires on each stick/key actuation; keyboard arrows/WASD and d-pad composites supply x of +/-1."
+        ]
+      },
+      "stop": "awaiting approval"
+    }
+  ],
+  "finished_at": "2026-11-11T17:55:49+00:00"
+}

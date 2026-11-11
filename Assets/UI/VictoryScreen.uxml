@@ -1,0 +1,16 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="project://database/Assets/UI/VictoryScreen.uss" />
+    <ui:VisualElement name="root" class="victory-root">
+        <ui:VisualElement name="overlay" class="victory-overlay" />
+        <ui:VisualElement name="content" class="victory-content">
+            <ui:VisualElement name="cards" class="cards">
+                <ui:VisualElement name="card-1" class="card" />
+                <ui:VisualElement name="card-2" class="card card--second" />
+            </ui:VisualElement>
+            <ui:Label name="headline" class="headline" text="Victory!" />
+            <ui:Label name="outcome" class="outcome outcome--win" text="Congratulations!" />
+            <ui:Label name="quote" class="quote" text="" />
+        </ui:VisualElement>
+        <ui:Label name="hint" class="hint" text="PRESS ANY BUTTON" />
+    </ui:VisualElement>
+</ui:UXML>

@@ -18,3 +18,8 @@ MonoBehaviour:
   fullName: Peaux Strange
   tagline: Eyeliner on. Rednecks beware.
   selectCard: {fileID: 21300000, guid: 249b99905f0a6d945a137b1ecfc6e53c, type: 3}
+  victoryLines:
+  - You ain't shit compared to my brothers!
+  - Eyeliner didn't even smudge.
+  - Nice mustache, Barry. Shame about the nap on the gravel.
+  - Expelled at sixteen. Still smarter than you.

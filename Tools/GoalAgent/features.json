@@ -228,11 +228,13 @@
         "section": "MVP Scope",
         "match": "victory/defeat"
       },
-      "description": "'Victory! {Winner} knocked out {Loser} in {timer}' plus Congratulations!/Game Over!, built from GameSession.LastResult.",
+      "description": "Victory screen (own scene, UI Toolkit), shown after MatchFlow's knockout hold. DATA: GameSession.LastResult (MatchResult: Winner, Loser, ElapsedSeconds, IsDraw) and GameSession.Setup (Player / Cpu WrestlerDefinition). Fallbacks so the scene can be previewed when opened directly: a [SerializeField] WrestlerRoster roster; if !GameSession.HasSetup use roster.Wrestlers[0] as player and [1] as CPU; if no match was played (result is not a draw and Winner == Loser) use a preview result new MatchResult(WrestlerId.Player, WrestlerId.Cpu, 83f). Map WrestlerId.Player -> player definition, WrestlerId.Cpu -> cpu definition. TEXT (Style Guide + designer decisions): headline 'Victory! {Winner} knocked out {Loser} in {timer}' using SHORT names (WrestlerDefinition.DisplayName, e.g. Barry / Peaux) and timer via the existing MatchTimerFormat.Format(ElapsedSeconds) (m:ss). Outcome line: 'Congratulations!' if the player's wrestler won, 'Game Over!' if the CPU won. DRAW (IsDraw, D-030): headline 'Double Knockout! {Player} and {Cpu} knocked each other out in {timer}', outcome 'Nobody Wins!', no quote. QUOTE: one of the winner's WrestlerDefinition.VictoryLines chosen at random, shown in straight double quotes; hide the quote label if the list is empty. Put all text decisions in a pure static class (e.g. VictoryText.Build(MatchResult, WrestlerDefinition player, WrestlerDefinition cpu, int lineRoll) returning headline, outcome, outcome kind (win/lose/draw), quote, and which definitions to show), where the line index is lineRoll modulo the line count (the MonoBehaviour passes UnityEngine.Random.Range(0, int.MaxValue)); EditMode tests cover player win, CPU win, draw, empty lines, and the no-match preview fallback. CONTROLS (D-026): any keyboard or gamepad button returns to the Start screen (SceneLoader.Load(SceneId.Start)) via InputSystem.onAnyButtonPress.Call (needs using UnityEngine.InputSystem.Utilities), disposed in OnDisable; ignore input for a [SerializeField] 1.0 s after OnEnable measured from OnEnable with unscaled time (players are often still mashing at the knockout); load only once. EXACT VISUAL SPEC: root fills the screen with background-image url(\"project://database/Assets/Art/Arena/arena_backdrop.png\") scale-and-crop and a full-screen overlay rgba(16, 21, 26, 0.75). A content column, FIXED width 1600px, centered horizontally and vertically, align-items center. Cards row first: flex-direction row, justify-content center, height 504px. Card element(s) 360px x 504px, background-image from WrestlerDefinition.SelectCard, scale-to-fit, border-width 8px, border-color #FFD65A; show only the winner's card, or BOTH cards (40px apart) on a draw (hide the second with display none otherwise). Headline below (margin-top 32px): 56px bold #E6DFCC, -unity-text-outline-width 3px, outline #10151A, centered, wraps (white-space normal). Outcome (margin-top 8px): 80px bold, centered, text-shadow 6px 6px 0 #10151A; win: color #FFD65A with 4px outline #A74727; lose: color #C7352C with 4px outline #10151A; draw: color #E6DFCC with 4px outline #10151A (toggle USS classes). Quote (margin-top 16px): 36px italic #E19A36, centered, wraps. Hint 'PRESS ANY BUTTON' absolute at bottom center (bottom 40px): 28px bold #E6DFCC, outline 3px #10151A, blinking every 600 ms by toggling a hidden class (opacity 0) from C#. Plain ASCII text only. Never change gameplay.",
       "outputs": [
         "Assets/Scripts/UI/VictoryScreenController.cs",
+        "Assets/Scripts/UI/VictoryText.cs",
         "Assets/UI/VictoryScreen.uxml",
-        "Assets/UI/VictoryScreen.uss"
+        "Assets/UI/VictoryScreen.uss",
+        "Assets/Tests/EditMode/UI/VictoryTextTests.cs"
       ],
       "touches": [],
       "requires_assets": [],
@@ -240,7 +242,8 @@
         "match_end_handoff"
       ],
       "code_checks": [
-        "class:VictoryScreenController"
+        "class:VictoryScreenController",
+        "file:Assets/UI/VictoryScreen.uxml"
       ],
       "integration_checks": [
         "file:Assets/Scenes/Victory.unity",
@@ -254,13 +257,27 @@
         "effort": 2
       },
       "context_files": [
+        "Assets/Scripts/Core/Session/WrestlerDefinition.cs",
+        "Assets/Scripts/Core/Session/WrestlerRoster.cs",
+        "Assets/Scripts/Core/Session/MatchSetup.cs",
         "Assets/Scripts/Core/Session/GameSession.cs",
-        "Assets/Scripts/Core/Session/MatchSetup.cs"
+        "Assets/Scripts/Core/Session/SceneLoader.cs",
+        "Assets/Scripts/Core/CombatTypes.cs",
+        "Assets/Scripts/UI/MatchTimerFormat.cs",
+        "Assets/Scripts/UI/StartScreenController.cs"
       ],
       "context_sections": [
         {
           "doc": "docs/STYLE_GUIDE.md",
           "section": "UI"
+        },
+        {
+          "doc": "docs/DECISION_LOG.md",
+          "section": "D-026: Match start and end"
+        },
+        {
+          "doc": "docs/ARCHITECTURE.md",
+          "section": "4.3 Combat → UI"
         }
       ]
     },

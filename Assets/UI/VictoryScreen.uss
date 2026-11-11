@@ -1,0 +1,108 @@
+.victory-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    justify-content: center;
+    align-items: center;
+    background-image: url("project://database/Assets/Art/Arena/arena_backdrop.png");
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.victory-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(16, 21, 26, 0.75);
+}
+
+.victory-content {
+    width: 1600px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.cards {
+    flex-direction: row;
+    justify-content: center;
+    height: 504px;
+}
+
+.card {
+    width: 360px;
+    height: 504px;
+    -unity-background-scale-mode: scale-to-fit;
+    border-width: 8px;
+    border-color: #FFD65A;
+}
+
+.card--second {
+    margin-left: 40px;
+}
+
+.headline {
+    margin-top: 32px;
+    font-size: 56px;
+    -unity-font-style: bold;
+    color: #E6DFCC;
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: #10151A;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.outcome {
+    margin-top: 8px;
+    font-size: 80px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    text-shadow: 6px 6px 0px #10151A;
+}
+
+.outcome--win {
+    color: #FFD65A;
+    -unity-text-outline-width: 4px;
+    -unity-text-outline-color: #A74727;
+}
+
+.outcome--lose {
+    color: #C7352C;
+    -unity-text-outline-width: 4px;
+    -unity-text-outline-color: #10151A;
+}
+
+.outcome--draw {
+    color: #E6DFCC;
+    -unity-text-outline-width: 4px;
+    -unity-text-outline-color: #10151A;
+}
+
+.quote {
+    margin-top: 16px;
+    font-size: 36px;
+    -unity-font-style: italic;
+    color: #E19A36;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.hint {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    font-size: 28px;
+    -unity-font-style: bold;
+    color: #E6DFCC;
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: #10151A;
+    -unity-text-align: middle-center;
+}
+
+.hint--hidden {
+    opacity: 0;
+}

@@ -233,6 +233,7 @@ UI reads `IWrestlerView.Health / MaxHealth` (bars only, never numbers), subscrib
 public sealed class WrestlerDefinition : ScriptableObject {
     string DisplayName; Sprite Portrait; GameObject Prefab; // Prefab = presentation prefab
     string FullName; string Tagline; Sprite SelectCard;     // Character Select (Assignment 5); FullName falls back to DisplayName
+    IReadOnlyList<string> VictoryLines;                     // Victory screen gloat lines (Assignment 4 output, designer-approved)
 }
 public sealed class WrestlerRoster : ScriptableObject { WrestlerDefinition[] Wrestlers; } // exactly 2 in MVP
 public readonly struct MatchSetup { WrestlerDefinition Player; WrestlerDefinition Cpu; }

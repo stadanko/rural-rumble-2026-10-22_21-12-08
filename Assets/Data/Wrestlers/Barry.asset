@@ -18,3 +18,8 @@ MonoBehaviour:
   fullName: Barry "Hot Potato" Lankford
   tagline: Retired trucker. Active ass-kicker.
   selectCard: {fileID: 21300000, guid: 448475fb73659fb43b840e02f4babefa, type: 3}
+  victoryLines:
+  - Watch your cigarette butts!
+  - Hot Potato's too hot to handle, and too cold to hold.
+  - You look like you been chasin' parked cars, son.
+  - I got a cure for your bad attitude. It's called a knuckle sandwich!

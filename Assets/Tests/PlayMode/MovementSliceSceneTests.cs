@@ -106,16 +106,26 @@ namespace RuralRumble.Tests.PlayMode
             {
                 Vector2 start = match.Player.Position;
 
-                keyboard.SetPressed("A");
-                yield return new WaitForSeconds(0.4f);
-                Assert.AreEqual(CombatState.Walking, match.Player.State, "holding A should walk");
-                Assert.Less(match.Player.Position.x, start.x - 0.3f, "holding A should move the player left");
-                Assert.AreEqual(-1, match.Player.HorizontalFacing);
-                Assert.IsFalse(boot.PlayerRoot.GetComponent<WrestlerView>().SpriteRenderer.flipX, "facing left -> not flipped");
-
+                // D-035 put the truck at (-2, -13): its footprint (x -2..6.37, y -13..-11.83) fills the depth band
+                // at and below the spawn's height to the left. Test the vertical keys from the spawn (nothing above or
+                // below it), and end up behind the truck (above y -11.83) so the left walk and run below pass behind it.
                 keyboard.SetPressed("W");
                 yield return new WaitForSeconds(0.3f);
                 Assert.Greater(match.Player.Position.y, start.y + 0.2f, "holding W should move toward the trailer (+y)");
+
+                Vector2 afterUp = match.Player.Position;
+                keyboard.SetPressed("S");
+                yield return new WaitForSeconds(0.2f);
+                Assert.Less(match.Player.Position.y, afterUp.y - 0.2f, "holding S should move away from the trailer (-y)");
+                Assert.Greater(match.Player.Position.y, -11.8333f, "stay behind the truck for the left walk and run");
+
+                Vector2 beforeWalk = match.Player.Position;
+                keyboard.SetPressed("A");
+                yield return new WaitForSeconds(0.4f);
+                Assert.AreEqual(CombatState.Walking, match.Player.State, "holding A should walk");
+                Assert.Less(match.Player.Position.x, beforeWalk.x - 0.3f, "holding A should move the player left");
+                Assert.AreEqual(-1, match.Player.HorizontalFacing);
+                Assert.IsFalse(boot.PlayerRoot.GetComponent<WrestlerView>().SpriteRenderer.flipX, "facing left -> not flipped");
 
                 keyboard.ReleaseAll();
                 yield return null;
@@ -179,7 +189,14 @@ namespace RuralRumble.Tests.PlayMode
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (!silence || scene.name != "Match")
+            if (scene.name != "Match")
+                return;
+            // Tests decide the CPU's input themselves, whatever the designer's "Disable Cpu Ai" testing toggle is
+            // set to in Match.unity: a test that wants the brain gets it even if the toggle is saved on.
+            var bootstrap = Object.FindFirstObjectByType<MatchBootstrap>();
+            if (bootstrap != null)
+                bootstrap.CpuAiDisabled = false;
+            if (!silence)
                 return;
             var runner = Object.FindFirstObjectByType<CombatMatchRunner>();
             Assert.IsNotNull(runner, "no CombatMatchRunner in Match.unity");

@@ -49,7 +49,7 @@ namespace RuralRumble.Combat
         [Header("Bodyslam")]
         [Tooltip("Bodyslam timing (lock-up slice step 2). Startup = Grapple press to impact (Wrestler B hits the ground); damage is applied when Active starts. When Recovery ends, B is Knocked Down and A returns to Standing or Recovering. Startup: Combat starting point, used only for an initiator with no entry below (between the two approved pairs). Active + Recovery: Combat starting point, = the rest of the approved clips after impact (D-033: 1.209 s for both pairs), so the knockdown starts as the clip finishes.")]
         public MoveTiming bodyslamTiming = new MoveTiming(1.15f, 0.1f, 1.11f);
-        [Tooltip("Set (D-033 approved art timing). Bodyslam Startup per initiator, so each pair's clips play at native speed: Barry 1.208 s (slams Peaux), Peaux 1.083 s (slams Barry). An initiator not listed uses bodyslamTiming's Startup. Matched against the WrestlerDefinitions the match was built with.")]
+        [Tooltip("Set (D-036, designer-retimed; was D-033). Bodyslam Startup (impact time) per initiator, matched to each slammer's clip so it plays at about native speed: Barry 0.525 s (slams Peaux), Peaux 0.475 s (slams Barry). Editable from the FrameTiming Inspector too. An initiator not listed uses bodyslamTiming's Startup. Matched against the WrestlerDefinitions the match was built with.")]
         public WrestlerStartup[] bodyslamStartupByInitiator = new WrestlerStartup[0];
 
         // ------------------------------------------------------------------ Health and Damage

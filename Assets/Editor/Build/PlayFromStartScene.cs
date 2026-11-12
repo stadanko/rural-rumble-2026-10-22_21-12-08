@@ -24,6 +24,9 @@ namespace RuralRumble.EditorBuild
             EditorApplication.playModeStateChanged += state =>
             {
                 if (state == PlayModeStateChange.ExitingEditMode) Apply();
+                // After a test run the setting was cleared (see TestRunnerIsEnteringPlayMode); restore it once the
+                // Editor is back in edit mode and has reopened the user's scene.
+                if (state == PlayModeStateChange.EnteredEditMode) EditorApplication.delayCall += Apply;
             };
         }
 
@@ -47,10 +50,17 @@ namespace RuralRumble.EditorBuild
             return !EditorApplication.isPlayingOrWillChangePlaymode;
         }
 
+        /// <summary>
+        /// True while the Unity Test Runner is entering Play Mode: it first opens its own temporary
+        /// "InitTestScene..." scene and must start in it. Forcing Start.unity there strands the run.
+        /// </summary>
+        private static bool TestRunnerIsEnteringPlayMode() =>
+            EditorSceneManager.GetActiveScene().name.StartsWith("InitTestScene", System.StringComparison.Ordinal);
+
         private static void Apply()
         {
             SceneAsset start = null;
-            if (Enabled)
+            if (Enabled && !TestRunnerIsEnteringPlayMode())
             {
                 foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
                 {

@@ -43,8 +43,8 @@ namespace RuralRumble.Tests.PlayMode
             Assert.AreEqual(2, g.Obstacles.Count);
             ArenaRect truck = g.Obstacles.OrderBy(o => o.XMin).First();
             ArenaRect pool = g.Obstacles.OrderBy(o => o.XMin).Last();
-            AssertRect("truck footprint", truck, -0.6667f, -10.8333f, 7.7f, -9.6667f);
-            AssertRect("pool footprint", pool, 18.3333f, -10.6667f, 27.6667f, -9.6667f);
+            AssertRect("truck footprint", truck, -2f, -13f, 6.3667f, -11.8333f); // D-035: designer position (-2, -13)
+            AssertRect("pool footprint", pool, 21f, -14f, 30.3333f, -13f); // D-035: designer position (21, -14)
         }
 
         private static void AssertRect(string name, ArenaRect r, float xMin, float yMin, float xMax, float yMax)

@@ -685,6 +685,109 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1536734218677359298, guid: 6d7357c780084d5428a0a0182c8a984e, type: 3}
   m_PrefabInstance: {fileID: 1110494041}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1110494043 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8655528624252632108, guid: 6d7357c780084d5428a0a0182c8a984e, type: 3}
+  m_PrefabInstance: {fileID: 1110494041}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56a1d1518dfd6b94caa616355a8e33e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RuralRumble.Combat::RuralRumble.Combat.ArenaObstacleMarker
+--- !u!114 &1110494044 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 303886133514468977, guid: 6d7357c780084d5428a0a0182c8a984e, type: 3}
+  m_PrefabInstance: {fileID: 1110494041}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56a1d1518dfd6b94caa616355a8e33e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RuralRumble.Combat::RuralRumble.Combat.ArenaObstacleMarker
+--- !u!1 &1808264424
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1808264426}
+  - component: {fileID: 1808264425}
+  m_Layer: 0
+  m_Name: CombatAudio
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1808264425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1808264424}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 135fd694051ef0e46b8e461e4ea48f4c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RuralRumble.Juice::RuralRumble.Juice.CombatAudio
+  strike1:
+    clip: {fileID: 8300000, guid: 5b3f1fb682e2a8748947508511d464aa, type: 3}
+    volume: 1
+  strike2:
+    clip: {fileID: 8300000, guid: 784b1333ff17bca4194d542dbfc44c6f, type: 3}
+    volume: 1
+  strike3:
+    clip: {fileID: 8300000, guid: a33341056b288f94abda06e35f23dffa, type: 3}
+    volume: 1
+  stomp:
+    clip: {fileID: 8300000, guid: fc9a5e521fb15674297a558d34695e4e, type: 3}
+    volume: 1
+  bodyThud:
+    clip: {fileID: 8300000, guid: 045652424f9b57a44b8e18cae04fa4f3, type: 3}
+    volume: 1
+  truckImpact:
+    clip: {fileID: 8300000, guid: 31cc3ded9931dc343a55e61191540db8, type: 3}
+    volume: 1
+  poolImpact:
+    clip: {fileID: 8300000, guid: ef16cecc1f7e19b498b65f622d43f593, type: 3}
+    volume: 1
+  voices:
+  - wrestler: {fileID: 11400000, guid: a759afccac418004080629b857d011a6, type: 2}
+    hurt: {fileID: 8300000, guid: 1684270d7fe930641a028bbccf0ffaa8, type: 3}
+    knockout: {fileID: 8300000, guid: 42a5caed2af18f742b3b99f7d7f85dfb, type: 3}
+    volume: 1
+  - wrestler: {fileID: 11400000, guid: 88fa395ed34cfaa4cb5494a98b84eec2, type: 2}
+    hurt: {fileID: 8300000, guid: 7af44c720f094f04e8232be10bc31135, type: 3}
+    knockout: {fileID: 8300000, guid: cddf4d8d8a684c743a6d0498e3d8521e, type: 3}
+    volume: 1
+  truckMarker: {fileID: 1110494044}
+  poolMarker: {fileID: 1110494043}
+  lightHitGruntChance: 0.35
+  gruntPitchVariation: 0.06
+  impactPitchVariation: 0.03
+  bodyslamThudWindow: 2
+  simultaneousSounds: 8
+--- !u!4 &1808264426
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1808264424}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2090353082
 GameObject:
   m_ObjectHideFlags: 0
@@ -753,3 +856,4 @@ SceneRoots:
   - {fileID: 310596844}
   - {fileID: 905938064}
   - {fileID: 516605206}
+  - {fileID: 1808264426}

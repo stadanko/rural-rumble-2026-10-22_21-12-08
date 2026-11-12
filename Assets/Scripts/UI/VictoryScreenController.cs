@@ -55,6 +55,7 @@ namespace RuralRumble.UI
             {
                 if (_loading || Time.unscaledTime - _enabledAt < inputDelaySeconds) return;
                 _loading = true;
+                UiSoundEvents.Raise(UiSound.Confirm);
                 SceneLoader.Load(SceneId.Start);
             });
         }

@@ -20,6 +20,12 @@ namespace RuralRumble.EditorTooling
     /// Lock Up / Locked Up use the approved pair sheets (D-032; run ImportLockUpSheets first); lock-up whiff and
     /// break stay PLACEHOLDER stand-ins. Bodyslam / Bodyslammed use the approved bodyslam pair sheets (D-033; run
     /// ImportBodyslamSheets first).
+    ///
+    /// Timing: the key frames below (SourceFps frames) are only the defaults. Each wrestler has a
+    /// WrestlerFrameTiming asset (Assets/Animation/{Name}/{Name}_FrameTiming.asset, created from these defaults if
+    /// missing) with a designer-editable Hold (ms) for every sprite / pose step of every clip; the clips, their
+    /// lengths and the MoveAnimationTable contact times are built from it. Menu: Rural Rumble/Rebuild Wrestler
+    /// Animations (both wrestlers, clips only).
     /// </summary>
     public static class WrestlerAnimationBuilder
     {
@@ -85,6 +91,7 @@ namespace RuralRumble.EditorTooling
             public int[] KeyFrames;
             public int LengthFrames;
             public int ContactIndex;
+            /// <summary>Built-in default only; the built clip's contact time comes from the WrestlerFrameTiming asset.</summary>
             public float ContactTime => KeyFrames[ContactIndex] / SourceFps;
         }
 
@@ -111,6 +118,27 @@ namespace RuralRumble.EditorTooling
             public Sprite[] LockedUp;                // Locked Up hold (B, receiver); null -> placeholder
             public MoveClipSpec Bodyslam;            // Bodyslam (A, Grappling); contact = impact frame; null -> LockUp hold stand-in
             public MoveClipSpec Bodyslammed;         // Bodyslammed (B, Grappled); contact = impact frame; null -> LockedUp hold stand-in
+        }
+
+        public const string RebuildMenuPath = "Rural Rumble/Rebuild Wrestler Animations";
+
+        /// <summary>
+        /// Designer rebuild: rewrites both wrestlers' clips, override controllers and MoveAnimationTable contact
+        /// times from their WrestlerFrameTiming assets (Hold (ms) per sprite). Prefabs, sprites, import settings
+        /// and the Animator graph are left as they are. Not available in Play Mode.
+        /// </summary>
+        [MenuItem(RebuildMenuPath)]
+        public static void RebuildWrestlerAnimationsMenu() => Debug.Log(RebuildWrestlerAnimations());
+
+        [MenuItem(RebuildMenuPath, true)]
+        private static bool RebuildWrestlerAnimationsValidate() => !EditorApplication.isPlayingOrWillChangePlaymode;
+
+        public static string RebuildWrestlerAnimations()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Leave Play Mode before rebuilding wrestler animations.");
+            AssetDatabase.SaveAssets(); // pending Inspector edits to the timing assets
+            return BuildBarry(writePrefab: false) + "\n" + BuildPeaux(writePrefab: false);
         }
 
         [MenuItem("Rural Rumble/Tooling/Build Barry Animations + Prefab")]
@@ -439,6 +467,19 @@ namespace RuralRumble.EditorTooling
 
             string folder = "Assets/Animation/" + spec.Name;
             EnsureFolder(folder);
+            currentTiming = LoadOrCreateTiming(spec.Name);
+            try
+            {
+                return BuildClips(spec, writePrefab, controller, folder);
+            }
+            finally
+            {
+                currentTiming = null;
+            }
+        }
+
+        private static string BuildClips(WrestlerArtSpec spec, bool writePrefab, AnimatorController controller, string folder)
+        {
 
             bool standBackPlaceholder = spec.StandBack == null;
             bool walkBackPlaceholder = spec.WalkBack == null;
@@ -575,7 +616,7 @@ namespace RuralRumble.EditorTooling
 
             // Stomp: rises 10 px leaning back (wind-up), slams down 2 px leaning forward onto the boot at the contact
             // frame (5 = 0.208 s), settles by frame 9. 0.5 s long; WrestlerView scales it to the tuned Startup.
-            AnimationClip stomp = WriteSpriteClip(P("Stomp"), stand, one, 12, loop: false, new[]
+            TimedClip stompTimed = WriteTimedClip(P("Stomp"), stand, one, 12, false, new[]
             {
                 new PoseKey(0, 0, 0, 0),
                 new PoseKey(1, 0, 2, -4),
@@ -584,8 +625,9 @@ namespace RuralRumble.EditorTooling
                 new PoseKey(StompStandInContactFrame, 0, -2, 6),
                 new PoseKey(7, 0, 0, 3),
                 new PoseKey(9, 0, 0, 0),
-            });
-            table.SetEntry(MoveId.Stomp, stomp, StompStandInContactFrame / SourceFps);
+            }, ClipPlayback.ContactScaled, StompStandInContactFrame);
+            AnimationClip stomp = stompTimed.Clip;
+            table.SetEntry(MoveId.Stomp, stomp, stompTimed.ContactTime);
 
             bySlot[SlotStruck] = struck;
             bySlot[SlotKnockedDown] = knockedDown;
@@ -696,7 +738,7 @@ namespace RuralRumble.EditorTooling
                     new PoseKey(6, 6, 0, -3),
                     new PoseKey(8, 2, 0, 0),
                     new PoseKey(9, 0, 0, 0),
-                });
+                }, ClipPlayback.FittedToMove);
             AnimationClip breakB = WriteSpriteClip(P(WrestlerView.BreakLockUpReceiverStateName), new[] { braced, stand }, new[] { 0, 2 },
                 LockUpOneShotFrames, loop: false, new[]
                 {
@@ -706,7 +748,7 @@ namespace RuralRumble.EditorTooling
                     new PoseKey(6, 10, 0, -5),
                     new PoseKey(8, 4, 0, -2),
                     new PoseKey(9, 0, 0, 0),
-                });
+                }, ClipPlayback.FittedToMove);
 
             AnimationClip whiff = WriteSpriteClip(P(WrestlerView.LockUpWhiffStateName), new[] { windUp, reach, stand }, new[] { 0, 2, 8 },
                 LockUpOneShotFrames, loop: false, new[]
@@ -717,7 +759,7 @@ namespace RuralRumble.EditorTooling
                     new PoseKey(6, -6, -1, 6),
                     new PoseKey(8, -2, 0, 2),
                     new PoseKey(9, 0, 0, 0),
-                });
+                }, ClipPlayback.FittedToMove);
 
             // Contact time 0 = no contact frame: WrestlerView fits the clip to the move's total time.
             table.SetEntry(MoveId.LockUp, whiff, 0f);
@@ -768,10 +810,10 @@ namespace RuralRumble.EditorTooling
             {
                 if (art != null)
                     return;
-                AnimationClip clip = WriteSpriteClip($"{folder}/{spec.Name}_{move}_PLACEHOLDER.anim", stand, one, length,
-                    loop: false, poses);
-                bySlot[slot] = clip;
-                table.SetEntry(move, clip, contact / SourceFps);
+                TimedClip timed = WriteTimedClip($"{folder}/{spec.Name}_{move}_PLACEHOLDER.anim", stand, one, length,
+                    false, poses, ClipPlayback.ContactScaled, contact);
+                bySlot[slot] = timed.Clip;
+                table.SetEntry(move, timed.Clip, timed.ContactTime);
                 names.Add(move.ToString());
             }
 
@@ -1089,9 +1131,10 @@ namespace RuralRumble.EditorTooling
         {
             if (move == null)
                 return;
-            AnimationClip clip = WriteSpriteClip(path, move.Sprites, move.KeyFrames, move.LengthFrames, loop: false);
-            bySlot[slotName] = clip;
-            table.SetEntry(moveId, clip, move.ContactTime);
+            TimedClip timed = WriteTimedClip(path, move.Sprites, move.KeyFrames, move.LengthFrames, false, null,
+                ClipPlayback.ContactScaled, move.KeyFrames[move.ContactIndex]);
+            bySlot[slotName] = timed.Clip;
+            table.SetEntry(moveId, timed.Clip, timed.ContactTime);
         }
 
         // ---------- per-wrestler clips ----------
@@ -1099,13 +1142,9 @@ namespace RuralRumble.EditorTooling
         private static readonly EditorCurveBinding SpriteBinding =
             EditorCurveBinding.PPtrCurve("", typeof(SpriteRenderer), "m_Sprite");
 
-        /// <summary>
-        /// Sprite-swap clip on the Animator's own GameObject. keyFrames are in SourceFps frames. Unity makes a
-        /// sprite clip one sample longer than its last key, so a hold key repeating the last sprite goes at
-        /// loopFrames - 1: the clip is then exactly loopFrames long and the last sprite holds until the loop point.
-        /// </summary>
-        private static AnimationClip WriteSpriteClip(string path, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop) =>
-            WriteSpriteClip(path, sprites, keyFrames, loopFrames, loop, null);
+        // Sprite-swap clips (WriteSpriteClip / WriteTimedClip, below) are on the Animator's own GameObject. keyFrames,
+        // loopFrames and pose frames are the built-in timing in SourceFps frames; the wrestler's WrestlerFrameTiming
+        // asset (designer Hold (ms) per step, defaults = these frames) decides the actual key times.
 
         /// <summary>
         /// One stepped pose key for a stand-in clip: child-sprite offset (native pixels), z rotation (degrees,
@@ -1138,10 +1177,11 @@ namespace RuralRumble.EditorTooling
         /// clip. Clips without a pose get the rest pose (0 offset, 0 rotation, white), so with Write Defaults off a
         /// stand-in's offset, rotation or tint never sticks into the next state.
         /// </summary>
-        private static void WritePoseCurves(AnimationClip clip, PoseKey[] poses)
+        private static void WritePoseCurves(AnimationClip clip, PoseKey[] poses, Func<int, float> timeOfFrame)
         {
-            poses = poses == null || poses.Length == 0 ? RestPose : poses;
-            float KeyTime(PoseKey k) => k.Frame / SourceFps;
+            bool rest = poses == null || poses.Length == 0;
+            poses = rest ? RestPose : poses;
+            float KeyTime(PoseKey k) => rest ? 0f : timeOfFrame(k.Frame);
             void Curve(EditorCurveBinding binding, Func<PoseKey, float> value)
             {
                 var curve = new AnimationCurve(poses.Select(k => new Keyframe(KeyTime(k), value(k))).ToArray());
@@ -1164,8 +1204,155 @@ namespace RuralRumble.EditorTooling
             Curve(ColorBinding("a"), k => k.Tint.a);
         }
 
-        private static AnimationClip WriteSpriteClip(string path, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop, PoseKey[] poses)
+        /// <summary>A written clip and its contact time (seconds at native speed; 0 when it has no contact frame).</summary>
+        private struct TimedClip
         {
+            public AnimationClip Clip;
+            public float ContactTime;
+        }
+
+        private static AnimationClip WriteSpriteClip(string path, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop,
+            PoseKey[] poses = null, ClipPlayback playback = ClipPlayback.Native) =>
+            WriteTimedClip(path, sprites, keyFrames, loopFrames, loop, poses, playback, -1).Clip;
+
+        // ---------- designer frame timing (WrestlerFrameTiming) ----------
+
+        /// <summary>Timing asset of the wrestler being built (set by Build); null = built-in timing only.</summary>
+        private static WrestlerFrameTiming currentTiming;
+
+        public static string FrameTimingPath(string wrestlerName) =>
+            $"Assets/Animation/{wrestlerName}/{wrestlerName}_FrameTiming.asset";
+
+        /// <summary>The wrestler's frame-timing asset, created empty if missing (the build fills it with defaults).</summary>
+        private static WrestlerFrameTiming LoadOrCreateTiming(string wrestlerName)
+        {
+            string path = FrameTimingPath(wrestlerName);
+            var timing = AssetDatabase.LoadAssetAtPath<WrestlerFrameTiming>(path);
+            if (timing != null)
+                return timing;
+            timing = ScriptableObject.CreateInstance<WrestlerFrameTiming>();
+            timing.WrestlerName = wrestlerName;
+            AssetDatabase.CreateAsset(timing, path);
+            return timing;
+        }
+
+        /// <summary>
+        /// Seconds for a time in ms. When the time is (within 1e-3 ms) a whole number k of SourceFps frames it
+        /// returns exactly k / SourceFps, the value the frame-based builder always wrote, so default timing
+        /// produces byte-identical clips.
+        /// </summary>
+        private static float MsToSeconds(double ms)
+        {
+            double k = Math.Round(ms * SourceFps / 1000.0);
+            if (Math.Abs(ms - k * 1000.0 / SourceFps) < 1e-3)
+                return (int)k / SourceFps;
+            return (float)(ms / 1000.0);
+        }
+
+        /// <summary>Shortest Hold (ms) the builder accepts.</summary>
+        public const float MinHoldMs = 1f;
+
+        /// <summary>
+        /// Splits a clip into steps (every sprite key and every stand-in pose key, in time order; the last step
+        /// lasts until the clip length), looks up / creates its entry in the current timing asset, and returns
+        /// the cumulative start time of each step plus the total, in ms. The built-in frame timing is the
+        /// default: hold = frames to the next step x 1000 / SourceFps. Designer holds are kept while the step
+        /// count matches; an entry whose holds all still equal the stored defaults follows new built-in defaults.
+        /// </summary>
+        private static double[] ResolveStepTimes(string clipName, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop,
+            PoseKey[] poses, ClipPlayback playback, int contactFrame, out int[] stepFrames)
+        {
+            var frames = new SortedSet<int>(keyFrames);
+            if (poses != null)
+                foreach (PoseKey p in poses)
+                {
+                    if (p.Frame < 0 || p.Frame >= loopFrames)
+                        throw new ArgumentException($"{clipName}: pose key at frame {p.Frame} is outside the clip (0..{loopFrames - 1}).");
+                    frames.Add(p.Frame);
+                }
+            stepFrames = frames.ToArray();
+            int n = stepFrames.Length;
+            var keySet = new HashSet<int>(keyFrames);
+            var stepSprites = new Sprite[n];
+            var defaults = new float[n];
+            int contactStep = -1;
+            for (int s = 0; s < n; s++)
+            {
+                int f = stepFrames[s];
+                int last = 0;
+                for (int i = 0; i < keyFrames.Length; i++)
+                    if (keyFrames[i] <= f) last = i;
+                stepSprites[s] = sprites[last];
+                int next = s + 1 < n ? stepFrames[s + 1] : loopFrames;
+                defaults[s] = (next - f) * 1000f / SourceFps;
+                if (f == contactFrame) contactStep = s;
+            }
+            if (contactFrame >= 0 && contactStep < 0)
+                throw new ArgumentException($"{clipName}: contact frame {contactFrame} is not a step of the clip.");
+
+            float[] holds = defaults;
+            if (currentTiming != null)
+            {
+                WrestlerFrameTiming.ClipTiming entry = currentTiming.Find(clipName);
+                if (entry == null)
+                {
+                    entry = new WrestlerFrameTiming.ClipTiming { ClipName = clipName };
+                    currentTiming.Clips.Add(entry);
+                }
+                bool sameShape = entry.Steps.Count == n;
+                // Designer-approved defaults ('Set current as default') survive rebuilds while the clip keeps its step count.
+                bool customDefaults = sameShape && entry.CustomDefaults;
+                bool untouched = sameShape && entry.Steps.All(st => Mathf.Abs(st.HoldMs - st.DefaultHoldMs) < 1e-3f);
+                if (!sameShape && entry.Steps.Count > 0)
+                    Debug.LogWarning($"WrestlerAnimationBuilder: {currentTiming.name} {clipName} had {entry.Steps.Count} steps, " +
+                                     $"the clip now has {n}; its Hold (ms) values were reset to the built-in defaults" +
+                                     (entry.CustomDefaults ? " and its custom defaults were cleared." : "."));
+                if (!sameShape)
+                {
+                    entry.Steps.Clear();
+                    for (int s = 0; s < n; s++)
+                        entry.Steps.Add(new WrestlerFrameTiming.Step());
+                    entry.CustomDefaults = false;
+                }
+                for (int s = 0; s < n; s++)
+                {
+                    WrestlerFrameTiming.Step st = entry.Steps[s];
+                    st.Sprite = stepSprites[s];
+                    st.PoseOnly = !keySet.Contains(stepFrames[s]);
+                    st.BuiltInHoldMs = defaults[s];
+                    if (customDefaults)
+                        continue; // keep the designer's Hold (ms) and Default values as they are
+                    if (!sameShape || untouched)
+                        st.HoldMs = defaults[s];
+                    st.DefaultHoldMs = defaults[s];
+                }
+                entry.Loops = loop;
+                entry.Playback = playback;
+                entry.ContactStep = contactStep;
+                EditorUtility.SetDirty(currentTiming);
+                holds = entry.Steps.Select(st => Mathf.Max(MinHoldMs, st.HoldMs)).ToArray();
+            }
+
+            var start = new double[n + 1];
+            for (int s = 0; s < n; s++)
+                start[s + 1] = start[s] + holds[s];
+            return start;
+        }
+
+        private static TimedClip WriteTimedClip(string path, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop,
+            PoseKey[] poses, ClipPlayback playback, int contactFrame)
+        {
+            string clipName = System.IO.Path.GetFileNameWithoutExtension(path);
+            double[] startMs = ResolveStepTimes(clipName, sprites, keyFrames, loopFrames, loop, poses, playback, contactFrame,
+                out int[] stepFrames);
+            double totalMs = startMs[startMs.Length - 1];
+            double MsOfFrame(int frame)
+            {
+                int s = Array.IndexOf(stepFrames, frame);
+                if (s < 0) throw new ArgumentException($"{clipName}: frame {frame} is not a step.");
+                return startMs[s];
+            }
+
             var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
             bool isNew = clip == null;
             if (isNew)
@@ -1175,21 +1362,29 @@ namespace RuralRumble.EditorTooling
             AnimationUtility.SetObjectReferenceCurve(clip, SpriteBinding, null);
             clip.frameRate = SourceFps;
 
+            // Unity makes a sprite clip one sample (1 / SourceFps) longer than its last key, so the hold key that
+            // repeats the last sprite goes one sample before the total: the clip is then exactly total long. A last
+            // step shorter than one sample therefore shows for one sample (the Inspector warns about it).
             var keys = new List<ObjectReferenceKeyframe>();
             for (int i = 0; i < sprites.Length; i++)
-                keys.Add(new ObjectReferenceKeyframe { time = keyFrames[i] / SourceFps, value = sprites[i] });
-            if (loopFrames - 1 > keyFrames[keyFrames.Length - 1])
-                keys.Add(new ObjectReferenceKeyframe { time = (loopFrames - 1) / SourceFps, value = sprites[sprites.Length - 1] });
+                keys.Add(new ObjectReferenceKeyframe { time = MsToSeconds(MsOfFrame(keyFrames[i])), value = sprites[i] });
+            double holdKeyMs = totalMs - 1000.0 / SourceFps;
+            if (holdKeyMs > MsOfFrame(keyFrames[keyFrames.Length - 1]) + 1e-3)
+                keys.Add(new ObjectReferenceKeyframe { time = MsToSeconds(holdKeyMs), value = sprites[sprites.Length - 1] });
 
             AnimationUtility.SetObjectReferenceCurve(clip, SpriteBinding, keys.ToArray());
-            WritePoseCurves(clip, poses);
+            WritePoseCurves(clip, poses, frame => MsToSeconds(MsOfFrame(frame)));
             SetLoop(clip, loop);
 
             if (isNew)
                 AssetDatabase.CreateAsset(clip, path);
             else
                 EditorUtility.SetDirty(clip);
-            return clip;
+            return new TimedClip
+            {
+                Clip = clip,
+                ContactTime = contactFrame >= 0 ? MsToSeconds(MsOfFrame(contactFrame)) : 0f,
+            };
         }
 
         private static void SetLoop(AnimationClip clip, bool loop)

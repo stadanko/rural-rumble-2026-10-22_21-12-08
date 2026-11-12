@@ -67,7 +67,9 @@ namespace RuralRumble.UI
         void OnNavigate(InputAction.CallbackContext ctx)
         {
             if (Ignoring || roster == null) return;
+            int previous = _index;
             _index = CharacterSelectRules.Move(_index, ctx.ReadValue<Vector2>().x, roster.Wrestlers.Count);
+            if (_index != previous) UiSoundEvents.Raise(UiSound.Navigate);
             Refresh();
         }
 
@@ -76,6 +78,7 @@ namespace RuralRumble.UI
             if (Ignoring || roster == null || roster.Wrestlers.Count < 2) return;
             _loading = true;
             GameSession.Setup = CharacterSelectRules.BuildSetup(roster.Wrestlers, _index);
+            UiSoundEvents.Raise(UiSound.Confirm);
             SceneLoader.Load(SceneId.Match);
         }
 
@@ -83,6 +86,7 @@ namespace RuralRumble.UI
         {
             if (Ignoring) return;
             _loading = true;
+            UiSoundEvents.Raise(UiSound.Back);
             SceneLoader.Load(SceneId.Start);
         }
 

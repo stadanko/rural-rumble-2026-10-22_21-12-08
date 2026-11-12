@@ -6,6 +6,7 @@
         "RuralRumble.Combat",
         "RuralRumble.AI",
         "RuralRumble.UI",
+        "RuralRumble.Juice",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

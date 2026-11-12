@@ -257,6 +257,15 @@ public static class GameSession { MatchSetup Setup; MatchResult LastResult; bool
 - EditMode tests build a `CombatMatch` with `ScriptedInput`, a `CombatTuning` instance (`ScriptableObject.CreateInstance<CombatTuning>()` gives COMBAT_SPEC defaults, or load the project asset), and arena rects. Assertions read thresholds and timings from that instance.
 - PlayMode tests cover scene flow and the runner.
 
+### 4.6 Audio playback (Juice)
+
+- **Combat audio:** a Juice `MonoBehaviour` in `Match.unity` subscribes to `CombatEvents` from `Start` via `MatchBootstrap.Current.Match.Events` (like the HUD) and plays clips through its own `AudioSource`s. Clips, per-clip volumes and pitch variation are Inspector fields. Missing clips are skipped (store audio is git-ignored, D-034 amendment).
+- **Which obstacle:** `ObstacleHit` carries only a contact point. Juice tells truck from pool by the nearest of two `ArenaObstacleMarker` references assigned in the Inspector; Combat is unchanged.
+- **Bodyslam thud** plays on `HitLanded(Bodyslam)` (impact). The `KnockedDown` that follows ~1.2 s later for the same wrestler must not play a second thud.
+- **Menu audio (Architect decision, 2026-11-11):** UI screens raise `UiSoundEvents.Raise(UiSound.Navigate | Confirm | Back | Start)` (Core, `Assets/Scripts/Core/UiSoundEvents.cs`), usually right before `SceneLoader.Load`. A single Juice menu-audio player, created at runtime (`RuntimeInitializeOnLoadMethod`) and kept with `DontDestroyOnLoad`, subscribes and plays them, so a sound isn't cut off by the scene change. It is the only persistent object in the game and holds audio only. UI never references Juice.
+- **Every scene's camera has one `AudioListener`** (Start, CharacterSelect and Victory got theirs in the Juice sound pass; without one, Unity plays nothing audible). New scenes must add it.
+- **Built (Juice sound pass 1):** `CombatAudio` on the `CombatAudio` root object in Match.unity (7 clip slots, Barry/Peaux voices, truck/pool markers assigned); `MenuAudioPlayer` loads `Assets/Prefabs/Effects/Resources/MenuAudioSettings.asset`. Clip references point at git-ignored store audio, so a clone without it is silent, with no errors.
+
 ## 5. Combat tuning asset
 
 - Type: `CombatTuning : ScriptableObject` in `Assets/Scripts/Combat/Tuning/`. Asset: `Assets/Data/Tuning/CombatTuning.asset`. One asset shared by both wrestlers and the CPU.

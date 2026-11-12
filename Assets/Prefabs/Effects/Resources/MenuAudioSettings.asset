@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 969feb4902cdd3842a783abd322a073c, type: 3}
+  m_Name: MenuAudioSettings
+  m_EditorClassIdentifier: RuralRumble.Juice::RuralRumble.Juice.MenuAudioSettings
+  navigate:
+    clip: {fileID: 8300000, guid: 52b3fac989982604db9177c484a40d4e, type: 3}
+    volume: 0.35
+  confirm:
+    clip: {fileID: 8300000, guid: 414da9d3038ae484bb5ae8a3a53b435e, type: 3}
+    volume: 0.35
+  back:
+    clip: {fileID: 8300000, guid: 1e6f70c55c1f3e642ae753fa7d0cf972, type: 3}
+    volume: 0.35
+  start:
+    clip: {fileID: 8300000, guid: c1e21bcc1f226024eb6f1b1ad512d3b9, type: 3}
+    volume: 0.35

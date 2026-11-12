@@ -147,16 +147,37 @@ namespace RuralRumble.Tests.EditMode
             Assert.AreEqual(CombatState.Walking, h.Player.State);
         }
 
+        // Updated for D-037 (Focus). Old setup (walk left to face away, then strike) now strikes toward the CPU,
+        // so "hits only in front" is checked with facing locked by the strike itself: the CPU runs behind the
+        // player during a lengthened wind-up (another depth inside strike tolerance) and stops within reach
+        // behind; the strike still reaches in its locked direction and whiffs.
         [Test]
-        public void Strike_FacingAway_Whiffs()
+        public void Strike_OpponentBehind_FacingLocked_Whiffs()
         {
-            using var h = new MatchHarness(P, C);
-            h.PlayerInput.HeldMove = Vector2.left;
-            h.Tick(1, Dt);
-            h.PlayerInput.Release();
-            Assert.AreEqual(-1, h.Player.HorizontalFacing);
+            // The CPU passes at a depth just beyond D-027 wrestler blocking; that is outside the default strike
+            // depth tolerance, so this test widens the tolerance to keep the CPU inside the strike's depth band.
+            float gap;
+            {
+                var d = ScriptableObject.CreateInstance<CombatTuning>();
+                gap = 2f * d.wrestlerBlockHalfDepth + 0.1f;
+                Object.DestroyImmediate(d);
+            }
+            using var h = new MatchHarness(P, new Vector2(P.x + 4.5f, P.y + gap), configure: t =>
+            {
+                t.strike1Timing = new MoveTiming(1.5f, 0.1f, 0.15f);
+                t.strikeDepthTolerance = gap + 0.2f;
+            });
+            Assert.That(4.5f, Is.GreaterThan(h.Tuning.strike1Reach + h.Tuning.hurtHalfWidth), "precondition: CPU starts out of reach");
+            h.CpuIdle = false;
             h.PlayerInput.PressStrikeOnce();
-            h.TickSeconds(1f, Dt);
+            h.CpuInput.PressRunOnce(); // nothing held: toward the player
+            h.Tick(1, Dt);
+            float behind = h.Tuning.hurtHalfWidth + 0.5f; // hurt box fully behind the attacker's feet, inside reach if turned
+            Assert.That(behind, Is.LessThan(h.Tuning.strike1Reach + h.Tuning.hurtHalfWidth));
+            h.TickUntil(() => h.Cpu.Position.x < P.x - behind, 2f, Dt);
+            h.CpuInput.PressRunOnce(); // cancel the run (D-027)
+            h.TickUntil(() => h.Player.State != CombatState.Striking, 3f, Dt);
+            Assert.That(h.Cpu.Position.x, Is.InRange(P.x - behind - 0.3f, P.x - behind), "precondition: CPU stopped behind, in reach if turned");
             Assert.IsEmpty(h.Hits);
             Assert.AreEqual(h.Tuning.maxHealth, h.Cpu.Health);
         }
@@ -257,8 +278,11 @@ namespace RuralRumble.Tests.EditMode
         {
             using var h = new MatchHarness(P, new Vector2(11.2f, -12f));
             h.CpuIdle = false;
-            h.CpuInput.Enqueue(new WrestlerIntent(Vector2.right, ButtonState.None, ButtonState.None, ButtonState.None)); // turn right
+            // D-037: the run goes the left/right held on the press (was: turn right with the stick, then Run).
+            h.CpuInput.Wait();
+            h.CpuInput.HeldMove = Vector2.right;
             h.CpuInput.PressRunOnce();
+            h.CpuInput.Release();
             h.PlayerInput.Wait();
             h.PlayerInput.PressStrikeOnce();
             h.TickSeconds(0.4f, Dt);

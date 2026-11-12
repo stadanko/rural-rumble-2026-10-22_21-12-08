@@ -13,6 +13,7 @@ namespace RuralRumble.Combat
     ///
     /// A tick has three steps, each run for both wrestlers before the next (see CombatMatch.Tick):
     /// <list type="number">
+    /// <item>Focus (D-037, <see cref="ApplyFocus"/>): a free wrestler faces the opponent; also re-applied after movement.</item>
     /// <item><see cref="Think"/>: timers, button presses and the movement this wrestler wants.</item>
     /// <item>Movement (CombatMatch): arena, wrestler blocking, obstacle hits, run collisions.</item>
     /// <item>Hits (CombatMatch): strikes whose hit window was open this tick are checked and applied.</item>
@@ -210,7 +211,7 @@ namespace RuralRumble.Combat
 
             if (intent.RunWhip.Pressed && !recovering)
             {
-                StartRun();
+                StartRun(intent.Move.x, opponentPosition);
                 PendingDelta = RunDelta(dt);
                 return;
             }
@@ -224,7 +225,7 @@ namespace RuralRumble.Combat
                 return;
             }
 
-            SetFacing(dir);
+            // D-037: movement input never turns the wrestler; Focus (CombatMatch) sets facing.
             if (!recovering)
                 SetState(CombatState.Walking);
             PendingDelta = WalkVelocity(dir, recovering) * dt;
@@ -541,11 +542,11 @@ namespace RuralRumble.Combat
             return recovering ? v * tuning.recoveringWalkSpeedMultiplier : v;
         }
 
-        private void StartRun()
+        private void StartRun(float moveX, Vector2 opponentPosition)
         {
-            // D-020: run in the facing left/right direction; facing straight up/down uses the last
-            // left/right facing, which HorizontalFacing already holds.
-            runDirection = horizontalFacing;
+            // D-037: the left/right held when Run is pressed; with none held, toward the opponent. The runner
+            // faces the run direction (Focus is off while running).
+            runDirection = FocusRules.RunDirection(moveX, tuning.moveDeadzone, opponentPosition.x - position.x, horizontalFacing);
             SetFacing(new Vector2Int(runDirection, 0));
             SetState(CombatState.Running);
         }
@@ -557,6 +558,24 @@ namespace RuralRumble.Combat
         {
             if (state == CombatState.Running)
                 SetState(BaseState);
+        }
+
+        // ================================================================ Focus (D-037)
+
+        /// <summary>Free to act: Standing, Walking or Recovering. Only then does Focus set facing (D-037).</summary>
+        internal bool IsFreeToAct =>
+            state == CombatState.Standing || state == CombatState.Walking || state == CombatState.Recovering;
+
+        /// <summary>
+        /// D-037 Focus: a free wrestler faces the opponent (left/right by side, back stance when the opponent is
+        /// more than the tuned height higher on screen). Locked states (striking, Struck, down, lock-up, bodyslam,
+        /// whiff) and Running keep their facing. Raises FacingChanged only on a change.
+        /// </summary>
+        internal void ApplyFocus(Vector2 opponentPosition)
+        {
+            if (!IsFreeToAct)
+                return;
+            SetFacing(FocusRules.FacingToward(position, opponentPosition, horizontalFacing, FocusRules.BackStanceHeightUnits(tuning)));
         }
 
         // ================================================================ Being hit

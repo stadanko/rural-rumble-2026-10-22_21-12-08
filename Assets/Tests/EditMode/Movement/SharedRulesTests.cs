@@ -34,36 +34,57 @@ namespace RuralRumble.Tests.EditMode
             // player walk through the CPU.)
             var cpuStart = new Vector2(17.6667f, -13.5f);
             using var h = new MatchHarness(new Vector2(9f, -11.6667f), cpuStart: cpuStart);
-            Vector2 cpuFacing = h.Cpu.Facing;
-            // Player walks past the CPU and runs across the arena.
-            h.PlayerInput.HeldMove = Vector2.right; h.TickSeconds(3f);
-            h.PlayerInput.Release(); h.PlayerInput.PressRunOnce(); h.TickSeconds(3f);
-            h.PlayerInput.HeldMove = new Vector2(-1f, 1f); h.TickSeconds(3f);
+            // Player walks past the CPU and runs across the arena. Since D-037 the idle CPU's facing follows the
+            // player (Focus), but it still never moves or changes state.
+            float threshold = h.Tuning.focusBackStanceHeightPx / 60f;
+            void AssertCpuFacesPlayer(string when)
+            {
+                float dx = h.Player.Position.x - h.Cpu.Position.x;
+                if (dx == 0f) return;
+                bool back = h.Player.Position.y - h.Cpu.Position.y > threshold;
+                Vector2 expected = new Vector2(dx > 0f ? 1f : -1f, back ? 1f : 0f).normalized;
+                Assert.AreEqual(expected, h.Cpu.Facing, when);
+            }
+            h.PlayerInput.HeldMove = Vector2.right; h.TickSeconds(3f, afterEachTick: i => AssertCpuFacesPlayer($"walk {i}"));
+            h.PlayerInput.Release(); h.PlayerInput.PressRunOnce(); h.TickSeconds(3f, afterEachTick: i => AssertCpuFacesPlayer($"run {i}"));
+            h.PlayerInput.HeldMove = new Vector2(-1f, 1f); h.TickSeconds(3f, afterEachTick: i => AssertCpuFacesPlayer($"walk back {i}"));
             V2Assert.AreEqual(cpuStart, h.Cpu.Position, 1e-6f);
             Assert.AreEqual(CombatState.Standing, h.Cpu.State);
-            Assert.AreEqual(cpuFacing, h.Cpu.Facing);
             Assert.IsFalse(h.StateChanges.Any(e => e.id == WrestlerId.Cpu));
-            Assert.IsFalse(h.FacingChanges.Any(e => e.id == WrestlerId.Cpu));
+            Assert.IsTrue(h.FacingChanges.Any(e => e.id == WrestlerId.Cpu), "precondition: the player crossed the CPU");
         }
 
         // Shared rules: the CPU's intents go through exactly the same movement rules as the player's.
+        // Updated for D-037: facing now depends on which side the opponent is on, so identical intents no
+        // longer give identical facing. The wrestlers stand mirrored and get mirrored intents (walk away, walk
+        // diagonally away and down, then Run with nothing held = toward each other, at another depth): states
+        // must match, facings and x travel must mirror, and depth travel must match.
         [Test]
-        public void CpuAndPlayer_SameIntents_SameResults()
+        public void CpuAndPlayer_MirroredIntents_MirroredResults()
         {
-            var playerStart = new Vector2(5f, -13f);
-            var cpuStart = new Vector2(5f, -11.5f);
+            var playerStart = new Vector2(8f, -13f);
+            // Different depths, but well under the back-stance height (default 50 px = 0.83 units), so both start
+            // in front stance: 0.4 units = 24 px.
+            var cpuStart = new Vector2(18f, -12.6f);
             using var h = new MatchHarness(playerStart, cpuStart: cpuStart);
+            Assert.That(cpuStart.y - playerStart.y, Is.LessThan(h.Tuning.focusBackStanceHeightPx / 60f), "precondition: both front stance");
             h.CpuIdle = false;
-            // They start facing opposite ways (each faces the other); walking right aligns them.
-            void Both(Vector2 move) { h.PlayerInput.HeldMove = move; h.CpuInput.HeldMove = move; }
-            Both(Vector2.right); h.Tick(20);
-            Both(new Vector2(1f, -1f)); h.Tick(10);
-            Both(Vector2.zero); h.PlayerInput.PressRunOnce(); h.CpuInput.PressRunOnce(); h.Tick(15);
-            Assert.AreEqual(h.Player.State, h.Cpu.State);
-            Assert.AreEqual(h.Player.Facing, h.Cpu.Facing);
-            Assert.AreEqual(h.Player.HorizontalFacing, h.Cpu.HorizontalFacing);
-            Assert.AreEqual(h.Player.Position.x - playerStart.x, h.Cpu.Position.x - cpuStart.x, 1e-4f);
-            // Depth: player is clamped at the front edge, CPU is not, so compare only horizontal travel and state.
+            void Both(Vector2 playerMove) { h.PlayerInput.HeldMove = playerMove; h.CpuInput.HeldMove = new Vector2(-playerMove.x, playerMove.y); }
+            void AssertMirrored(string when)
+            {
+                Assert.AreEqual(h.Player.State, h.Cpu.State, when);
+                Assert.AreEqual(-h.Player.HorizontalFacing, h.Cpu.HorizontalFacing, when);
+                Assert.AreEqual(new Vector2(-h.Player.Facing.x, h.Player.Facing.y), h.Cpu.Facing, when);
+                Assert.AreEqual(h.Player.Position.x - playerStart.x, -(h.Cpu.Position.x - cpuStart.x), 1e-4f, when);
+                Assert.AreEqual(h.Player.Position.y - playerStart.y, h.Cpu.Position.y - cpuStart.y, 1e-4f, when);
+            }
+            Both(Vector2.left); h.Tick(20, afterEachTick: i => AssertMirrored($"walk away {i}"));
+            Assert.AreEqual(1, h.Player.HorizontalFacing, "backing away, facing the CPU");
+            Both(new Vector2(-1f, -1f)); h.Tick(10, afterEachTick: i => AssertMirrored($"diagonal {i}"));
+            Both(Vector2.zero); h.PlayerInput.PressRunOnce(); h.CpuInput.PressRunOnce();
+            h.Tick(15, afterEachTick: i => AssertMirrored($"run {i}"));
+            Assert.AreEqual(CombatState.Running, h.Player.State);
+            Assert.AreEqual(1, h.Player.HorizontalFacing, "nothing held: each runs toward the other");
         }
 
         [Test]

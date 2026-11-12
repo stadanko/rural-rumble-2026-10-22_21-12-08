@@ -12,6 +12,9 @@ namespace RuralRumble.Combat
     /// the first-processed wrestler see the other's result from the same step, so neither the player
     /// nor the CPU is favored by processing order:
     /// <list type="number">
+    /// <item>Focus (D-037): each free wrestler (Standing, Walking, Recovering) turns to face the other, from
+    /// positions at the start of the tick, so a strike, lock-up or whiff started this tick reaches toward the
+    /// opponent.</item>
     /// <item>Think: timers and buttons. Each wrestler sees a snapshot of the opponent's state and
     /// position taken before either thinks.</item>
     /// <item>Lock-ups (<see cref="LockUpController"/>): this tick's Lock Up presses are resolved against the
@@ -19,6 +22,9 @@ namespace RuralRumble.Combat
     /// (lock-up, bodyslam, break; a bodyslam's impact damage and knockdown happen here).</item>
     /// <item>Movement (skipped while a paired move plays: Combat holds both at the pair anchor): each wrestler moves through the arena on its own, then <see cref="WrestlerBlocking"/>
     /// resolves the two feet boxes symmetrically. Obstacle hits, run ends and run collisions follow.</item>
+    /// <item>Focus again, from the new positions, for every wrestler free to act now (including one that became
+    /// free this tick, e.g. a run, strike, Struck or lock-up that just ended), so facing read after the tick is
+    /// correct. Runners and locked states keep their facing.</item>
     /// <item>Hits: each strike whose hit window was open this tick is checked against the other's hurt
     /// box. The one whose window opened earlier lands; the other is cancelled. An exact tie is a trade
     /// (both land).</item>
@@ -51,6 +57,7 @@ namespace RuralRumble.Combat
             cpu = new CombatWrestler(WrestlerId.Cpu, tuning, Events, cpuStartFeet, -playerFacing, cpuWrestler);
             player.PlaceAt(Arena.ClampToBounds(playerStartFeet, player.FeetHalfExtents));
             cpu.PlaceAt(Arena.ClampToBounds(cpuStartFeet, cpu.FeetHalfExtents));
+            ApplyFocus(); // D-037: start in the focus facing (stance included).
 
             if (random01 == null)
             {
@@ -88,6 +95,9 @@ namespace RuralRumble.Combat
             dt = Mathf.Clamp(dt, 0f, Tuning.maxTickStep);
             ElapsedSeconds += dt;
 
+            // 0. Focus (D-037) before anyone acts: actions started this tick use the focus facing.
+            ApplyFocus();
+
             // 1. Think (opponent snapshots taken before either wrestler changes).
             CombatState playerStateBefore = player.State, cpuStateBefore = cpu.State;
             Vector2 playerPosBefore = player.Position, cpuPosBefore = cpu.Position;
@@ -102,11 +112,24 @@ namespace RuralRumble.Combat
             if (!lockUps.IsActive)
                 ResolveMovement();
 
+            // 3b. Focus (D-037) from the new positions, for whoever is free to act now.
+            ApplyFocus();
+
             // 4. Hits.
             ResolveHits();
 
             // 5. Knockout.
             CheckKnockout();
+        }
+
+        // ================================================================ Focus
+
+        /// <summary>D-037: both wrestlers aim from the same position snapshot, so processing order cannot matter.</summary>
+        private void ApplyFocus()
+        {
+            Vector2 playerPos = player.Position, cpuPos = cpu.Position;
+            player.ApplyFocus(cpuPos);
+            cpu.ApplyFocus(playerPos);
         }
 
         // ================================================================ Movement

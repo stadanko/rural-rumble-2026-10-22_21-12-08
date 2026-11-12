@@ -93,7 +93,8 @@ namespace RuralRumble.Tests.PlayMode
             V2Assert(PlayerSpawn, match.Player.Position, 0.05f, "the player has no input and must not move");
         }
 
-        // ARCHITECTURE 4.1 / D-019: keyboard D = move right, A = left, Space = Run (press once, D-020).
+        // ARCHITECTURE 4.1 / D-019: keyboard D = move right, A = left, Space = Run (press once, D-020; direction
+        // and facing per D-037 Focus).
         [UnityTest]
         public IEnumerator PlayerInput_Keyboard_WalksAndRuns()
         {
@@ -124,24 +125,28 @@ namespace RuralRumble.Tests.PlayMode
                 yield return new WaitForSeconds(0.4f);
                 Assert.AreEqual(CombatState.Walking, match.Player.State, "holding A should walk");
                 Assert.Less(match.Player.Position.x, beforeWalk.x - 0.3f, "holding A should move the player left");
-                Assert.AreEqual(-1, match.Player.HorizontalFacing);
-                Assert.IsFalse(boot.PlayerRoot.GetComponent<WrestlerView>().SpriteRenderer.flipX, "facing left -> not flipped");
+                // D-037 Focus: walking away backs up while still facing the CPU (to the right).
+                Assert.AreEqual(1, match.Player.HorizontalFacing, "holding A backs away but keeps facing the CPU");
+                Assert.IsTrue(boot.PlayerRoot.GetComponent<WrestlerView>().SpriteRenderer.flipX, "facing right -> flipped");
 
                 keyboard.ReleaseAll();
                 yield return null;
                 yield return null;
                 Assert.AreEqual(CombatState.Standing, match.Player.State, "releasing all keys should stand");
 
-                // Press-once run: tap Space, release, and the run keeps going left (last horizontal facing).
+                // Press-once run (D-037): tap Space while holding A, release both, and the run keeps going left
+                // (the held direction, away from the CPU); the runner faces the run direction.
                 Vector2 beforeRun = match.Player.Position;
-                keyboard.SetPressed("Space");
+                keyboard.SetPressed("A", "Space");
                 yield return null;
                 yield return null;
                 keyboard.ReleaseAll();
                 yield return new WaitForSeconds(0.2f);
                 Assert.AreEqual(CombatState.Running, match.Player.State, "one Space tap should start a run");
-                Assert.Less(match.Player.Position.x, beforeRun.x - 0.5f);
+                Assert.Less(match.Player.Position.x, beforeRun.x - 0.5f, "A held on the Space tap runs left");
                 Assert.AreEqual(beforeRun.y, match.Player.Position.y, 1e-4f, "runs are left/right only");
+                Assert.AreEqual(-1, match.Player.HorizontalFacing, "the runner faces the run direction");
+                Assert.IsFalse(boot.PlayerRoot.GetComponent<WrestlerView>().SpriteRenderer.flipX, "facing left -> not flipped");
 
                 // The CPU is silenced in this test, so any CPU movement would have to come from the player's input.
                 V2Assert(CpuSpawn, match.Cpu.Position, 1e-3f, "player input must not move the CPU");

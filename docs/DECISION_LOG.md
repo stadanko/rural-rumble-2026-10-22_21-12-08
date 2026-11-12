@@ -351,6 +351,22 @@ Agents: read this before starting work. If a task conflicts with a decision here
 - **Affects:** Assets/Animation/*/{Barry,Peaux}_FrameTiming.asset and the four bodyslam clips, Assets/Animation/MoveAnimationTable.asset, Assets/Data/Tuning/CombatTuning.asset, docs/ARCHITECTURE.md, docs/ACCEPTANCE_TESTS.md (L5.9). EditMode `BodyslamTests` keep their own fixture values (they test the per-initiator rule, not the project asset).
 - **Playtest (2026-11-12):** designer accepted the faster bodyslam and the Frame Timing Inspector (including the combat-timing section and the Disable Cpu Ai testing toggle).
 
+## D-037: Focus: wrestlers always face each other
+
+- **Date:** 2026-11-12
+- **Decided by:** Designer
+- **Decision:**
+  - **Facing:** while a wrestler is **free to act** (Standing, Walking or Recovering), their left/right facing always points at the opponent, whatever direction they move. Walking away means backing up while still facing the opponent. If the two are exactly vertically aligned, the last left/right facing is kept.
+  - **Front/back stance** comes from position, not input. If the opponent is more than the **Focus back-stance height** higher on screen (farther back, toward the trailer), the wrestler uses the **back** stance; otherwise **front**. At about equal height, both use front. This holds whichever side each wrestler is on.
+  - **Tunable:** `CombatTuning.focusBackStanceHeightPx`, default **50 px** (60 px = 1 world unit; first set at 100 px, lowered to 50 px by the designer the same day after trying it in game), editable in the Inspector and live in Play Mode.
+  - **Locked facing:** while striking, Struck, Knocked Down / Knocked Out, or in a lock-up or bodyslam, facing stays where it was. It snaps back to the opponent as soon as the wrestler is free to act again.
+  - **Running:** Focus is off for the runner, who faces the run direction until the run ends. **Run direction:** the left/right direction held on the Left Stick/D-Pad (or A/D) when Run is pressed; with no left/right held, **toward the opponent**. A wrestler whose opponent is running (but who isn't running) keeps focusing on them.
+  - **Input:** movement input moves the wrestler but no longer turns them or chooses the stance. This applies to the player and the CPU alike.
+- **Why:** Keeps both wrestlers engaged with each other like a real match, and makes the stance read clearly from where the wrestlers stand.
+- **Affects:** docs/CONTROLS.md (movement, Run), docs/COMBAT_SPEC.md (Focus, Tuning Values), Combat (`CombatWrestler` facing, run direction), `CombatTuning`, EditMode/PlayMode tests that assumed facing follows input. Presentation is unchanged: it already draws the facing combat reports.
+- **Open point:** Q-006 (Irish Whip direction under Focus).
+- **Playtest (2026-11-12):** designer accepted Focus (facing, stance at 50 px, running, locked facing, CPU).
+
 ---
 
 ## Open Questions
@@ -362,3 +378,4 @@ Not yet decided. Agents must not resolve these on their own.
 - **Q-003: When to start the Art Wrangler.** Resolved by D-008.
 - **Q-004: Master copies of design documents.** The `.docx` files in docs/ are older than the `.md` versions. Recommended: treat the `.md` files as the source of truth.
 - **Q-005: Craftpix license.** Resolved by D-011.
+- **Q-006: Irish Whip direction under Focus (D-037).** CONTROLS says that with no direction held, the whip goes "in the direction the opponent is currently facing". Under Focus, the locked-up opponent faces the initiator, so that would whip them *into* the initiator. Decide when the Irish Whip is built (lock-up slice step 3).

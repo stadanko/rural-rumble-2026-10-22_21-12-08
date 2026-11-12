@@ -61,42 +61,42 @@ Last run: 2026-10-31 (with the combat-core slice; see that section). Movement te
 
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
-| M3.1 | One Run press starts a run in the facing left/right direction; it continues with no input held | D-020 | `RunningTests.Run_OnePressFromStanding_*`, `Run_FromWalkingLeft_RunsLeft`, PlayMode `PlayerInput_Keyboard_WalksAndRuns` (Space tap) | Auto |
-| M3.2 | Facing straight up or down, the run goes toward the last left/right facing | D-020 | `RunningTests.Run_FacingStraightUpOrDown_UsesLastHorizontalFacing` (4 cases) | Auto |
-| M3.3 | A diagonal facing runs along its horizontal part | D-020 | `RunningTests.Run_FacingDiagonal_RunsHorizontally` | Auto |
+| M3.1 | One Run press starts a run; it continues with no input held. Direction per D-037 (see F4): the left/right held on the press, else toward the opponent | D-020, D-037 | `RunningTests.Run_OnePressFromStanding_*`, `Run_FromWalkingLeft_HoldingLeft_RunsLeft`, `Run_FromWalkingLeft_Released_RunsTowardOpponent`, PlayMode `PlayerInput_Keyboard_WalksAndRuns` (A + Space tap) | Auto |
+| M3.2 | ~~Facing straight up or down, the run goes toward the last left/right facing~~ Superseded by D-037: holding straight up or down (no left/right) runs toward the opponent | D-037 | `RunningTests.Run_HoldingStraightUpOrDown_RunsTowardOpponent` (4 cases; replaces `Run_FacingStraightUpOrDown_UsesLastHorizontalFacing`) | Auto |
+| M3.3 | ~~A diagonal facing runs along its horizontal part~~ Superseded by D-037: a diagonal held on the press runs along its left/right part | D-037 | `RunningTests.Run_HoldingDiagonal_RunsAlongHeldHorizontal` (4 cases; replaces `Run_FacingDiagonal_RunsHorizontally`) | Auto |
 | M3.4 | A run is left or right only: holding up or down does not steer depth | COMBAT_SPEC Running | `RunningTests.Run_HoldingUpOrDown_DoesNotSteerDepth` | Auto |
 | M3.5 | The run ends at the arena ends and the back wall (back to Standing, no damage); a run into the truck or pool is Struck with obstacle collision damage, then Standing (D-027; Knocked Down below 30, D-030, see C9) | D-020, D-027 | `RunningTests.Run_StopsAt{Right,Left}Edge_*`, `Run_StopsAtTruck_StruckThenStanding`, `Run_StopsAtPool_StruckThenStanding`, `Run_StartedAgainstEdge_*`; `RunRulesTests.RunIntoArenaEndOrBackWall_NoDamageNoEvent` | Auto |
 | M3.6 | After a run the wrestler can walk and run again | D-020 | `RunningTests.Run_AfterStopping_CanWalkAndRunAgain` | Auto |
 | M3.7 | Run ends on "gets hit" or "performs another action" | D-020, D-029 | Combat-core slice C9.2, C9.3 (`StrikeTests.Strike_LandsOnRunningWrestler`, `RunRulesTests.StrikeWhileRunning_*`) | Auto |
 | M3.8 | Recovering: walking slowed, running not allowed | COMBAT_SPEC Recovering | Combat-core slice C7 (`RecoveringTests.Recovering_WalksAtReducedSpeed_*`, `Recovering_CannotRun`) | Auto |
 | M3.9 | Run speed feels right; a run stopping dead at the edge or an obstacle reads well | D-005 starting points | none | **Human** |
-| M3.10 | Holding a direction and pressing Run on the same frame runs the way the player expects | CONTROLS ("direction player is facing") | none | **Human**, **Gap** (see report) |
+| M3.10 | ~~Holding a direction and pressing Run on the same frame runs the way the player expects~~ Gap closed by D-037 (the held left/right on the press decides); feel moves to F7.4 | D-037 | see F4 | Auto + **Human** (F7.4) |
 
 ### M4. Facing (ARCHITECTURE 4.2, STYLE_GUIDE animations)
 
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
-| M4.1 | `Facing` is the unit vector of the last 8-way direction | 4.2 | `FacingTests.Walk_SetsFacingToUnitEightWayDirection_*` (8 cases) | Auto |
-| M4.2 | Back-facing = Up-Left, Up, Up-Right (`Facing.y > 0`); the other five are front-facing | STYLE_GUIDE Walking Back/Front Facing | same test, plus PlayMode `WrestlerView_BackFacingRule_AllEightDirections` | Auto |
-| M4.3 | `HorizontalFacing` follows any left or right component and is kept when facing straight up or down | 4.2, D-020 | `FacingTests.Walk_DiagonalSetsHorizontalFacing`, `Walk_StraightUpOrDown_KeepsLastHorizontalFacing` | Auto |
-| M4.4 | Standing keeps the last facing ("stand to match the most recent animation") | STYLE_GUIDE Standing | `FacingTests.Standing_KeepsLastFacing` (8 cases) | Auto |
-| M4.5 | At match start the wrestlers face each other | implementation | `FacingTests.MatchStart_WrestlersFaceEachOther`; PlayMode flip check in `Match_Builds*` | Auto, **Gap** |
+| M4.1 | ~~`Facing` is the unit vector of the last 8-way direction~~ Superseded by D-037: movement input never turns a wrestler; Focus sets `Facing` (see F1, F2) | D-037 | `FacingTests.Walk_AnyDirection_DoesNotTurn_KeepsFacingOpponent` (8 directions x both sides; replaces `Walk_SetsFacingToUnitEightWayDirection_*`) | Auto |
+| M4.2 | Back-facing is `Facing.y > 0`. ~~Back = walking Up-Left, Up, Up-Right~~ Superseded by D-037: back stance only when the opponent is more than the Focus back-stance height higher (F2) | STYLE_GUIDE, D-037 | `FocusRulesTests.FacingToward_StanceThresholdBoundary`, `FocusTests.OpponentMovesHigher_*`; PlayMode `WrestlerView_BackFacingRule_AllEightDirections` (presentation of `Facing.y > 0`, unchanged) | Auto |
+| M4.3 | ~~`HorizontalFacing` follows any left or right component and is kept when facing straight up or down~~ Superseded by D-037: `HorizontalFacing` points at the opponent; kept only when exactly vertically aligned (F1.3) | D-037 | `FacingTests.WalkDiagonally_AwayOrToward_HorizontalFacingStaysOnOpponent`, `VerticallyAligned_KeepsLastHorizontalFacing_WhileWalkingUpOrDown` (replace `Walk_DiagonalSetsHorizontalFacing`, `Walk_StraightUpOrDown_KeepsLastHorizontalFacing`) | Auto |
+| M4.4 | ~~Standing keeps the last facing ("stand to match the most recent animation")~~ Superseded by D-037: a Standing wrestler faces the opponent whatever it walked last | D-037 | `FacingTests.Standing_AfterWalkingAnyDirection_FacesOpponent` (8 cases; replaces `Standing_KeepsLastFacing`) | Auto |
+| M4.5 | At match start the wrestlers face each other, stance included (Gap closed by D-037) | D-037 | `FacingTests.MatchStart_WrestlersFaceEachOther`, `FocusTests.MatchStart_FacesEachOther_IncludingBackStance`; PlayMode flip check in `Match_Builds*` | Auto |
 | M4.6 | `WrestlerView` flips Barry's left-facing art when `HorizontalFacing` = +1, sets Animator `State` = (int)CombatState and `Back` = 0/1, and never moves the root | 4.2 | `PresentationTests.WrestlerView_FlipsForRightFacing_AndSetsAnimatorState` | Auto |
-| M4.7 | The sprite and animation are correct in all 8 walk directions and both standing facings (correct clip, correct flip, no flicker when changing direction) | STYLE_GUIDE | none | **Human** |
+| M4.7 | The sprite and animation are correct in all 8 walk directions and both standing facings (correct clip, correct flip, no flicker when changing direction). Under D-037 the clip/flip follows Focus, not the walk direction: see F7 | STYLE_GUIDE, D-037 | none | **Human** |
 
 ### M5. Combat events (ARCHITECTURE 4.2)
 
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
 | M5.1 | `StateChanged` fires once per real transition, with a correct from/to chain and wrestler id | 4.2 | `CombatEventsTests.StateChanged_*` | Auto |
-| M5.2 | `FacingChanged` fires once per real facing change; not for the same direction, not for stick noise in one sector, not on Standing | 4.2 | `CombatEventsTests.FacingChanged_*` | Auto |
+| M5.2 | `FacingChanged` fires once per real facing change; not for the same direction, not on Standing. Since D-037 stick input never fires it (noise or full swings); real changes are crossing over, the stance threshold, and runs | 4.2, D-037 | `CombatEventsTests.FacingChanged_FiresOncePerRealChange_WithNewFacing`, `FacingChanged_StickNoiseAndSwings_DoNotFire`, `FacingChanged_RunFromBackStance_FiresOnceToHorizontal_ThenOnceWhenRunEnds` (all rewritten for D-037); `FocusTests.CrossingOver_FlipsBoth_OnceEach` | Auto |
 
 ### M6. Shared rules, CPU stand-in, tuning (CLAUDE.md, ARCHITECTURE 4.1, D-005)
 
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
-| M6.1 | The CPU's intents go through the same rules as the player's | CLAUDE.md Unity Rules, 4.1 | `SharedRulesTests.CpuAndPlayer_SameIntents_SameResults` | Auto |
-| M6.2 | ~~The idle stand-in CPU never moves~~ Replaced: Match.unity's CPU is driven by `OpponentBrain` (ARCHITECTURE 4.4). `IdleInput` is still the test harness's silent opponent | 4.4 | `SharedRulesTests.IdleInput_*`, `IdleCpu_*` (harness); PlayMode `MovementSliceSceneTests.Match_CpuIsDrivenByOpponentBrain_AndApproachesThePlayer` (replaces `Match_CpuStandInStaysIdle`) | Auto |
+| M6.1 | The CPU's intents go through the same rules as the player's. Since D-037 facing depends on the opponent's side, so the check is mirrored: mirrored positions and intents give the same states, mirrored facing and x travel, the same depth travel | CLAUDE.md Unity Rules, 4.1, D-037 | `SharedRulesTests.CpuAndPlayer_MirroredIntents_MirroredResults` (replaces `CpuAndPlayer_SameIntents_SameResults`) | Auto |
+| M6.2 | ~~The idle stand-in CPU never moves~~ Replaced: Match.unity's CPU is driven by `OpponentBrain` (ARCHITECTURE 4.4). `IdleInput` is still the test harness's silent opponent; it never moves or changes state, and since D-037 its facing follows the player (checked every tick) | 4.4, D-037 | `SharedRulesTests.IdleInput_*`, `IdleCpu_*` (harness); PlayMode `MovementSliceSceneTests.Match_CpuIsDrivenByOpponentBrain_AndApproachesThePlayer` (replaces `Match_CpuStandInStaysIdle`) | Auto |
 | M6.3 | Each input is read once per tick | 4.1 | `SharedRulesTests.Inputs_AreReadOncePerTick` | Auto |
 | M6.4 | Tuning edits (walk and run speeds, deadzone, feet width, max step) apply on the next tick without rebuilding the match | D-005, ARCHITECTURE 5 | `SharedRulesTests.TuningEdit_*` | Auto |
 | M6.5 | Editing `CombatTuning.asset` in the Inspector during Play Mode changes the running game | D-005 | none | **Human** |
@@ -126,13 +126,13 @@ Last run: 2026-10-31 (with the combat-core slice; see that section). Movement te
 
 ### Movement Slice: human playtest checklist
 
-1. Walk all 8 directions with the keyboard (WASD), the left stick and the D-pad. Check the sprite flip and the front/back clip in each direction, and that stopping keeps the last facing (M1.7, M4.7).
+1. Walk all 8 directions with the keyboard (WASD), the left stick and the D-pad. Since D-037 the flip and front/back clip follow the opponent (Focus), not the walk direction: see the Focus checklist (M1.7, M4.7, F7).
 2. Speeds: horizontal 3.0, depth 2.0, diagonal 3.6, run 7.0 u/s (D-029). Are these OK? (M1.4, M1.8, M3.9)
 3. Deadzone 0.3: does a resting or worn stick drift? Do small pushes register when they should? (M1.8)
 4. Truck and pool footprint depths against the art: walk along each front face and around each corner (M2.9).
 5. Edges: trailer back wall, front edge, left and right sides. Does the wrestler stop in a believable place? (M2.10)
 6. Depth sorting with the truck and pool (M2.11).
-7. Runs: tap B or Space from each facing, including straight up or down. Does stopping dead at edges and obstacles feel right? Does holding a direction and pressing Run together go the expected way? (M3.9, M3.10)
+7. Runs: tap B or Space with left, right, up, down and nothing held. Does stopping dead at edges and obstacles feel right? Does the run go the expected way (held left/right, else toward the opponent, D-037)? (M3.9, F7.4)
 8. Camera: the CPU now approaches, so run away from it in both directions (or knock it down first). Check zoom-out smoothness, the zoom-in return, and pixel crispness at the default zoom (M8.6).
 9. Edit `CombatTuning.asset` during Play Mode and confirm the change applies at once (M6.5).
 
@@ -159,7 +159,7 @@ Last run: 2026-10-31. EditMode 233/234 (1 known failure, C1.4). PlayMode 15/15.
 | C1.7 | Wrestlers can't move while Striking | D-024 | `StrikeTests.Striking_IsRooted` | Auto |
 | C1.8 | The attacker may strike from Standing, Walking, Running (ends the run, Strike 1), Striking (combo), Recovering; not while Struck or Knocked Down | Spec allowed-state list, D-029 | `RunRulesTests.StrikeWhileRunning_*`, `ComboTimingTests.StrikeFromRun_InsideComboWindow_IsStrike1`, `RecoveringTests.Recovering_CanStrike_ReturnsToRecovering`, `StrikeAllowedStatesTests.Struck_CannotStrikeOrMove`, `KnockedDown_StrikeIsMashNotAMove_AndCannotMove` | Auto |
 | C1.9 | A strike lands on a defender who is Standing, Walking, Running, Striking, Struck, Lock Up or Recovering; on Knocked Down only as a Stomp; never on Locked Up, Grappling, Grappled, Knocked Out | Spec allowed-state list, D-024, D-025 | `StrikeAllowedStatesTests.CanBeStruck_MatchesSpecList` (12 cases), `StrikeTests.Strike_LandsOnRunningWrestler`, `KnockdownTests.KnockedDown_ComboStrikeDoesNotLand_*`, `LockUpTests.Whiff_CanBeStruck`, `LockUp_PressedAsOpponentHitWindowOpens_Whiffs_AndTheStrikeLands` | Auto (Locked Up at the rule level only: nobody can strike a Locked Up wrestler while B has no control and A's Strike is ignored) |
-| C1.10 | Reach and depth: hits only in front, within reach + hurt box and the depth tolerance; a strike hits at most once | Combat starting points | `StrikeTests.Strike_FacingAway_Whiffs`, `Strike_DepthTolerance`, `Strike1_Reach_*`, `Strike_HitsOnlyOnce` | Auto |
+| C1.10 | Reach and depth: hits only in front, within reach + hurt box and the depth tolerance; a strike hits at most once. Since D-037 a free wrestler can't face away, so "only in front" is checked with facing locked by the strike (opponent passes behind during the wind-up) | Combat starting points, D-037 | `StrikeTests.Strike_OpponentBehind_FacingLocked_Whiffs` (replaces `Strike_FacingAway_Whiffs`), `Strike_DepthTolerance`, `Strike1_Reach_*`, `Strike_HitsOnlyOnce` | Auto |
 
 ### C2. Strike trades (COMBAT_SPEC Striking, D-030)
 
@@ -309,7 +309,7 @@ Step 1: the standing lock-up, the whiff and the break (COMBAT_SPEC Lock Up/Grapp
 | L1.1 | Lock Up from Standing, Walking or Recovering on an opponent who is Standing, Walking or Recovering, in reach and in front: A = Lock Up, B = Locked Up | Spec allowed list, D-028 | `LockUpTests.LockUp_FromStanding_OnStandingOpponent_*`, `LockUp_FromWalking_OnWalkingOpponent`, `LockUp_OnRecoveringOpponent`, `LockUp_FromRecovering`, `LockUp_PlayerAndCpuRoles_Swapped_SameRules` | Auto |
 | L1.2 | Both snapped to the pair anchor (A stays, B `lockUpPairSpacing` in front at A's depth; A placed behind B if B's spot is off the arena), facing each other; `PairedMoveStarted` carries initiator, receiver, LockUp, anchor, facing and the timing (Active = lock-up timer) | ARCHITECTURE 6 | `LockUpTests.LockUp_FromStanding_OnStandingOpponent_SnapsAndRaisesPairedMoveStarted`, `Snap_ReceiverSpotOutsideArena_InitiatorIsPlacedInstead` | Auto |
 | L1.3 | A strike still winding up (before its hit window opens) is cancelled by the lock-up and never lands; once its hit window is open the lock-up whiffs and the strike lands | Spec Striking (Wrestler B only) | `LockUpTests.LockUp_OnOpponentStrikeWindingUp_CancelsTheStrike`, `LockUp_SameTickOpponentStartsStrike_CancelsTheStrike`, `LockUp_PressedAsOpponentHitWindowOpens_Whiffs_AndTheStrikeLands` | Auto |
-| L1.4 | Not on an opponent who is Running, Struck, Lock Up (whiffing), Knocked Down or Knocked Out (whiff instead); not out of reach, beyond the depth tolerance or facing away; Lock Up does nothing while Running, Striking or Struck | Spec, D-029 | `LockUpTests.CanBeLockedUp_MatchesSpecList` (17 cases), `LockUp_OnRunningOpponent_Whiffs`, `LockUp_OnStruckOpponent_Whiffs`, `LockUp_OnKnockedDownOpponent_Whiffs`, `LockUp_OnWhiffingOpponent_Whiffs`, `LockUp_OutOfReach_Whiffs`, `LockUp_BeyondDepthTolerance_Whiffs`, `LockUp_FacingAway_Whiffs`, `LockUp_WhileStruck_DoesNothing`, `LockUp_WhileStriking_DoesNothing`, `RunRulesTests.LockUpWhileRunning_DoesNothing` | Auto |
+| L1.4 | Not on an opponent who is Running, Struck, Lock Up (whiffing), Knocked Down or Knocked Out (whiff instead); not out of reach or beyond the depth tolerance (~~facing away~~: superseded by D-037, a free wrestler always faces the opponent, so the grab reaches them); Lock Up does nothing while Running, Striking or Struck | Spec, D-029, D-037 | `LockUpTests.CanBeLockedUp_MatchesSpecList` (17 cases), `LockUp_OnRunningOpponent_Whiffs`, `LockUp_OnStruckOpponent_Whiffs`, `LockUp_OnKnockedDownOpponent_Whiffs`, `LockUp_OnWhiffingOpponent_Whiffs` (CPU now whiffs out of reach), `LockUp_OutOfReach_Whiffs`, `LockUp_BeyondDepthTolerance_Whiffs`, `LockUp_AfterStickAway_FocusStillFacesOpponent_LocksUp` (replaces `LockUp_FacingAway_Whiffs`), `LockUp_WhileStruck_DoesNothing`, `LockUp_WhileStriking_DoesNothing`, `RunRulesTests.LockUpWhileRunning_DoesNothing` | Auto |
 | L1.5 | Both press Lock Up in reach on the same tick: 50/50 winner from the injected random source; same seed, same winner; if only one reaches, that one wins | D-028 | `LockUpTests.Simultaneous_InReach_WinnerFromRandomSource` (2), `Simultaneous_SeededRandom_IsFiftyFifty_AndRepeatable`, `Simultaneous_OnlyOneReaches_ThatOneWins_NoRandom` | Auto |
 
 ### L2. Whiff (D-031)
@@ -389,3 +389,80 @@ Timeline (default tuning): Grapple press → A Grappling, B Grappled, `CurrentMo
 4. Is 12 damage plus a knockdown the right reward compared with a 13-damage strike combo? (L5.3)
 5. The CPU: with a 50% roll every 0.25 s it almost always slams within about half a second of locking up. Too predictable? Too punishing? (L6.1)
 6. Bodyslam to knock out (low health): does the freeze on the impact frame read as a finish? (L5.5)
+
+---
+
+## Focus (D-037)
+
+Free wrestlers always face each other (COMBAT_SPEC "Focus (D-037)", CONTROLS Run and Focus, Tuning Values "Focus back-stance height"). Supersedes the input-driven facing rows M3.2, M3.3, M3.10, M4.1, M4.3, M4.4 (and the "facing away" parts of C1.10 and L1.4). Tests: `Assets/Tests/EditMode/Movement/FocusRulesTests.cs` (pure `FocusRules`), `Assets/Tests/EditMode/Movement/FocusTests.cs` (through `CombatMatch`), plus the rewritten rows above. The threshold is read from `CombatTuning.focusBackStanceHeightPx`; 60 px = 1 unit is the documented constant.
+
+### F1. Facing the opponent (left/right)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| F1.1 | A free wrestler (Standing, Walking, Recovering) faces the opponent left/right every tick, from either side | D-037 | `FocusRulesTests.FacingToward_OpponentRight_FacesRight_OpponentLeft_FacesLeft`; `FacingTests.Walk_AnyDirection_DoesNotTurn_KeepsFacingOpponent`, `Standing_AfterWalkingAnyDirection_FacesOpponent`; `RecoveringTests.Recovering_WalksAtReducedSpeed_StaysRecovering` | Auto |
+| F1.2 | Walking away = backing up, still facing the opponent; movement input never turns a wrestler | D-037, CONTROLS | `FocusTests.WalkingAway_KeepsFacingOpponent_EveryTick`; `FacingTests.WalkDiagonally_AwayOrToward_HorizontalFacingStaysOnOpponent`; `CombatEventsTests.FacingChanged_StickNoiseAndSwings_DoNotFire`; PlayMode `PlayerInput_Keyboard_WalksAndRuns` (A held: facing and flip stay right) | Auto |
+| F1.3 | Exactly vertically aligned: the last left/right facing is kept (both +1 and -1) | D-037 | `FocusRulesTests.FacingToward_EqualX_KeepsCurrentHorizontal` (2 cases); `FacingTests.VerticallyAligned_KeepsLastHorizontalFacing_WhileWalkingUpOrDown` | Auto |
+| F1.4 | Crossing over flips both wrestlers, once each, at the crossing | D-037 | `FocusTests.CrossingOver_FlipsBoth_OnceEach` | Auto |
+| F1.5 | Both face each other from the start, stance included | D-037 | `FocusTests.MatchStart_FacesEachOther_IncludingBackStance` (both sides), `FacingTests.MatchStart_WrestlersFaceEachOther` | Auto |
+| F1.6 | A strike or lock-up pressed while backing away reaches toward the opponent (aimed this tick) | COMBAT_SPEC Focus "Input" | `FocusTests.Strike_PressedWhileWalkingAway_AimsAtOpponent_AndLands`, `LockUp_PressedWhileWalkingAway_AimsAtOpponent_AndLocksUp`; `LockUpTests.LockUp_AfterStickAway_FocusStillFacesOpponent_LocksUp` | Auto |
+
+### F2. Stance (front / back)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| F2.1 | Back stance only when the opponent is MORE than the threshold higher (larger world y); exactly the threshold, equal height or lower = front; holds on either side | D-037 | `FocusRulesTests.FacingToward_StanceThresholdBoundary` (both sides), `FacingToward_LowerOpponent_IsFront_AndHigherSeesLowerAsFront`, `FacingToward_UsesThePassedThreshold` | Auto |
+| F2.2 | In a match: the opponent rises past the threshold -> this wrestler back, opponent front; back to front when they come down (checked every tick) | D-037 | `FocusTests.OpponentMovesHigher_BackStance_ThenFrontAgain`, `Cpu_PlayerMuchHigher_CpuBackStance` | Auto |
+| F2.3 | Threshold = `focusBackStanceHeightPx` / 60 units; default 50 px | D-037, COMBAT_SPEC Tuning Values | `FocusRulesTests.BackStanceHeightUnits_IsPixelsOver60` (4 cases), `MatchCamera_PixelsPerUnit_Is60`, `NewTuning_FocusBackStanceHeight_Is100Px` | Auto |
+| F2.4 | The threshold is read live: an edit mid-match changes the stance on the next tick | D-037 "live in Play Mode", D-005 | `FocusTests.BackStanceHeight_EditedMidMatch_AppliesNextTick` | Auto |
+
+### F3. Locked facing
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| F3.1 | Striking: the opponent crosses behind during the wind-up; facing unchanged until the strike ends, then re-aims that tick; the strike reaches in its locked direction (whiff) | D-037 | `FocusTests.Striking_OpponentCrossesOver_FacingLockedUntilFree`, `StrikeTests.Strike_OpponentBehind_FacingLocked_Whiffs` | Auto |
+| F3.2 | Struck: facing unchanged while Struck, re-aims when Struck ends | D-037 | `FocusTests.Struck_OpponentCrossesOver_FacingLockedUntilFree` | Auto |
+| F3.3 | Knocked Down: facing unchanged while down; on getting up (Recovering, a free state) faces the opponent | D-037 | `FocusTests.KnockedDown_OpponentCrossesOver_FacingLockedUntilUp_ThenRecoveringFaces` | Auto |
+| F3.4 | Lock-up whiff (a lock-up state, D-031): facing unchanged until the whiff ends | D-037 | `FocusTests.LockUpWhiff_OpponentCrossesOver_FacingLockedUntilFree` | Auto |
+| F3.5 | Lock-up / bodyslam pair: facing held by the pair (receiver faces the initiator) | D-037, ARCHITECTURE 6 | `LockUpTests.LockUp_FromStanding_*`, `Simultaneous_AfterStickAway_BothStillReach_CoinFlipDecides`; `BodyslamTests.DuringBodyslam_NeitherWrestlerHasControl` (no facing changes) | Auto |
+| F3.6 | Knocked Out: facing locked | D-037 | none directly (the match freezes at a knockout, C8) | **Gap** (low value) |
+
+### F4. Running
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| F4.1 | Run direction = the left/right held on the press (beyond `moveDeadzone`), even away from the opponent | D-037, CONTROLS Run | `FocusRulesTests.RunDirection_HeldLeftOrRight_GoesThatWay_WhereverTheOpponentIs`; `RunningTests.Run_FromWalkingLeft_HoldingLeft_RunsLeft`, `Run_HoldingDiagonal_RunsAlongHeldHorizontal`, `Run_StartedAgainstEdge_EndsStandingSameTick`, `Run_AfterStopping_CanWalkAndRunAgain`; `StrikeTests.Strike_LandsOnRunningWrestler` (CPU); PlayMode `PlayerInput_Keyboard_WalksAndRuns` | Auto |
+| F4.2 | No left/right held (nothing, up/down only, or inside the deadzone) -> toward the opponent; exactly aligned -> current facing | D-037 | `FocusRulesTests.RunDirection_NothingHeldOrWithinDeadzone_GoesTowardOpponent`, `RunDirection_NothingHeld_EqualX_KeepsCurrentFacing`; `RunningTests.Run_HoldingStraightUpOrDown_RunsTowardOpponent`, `Run_FromWalkingLeft_Released_RunsTowardOpponent`, `Run_LeftTiltInsideDeadzone_RunsTowardOpponent_OutsideRunsLeft` | Auto |
+| F4.3 | The runner faces the run direction for the whole run (Focus off), then faces the opponent again the tick the run ends | D-037 | `FocusTests.RunningAway_FacesRunDirection_ThenFacesOpponentWhenRunEnds`, `RunnerPassesOpponent_OpponentTurnsToFollow_RunnerKeepsRunFacing`; `CombatEventsTests.FacingChanged_RunFromBackStance_*` | Auto |
+| F4.4 | A non-running wrestler keeps facing a running opponent (turns as the runner passes) | D-037 | `FocusTests.RunnerPassesOpponent_OpponentTurnsToFollow_RunnerKeepsRunFacing`, `RunningAway_FacesRunDirection_*` | Auto |
+
+### F5. Shared rules (CPU)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| F5.1 | The CPU faces the player by the same rules: its own walk input doesn't turn it; back stance toward a much higher player; its Run with nothing held goes toward the player | D-037, CLAUDE.md shared rules | `FocusTests.Cpu_WalksAway_StillFacesPlayer_AndRunsTowardPlayerWithNothingHeld`, `Cpu_PlayerMuchHigher_CpuBackStance`; `SharedRulesTests.IdleCpu_NeverMovesOrChangesState_WhilePlayerActs`, `CpuAndPlayer_MirroredIntents_MirroredResults` | Auto |
+
+### F6. Events
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| F6.1 | `FacingChanged` fires only on a real change (see M5.2) | 4.2, D-037 | `CombatEventsTests.FacingChanged_*`, `FocusTests.CrossingOver_FlipsBoth_OnceEach`, `OpponentMovesHigher_BackStance_ThenFrontAgain` (exactly 2 events) | Auto |
+
+### F7. Feel (human)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| F7.1 | Backing up while facing the opponent reads well (the walk clip played while moving away; no moonwalk look that confuses) | D-037 | none | **Human** |
+| F7.2 | The 50 px back-stance height feels right: the back stance shows when the opponent is clearly "behind/above", not at small depth differences | D-037 | none | **Human** |
+| F7.3 | No flip jitter when the wrestlers are nearly vertically aligned, and no front/back flicker when the height difference hovers around the threshold (there is no hysteresis by design) | D-037 | none | **Human** |
+| F7.4 | Run direction feels right: held left/right on the press, else toward the opponent; tapping Run while backing away goes the expected way | D-037 | none | **Human** |
+| F7.5 | The CPU looks engaged (always turned toward the player), and its runs and approaches read naturally | D-037 | none | **Human** |
+
+### Focus: human playtest checklist
+
+1. Walk away from the CPU in all 8 directions: you should back up while still facing it. Does that look and feel right? (F7.1)
+2. Walk toward the trailer until you are well above the CPU (more than 50 px), then come back down: the CPU should switch to its back stance and back. Walk below it: you switch. Is 100 px a good height? (F7.2)
+3. Stand almost exactly above or below the CPU and wiggle left/right; hover around the 50 px height difference. Any flip or stance flicker that looks bad? (F7.3)
+4. Run with left, right, up/down and nothing held, on both sides of the CPU and while backing away. Does each run go where you expect? (F7.4)
+5. Strike or lock up while the CPU crosses behind you: you stay turned until the move ends, then snap around. Does the snap read well? (F3, F7.3)
+6. Watch the CPU (AI on) for a minute: does always facing you make it look engaged, and do its runs look sensible? (F7.5)

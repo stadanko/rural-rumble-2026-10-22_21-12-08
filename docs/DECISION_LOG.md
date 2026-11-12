@@ -340,6 +340,7 @@ Agents: read this before starting work. If a task conflicts with a decision here
 - **Decision:** The pool sat at the porch steps ("appears to be on the porch") and the truck looked like it was floating. In `Arena.prefab` the designer set exact Transform positions: **pool (21, −14)** and **truck (−2, −13)** (from (18.3333, −10.6667) and (−0.6667, −10.8333)). Both now sit in the foreground; part of each extends past the arena art's edge (the pool's right third is never on camera). Collision moves with them (their `ArenaObstacleMarker`s are on the same objects): wrestlers walk behind both, through a 0.67-unit lane in front of the truck, and pass the pool only from behind. Changes the D-018 layout only for these two positions; footprint sizes, the walkable band, and spawn points are unchanged.
 - **Why:** The obstacles should look grounded in the dirt yard while still blocking movement.
 - **Affects:** Assets/Prefabs/Arena/Arena.prefab, docs/ARCHITECTURE.md (3.1 arena table), Assets/Tests/PlayMode/ArenaPrefabTests.cs.
+- **Playtest (2026-11-12):** designer accepted the obstacle look and walking around them.
 
 ## D-036: Faster bodyslam (retimed clips and impact times)
 
@@ -348,6 +349,7 @@ Agents: read this before starting work. If a task conflicts with a decision here
 - **Decision:** The designer retimed all four bodyslam clips with the new millisecond Frame Timing tools and set each slammer's impact time (`CombatTuning.bodyslamStartupByInitiator`) to match: **Barry 0.525 s** (was 1.208) and **Peaux 0.475 s** (was 1.083). Bodyslam damage now lands at that time, roughly twice as fast as under D-033. Barry's slam plays at 1x; Peaux's clip puts its impact at 500 ms, so it plays about 1.05x (impact lands 25 ms before the clip's HIT sprite at native speed).
 - **Why:** The D-033 art timing felt too slow in play.
 - **Affects:** Assets/Animation/*/{Barry,Peaux}_FrameTiming.asset and the four bodyslam clips, Assets/Animation/MoveAnimationTable.asset, Assets/Data/Tuning/CombatTuning.asset, docs/ARCHITECTURE.md, docs/ACCEPTANCE_TESTS.md (L5.9). EditMode `BodyslamTests` keep their own fixture values (they test the per-initiator rule, not the project asset).
+- **Playtest (2026-11-12):** designer accepted the faster bodyslam and the Frame Timing Inspector (including the combat-timing section and the Disable Cpu Ai testing toggle).
 
 ---
 

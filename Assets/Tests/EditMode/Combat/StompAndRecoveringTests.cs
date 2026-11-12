@@ -138,7 +138,7 @@ namespace RuralRumble.Tests.EditMode
             h.Tick(20, Dt);
             Assert.AreEqual(CombatState.Recovering, h.Player.State);
             Assert.AreEqual(x - h.Tuning.walkSpeedHorizontal * h.Tuning.recoveringWalkSpeedMultiplier * 20 * Dt, h.Player.Position.x, 1e-4f);
-            Assert.AreEqual(-1, h.Player.HorizontalFacing);
+            Assert.AreEqual(1, h.Player.HorizontalFacing, "D-037 Focus: backing away while Recovering still faces the CPU");
         }
 
         [Test]

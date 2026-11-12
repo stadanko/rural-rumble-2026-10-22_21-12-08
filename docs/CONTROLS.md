@@ -8,6 +8,7 @@ Xbox Style Controller Layout
     - Stick Down/Right = Player moves down/right
     - Stick Right = Player moves right
     - Stick Up/Right = Player moves up/right
+    - Movement moves the wrestler but does not turn them: they keep facing the opponent (Focus, D-037).
 - A Button = Lock Up/Grapple
     - If close to an opponent who is Standing, Walking, Recovering, or Striking (before the strike lands) & not in Lock Up animation (D-028)
         - Trigger’s a Lock Up
@@ -17,7 +18,7 @@ Xbox Style Controller Layout
         - Grapple 1
 - B Button = Run/Whip
     - If not in Lock Up animation
-        - Run in direction player is facing
+        - Run left or right in the direction held on the Left Stick/D-Pad; with no left/right held, run toward the opponent (D-037)
         - If already running from your own Run press, pressing B again cancels the run (D-027)
     - If in Player Triggered Lock Up animation
         - If Left Stick/D-Pad is pressed
@@ -38,10 +39,15 @@ Xbox Controller to Keyboard Mapping
 - X Button = J
 
 Running (D-020)
-- One press of B starts a run in the direction the wrestler faces (left or right). The run continues until the wrestler hits an obstacle or the arena edge, gets hit, or performs another action.
-- If the wrestler is facing up or down, the run goes toward their last left/right facing.
+- One press of B starts a run left or right: in the direction held on the Left Stick/D-Pad (A/D) at that moment, or, with no left/right held, toward the opponent (D-037). The run continues until the wrestler hits an obstacle or the arena edge, gets hit, or performs another action.
+- While running, the wrestler faces the run direction (Focus is off for the runner).
 - Pressing X while running ends the run and throws Strike 1. A (Lock Up) does nothing while running (D-029).
 - Pressing B again cancels a run you started yourself. A run caused by an Irish Whip can only be cancelled with B after 3 s (tunable) (D-027, D-028).
+
+Focus (D-037)
+- While free to act (standing, walking, recovering), a wrestler always faces the opponent left/right, even when moving away.
+- Front or back stance depends on position: if the opponent is more than 50 px (tunable) higher on screen, the wrestler shows the back stance; otherwise front.
+- Running turns Focus off for the runner until the run ends.
 
 Menu Controls (D-019)
 - Move selection: Left Stick / D-Pad, or WASD / arrow keys

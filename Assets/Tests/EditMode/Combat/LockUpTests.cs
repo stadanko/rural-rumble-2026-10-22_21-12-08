@@ -236,16 +236,22 @@ namespace RuralRumble.Tests.EditMode
             Assert.AreEqual(CombatState.KnockedDown, h.Cpu.State);
         }
 
+        // Updated for D-037 (Focus): the CPU can no longer face away, so it whiffs out of reach, and the player
+        // walks into reach while the (lengthened) whiff is still playing.
         [Test]
         public void LockUp_OnWhiffingOpponent_Whiffs()
         {
-            using var h = new MatchHarness(P, new Vector2(11.5f, -12f));
+            using var h = new MatchHarness(P, new Vector2(P.x + 3f, P.y), configure: t => t.lockUpWhiffTime = 3f);
+            Assert.That(3f, Is.GreaterThan(h.Tuning.lockUpReach + h.Tuning.hurtHalfWidth), "precondition: CPU out of reach");
             h.CpuIdle = false;
-            h.CpuInput.Enqueue(new WrestlerIntent(new Vector2(1f, 0f), ButtonState.None, ButtonState.None, ButtonState.None)); // face away
-            h.Tick(1, Dt);
             h.CpuInput.PressGrappleOnce();
             h.Tick(1, Dt);
             Assert.IsTrue(h.CpuW.IsWhiffing);
+
+            h.PlayerInput.HeldMove = Vector2.right;
+            h.TickUntil(() => h.Cpu.Position.x - h.Player.Position.x < h.Tuning.lockUpReach + h.Tuning.hurtHalfWidth - 0.2f, 2f, Dt);
+            h.PlayerInput.Release();
+            Assert.IsTrue(h.CpuW.IsWhiffing, "precondition: still whiffing when the player is in reach");
 
             h.PlayerInput.PressGrappleOnce();
             h.Tick(1, Dt);
@@ -274,15 +280,22 @@ namespace RuralRumble.Tests.EditMode
             Assert.IsTrue(h.PlayerW.IsWhiffing);
         }
 
+        // Replaces LockUp_FacingAway_Whiffs. D-037 (Focus): a free wrestler always faces the opponent, so the old
+        // "turn away with the stick, then Lock Up" setup now locks up. The not-in-reach whiffs stay covered by
+        // LockUp_OutOfReach_Whiffs and LockUp_BeyondDepthTolerance_Whiffs; the grab still only reaches forward,
+        // which FocusTests.LockUpWhiff_OpponentCrossesOver_FacingLockedUntilFree relies on.
         [Test]
-        public void LockUp_FacingAway_Whiffs()
+        public void LockUp_AfterStickAway_FocusStillFacesOpponent_LocksUp()
         {
             using var h = new MatchHarness(P, C);
-            h.PlayerInput.Enqueue(new WrestlerIntent(new Vector2(-1f, 0f), ButtonState.None, ButtonState.None, ButtonState.None)); // turn left
+            h.PlayerInput.Enqueue(new WrestlerIntent(new Vector2(-1f, 0f), ButtonState.None, ButtonState.None, ButtonState.None)); // stick left
             h.Tick(1, Dt);
+            Assert.AreEqual(1, h.Player.HorizontalFacing, "the stick does not turn the player");
             h.PlayerInput.PressGrappleOnce();
             h.Tick(1, Dt);
-            Assert.IsTrue(h.PlayerW.IsWhiffing);
+            Assert.IsFalse(h.PlayerW.IsWhiffing);
+            Assert.AreEqual(CombatState.LockUp, h.Player.State);
+            Assert.AreEqual(CombatState.LockedUp, h.Cpu.State);
         }
 
         [Test]
@@ -359,8 +372,11 @@ namespace RuralRumble.Tests.EditMode
             using var h = new MatchHarness(P, C, configure: LowHealth);
             MakePlayerRecovering(h);
             h.CpuIdle = true;
-            h.PlayerInput.Enqueue(new WrestlerIntent(new Vector2(-1f, 0f), ButtonState.None, ButtonState.None, ButtonState.None)); // face away
-            h.Tick(1, Dt);
+            // D-037: can't face away any more; back out of reach instead (Recovering walk), still facing the CPU.
+            h.PlayerInput.HeldMove = Vector2.left;
+            h.TickUntil(() => h.Cpu.Position.x - h.Player.Position.x > h.Tuning.lockUpReach + h.Tuning.hurtHalfWidth + 0.2f, 3f, Dt);
+            h.PlayerInput.Release();
+            Assert.AreEqual(CombatState.Recovering, h.Player.State, "precondition");
             h.PlayerInput.PressGrappleOnce();
             h.Tick(1, Dt);
             Assert.IsTrue(h.PlayerW.IsWhiffing);
@@ -589,20 +605,30 @@ namespace RuralRumble.Tests.EditMode
             }
         }
 
-        [Test]
-        public void Simultaneous_OnlyOneReaches_ThatOneWins_NoRandom()
+        // Replaces Simultaneous_OnlyOneReaches_ThatOneWins_NoRandom. Its setup (the CPU turned away with the
+        // stick, so only the player's grab reached) no longer exists under D-037: two free wrestlers always face
+        // each other, and reach and depth tolerance are symmetric, so if one reaches, both do. The D-028
+        // "only one reaches" branch can't be reached through CombatMatch any more (reported as a spec gap).
+        // Focus equivalent: after the CPU pushes its stick away, both still reach, so the coin flip decides.
+        [TestCase(0.25f, WrestlerId.Player)]
+        [TestCase(0.75f, WrestlerId.Cpu)]
+        public void Simultaneous_AfterStickAway_BothStillReach_CoinFlipDecides(float roll, WrestlerId winner)
         {
-            // The CPU faces away, so only the player's grab reaches.
-            using var h = new MatchHarness(P, C, random01: () => { Assert.Fail("no coin flip needed"); return 0f; });
+            int flips = 0;
+            using var h = new MatchHarness(P, C, random01: () => { flips++; return roll; });
             h.CpuIdle = false;
             h.CpuInput.Enqueue(new WrestlerIntent(new Vector2(1f, 0f), ButtonState.None, ButtonState.None, ButtonState.None));
             h.PlayerInput.Wait();
             h.Tick(1, Dt);
+            Assert.AreEqual(-1, h.Cpu.HorizontalFacing, "precondition: the stick did not turn the CPU");
             h.PlayerInput.PressGrappleOnce();
             h.CpuInput.PressGrappleOnce();
             h.Tick(1, Dt);
-            Assert.AreEqual(WrestlerId.Player, h.PairedMoves.Single().Initiator);
-            Assert.AreEqual(-1, h.Cpu.HorizontalFacing, "receiver turned to face the initiator");
+            Assert.AreEqual(1, flips, "both reach: one D-028 coin flip");
+            PairedMoveInfo info = h.PairedMoves.Single();
+            Assert.AreEqual(winner, info.Initiator);
+            Assert.AreEqual(-info.Facing, (winner == WrestlerId.Player ? h.Cpu : h.Player).HorizontalFacing,
+                "receiver faces the initiator");
         }
 
         // ================================================================ Snap

@@ -6,75 +6,91 @@ using UnityEngine;
 namespace RuralRumble.Tests.EditMode
 {
     /// <summary>
-    /// ARCHITECTURE 4.2 IWrestlerView: Facing = last 8-way direction; HorizontalFacing = last left/right
-    /// (+1 right, -1 left), kept while Facing is straight up/down.
-    /// STYLE_GUIDE animations: back-facing walk for Up/Left, Up, Up/Right; front-facing for the other five.
-    /// "When user stops walking, they will stand to match the most recent animation" (Standing keeps facing).
+    /// ARCHITECTURE 4.2 IWrestlerView: Facing is a unit 8-way vector, HorizontalFacing is +1 right / -1 left,
+    /// back-facing = Facing.y > 0. Since D-037 (COMBAT_SPEC "Focus") the facing of a free wrestler comes from
+    /// the two positions, not from input: "movement input never turns a wrestler or chooses the stance".
+    /// The old input-driven rules (Facing = last walk direction, D-020 straight up/down keeps the last
+    /// horizontal) are superseded; each old test below is replaced by its Focus equivalent.
     /// </summary>
     public class FacingTests
     {
         private static readonly object[] EightWay =
         {
-            new object[] { 1f, 0f, false }, new object[] { 1f, 1f, true }, new object[] { 0f, 1f, true },
-            new object[] { -1f, 1f, true }, new object[] { -1f, 0f, false }, new object[] { -1f, -1f, false },
-            new object[] { 0f, -1f, false }, new object[] { 1f, -1f, false },
+            new object[] { 1f, 0f }, new object[] { 1f, 1f }, new object[] { 0f, 1f }, new object[] { -1f, 1f },
+            new object[] { -1f, 0f }, new object[] { -1f, -1f }, new object[] { 0f, -1f }, new object[] { 1f, -1f },
         };
 
+        // Replaces Walk_SetsFacingToUnitEightWayDirection_AndBackFacingForUpwardDirections.
+        // COMBAT_SPEC Focus "Input: movement input never turns a wrestler or chooses the stance", on both sides.
         [TestCaseSource(nameof(EightWay))]
-        public void Walk_SetsFacingToUnitEightWayDirection_AndBackFacingForUpwardDirections(float x, float y, bool back)
+        public void Walk_AnyDirection_DoesNotTurn_KeepsFacingOpponent(float x, float y)
         {
-            using var h = new MatchHarness(SliceArena.OpenFloor);
-            h.PlayerInput.HeldMove = new Vector2(x, y);
-            h.Tick(2);
-            V2Assert.AreEqual(new Vector2(x, y).normalized, h.Player.Facing, 1e-4f);
-            Assert.AreEqual(back, h.Player.Facing.y > 0f, "IWrestlerView back-facing rule (Facing.y > 0)");
-            Assert.AreEqual(back, ((CombatWrestler)h.Player).IsBackFacing);
+            foreach (int side in new[] { 1, -1 })
+            {
+                // Opponent 6 units to the side and 0.5 lower: front stance, whatever 3 ticks of walking do.
+                Vector2 p = SliceArena.OpenFloor;
+                using var h = new MatchHarness(p, cpuStart: new Vector2(p.x + side * 6f, p.y - 0.5f));
+                h.PlayerInput.HeldMove = new Vector2(x, y);
+                h.Tick(3);
+                Assert.AreEqual(CombatState.Walking, h.Player.State, $"side {side}");
+                Assert.AreEqual(new Vector2(side, 0f), h.Player.Facing, $"side {side}: faces the opponent, front stance");
+                Assert.AreEqual(side, h.Player.HorizontalFacing);
+                Assert.IsFalse(h.PlayerW.IsBackFacing);
+                Assert.IsFalse(h.FacingChanges.Exists(e => e.id == WrestlerId.Player), $"side {side}: walking never turns");
+            }
         }
 
-        [TestCase(1f, 1f, 1)]
-        [TestCase(1f, -1f, 1)]
-        [TestCase(-1f, 1f, -1)]
-        [TestCase(-1f, -1f, -1)]
-        public void Walk_DiagonalSetsHorizontalFacing(float x, float y, int expected)
+        // Replaces Walk_DiagonalSetsHorizontalFacing. COMBAT_SPEC Focus: "Moving away means backing up while
+        // still facing the opponent" - walking diagonally away keeps HorizontalFacing toward the opponent.
+        [TestCase(1f, 1f)]
+        [TestCase(1f, -1f)]
+        [TestCase(-1f, 1f)]
+        [TestCase(-1f, -1f)]
+        public void WalkDiagonally_AwayOrToward_HorizontalFacingStaysOnOpponent(float x, float y)
         {
-            using var h = new MatchHarness(SliceArena.OpenFloor, cpuStart: expected > 0 ? new Vector2(1f, -13f) : MatchHarness.DefaultCpuStart);
-            Assert.AreEqual(-expected, h.Player.HorizontalFacing, "precondition: starts facing the other way");
+            // Opponent on the far side of the open floor, 0.3 lower: front stance throughout the half-second walk.
+            using var h = new MatchHarness(SliceArena.OpenFloor, cpuStart: new Vector2(SliceArena.OpenFloor.x + 10f, -13.3f));
             h.PlayerInput.HeldMove = new Vector2(x, y);
-            h.Tick(1);
-            Assert.AreEqual(expected, h.Player.HorizontalFacing);
+            for (int i = 0; i < 25; i++)
+            {
+                h.Tick(1);
+                Assert.AreEqual(1, h.Player.HorizontalFacing, $"tick {i}");
+            }
+            Assert.AreNotEqual(SliceArena.OpenFloor.x, h.Player.Position.x, "precondition: the player moved");
         }
 
-        [TestCase(-1, 1f)]
-        [TestCase(-1, -1f)]
-        [TestCase(1, 1f)]
-        [TestCase(1, -1f)]
-        public void Walk_StraightUpOrDown_KeepsLastHorizontalFacing(int lastHorizontal, float y)
+        // Replaces Walk_StraightUpOrDown_KeepsLastHorizontalFacing. COMBAT_SPEC Focus: "If the two are exactly
+        // vertically aligned, the last left/right facing is kept" - here the starting facings (+1 / -1).
+        [TestCase(1f)]
+        [TestCase(-1f)]
+        public void VerticallyAligned_KeepsLastHorizontalFacing_WhileWalkingUpOrDown(float y)
         {
-            using var h = new MatchHarness(SliceArena.OpenFloor);
-            h.PlayerInput.HeldMove = new Vector2(lastHorizontal, 0f);
-            h.Tick(1);
+            using var h = new MatchHarness(new Vector2(13f, -12.5f), cpuStart: new Vector2(13f, -11.5f));
+            Assert.AreEqual(1, h.Player.HorizontalFacing, "match start: player +1");
+            Assert.AreEqual(-1, h.Cpu.HorizontalFacing, "match start: CPU -1");
             h.PlayerInput.HeldMove = new Vector2(0f, y);
-            h.Tick(5);
-            Assert.AreEqual(lastHorizontal, h.Player.HorizontalFacing);
+            h.Tick(10);
+            Assert.AreEqual(13f, h.Player.Position.x, 1e-6f, "precondition: still exactly aligned");
+            Assert.AreEqual(1, h.Player.HorizontalFacing);
+            Assert.AreEqual(-1, h.Cpu.HorizontalFacing);
         }
 
+        // Replaces Standing_KeepsLastFacing. STYLE_GUIDE "stand to match the most recent animation" now meets
+        // Focus: after walking any direction and stopping, the Standing wrestler still faces the opponent.
         [TestCaseSource(nameof(EightWay))]
-        public void Standing_KeepsLastFacing(float x, float y, bool back)
+        public void Standing_AfterWalkingAnyDirection_FacesOpponent(float x, float y)
         {
-            using var h = new MatchHarness(SliceArena.OpenFloor);
+            using var h = new MatchHarness(SliceArena.OpenFloor); // CPU right and lower: (1, 0)
             h.PlayerInput.HeldMove = new Vector2(x, y);
             h.Tick(3);
-            Vector2 facing = h.Player.Facing;
-            int hf = h.Player.HorizontalFacing;
             h.PlayerInput.Release();
             h.Tick(20);
             Assert.AreEqual(CombatState.Standing, h.Player.State);
-            Assert.AreEqual(facing, h.Player.Facing);
-            Assert.AreEqual(hf, h.Player.HorizontalFacing);
-            Assert.AreEqual(back, h.Player.Facing.y > 0f);
+            Assert.AreEqual(new Vector2(1f, 0f), h.Player.Facing);
+            Assert.AreEqual(1, h.Player.HorizontalFacing);
         }
 
-        // Start of match: each wrestler faces the other (CombatMatch constructor; not stated in the spec).
+        // Start of match: each wrestler faces the other (D-037: CombatMatch applies Focus at construction).
         [Test]
         public void MatchStart_WrestlersFaceEachOther()
         {

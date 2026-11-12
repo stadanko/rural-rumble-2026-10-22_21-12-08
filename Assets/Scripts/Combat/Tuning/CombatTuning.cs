@@ -105,6 +105,11 @@ namespace RuralRumble.Combat
         [Tooltip("Stick magnitude below which Move counts as no direction.")]
         [Range(0f, 0.95f)] public float moveDeadzone = 0.3f;
 
+        // ------------------------------------------------------------------ Focus
+        [Header("Focus")]
+        [Tooltip("Set (D-037). If the opponent stands more than this many pixels higher on screen (60 px = 1 unit), the wrestler turns to the back stance; otherwise front. Read every tick, so Play Mode edits apply at once.")]
+        [Min(0f)] public float focusBackStanceHeightPx = 50f;
+
         // ------------------------------------------------------------------ Feet box and blocking
         [Header("Feet box and wrestler blocking")]
         [Tooltip("Movement-slice starting point. Half the width of the wrestler's feet box, world units. Used against arena edges/obstacles and the other wrestler.")]

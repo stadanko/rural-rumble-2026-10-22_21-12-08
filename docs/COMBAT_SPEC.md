@@ -16,6 +16,14 @@
 - **Recovering** - Wrestler is on their feet but they have a low amount of health and a Recovering animation is triggered. Walking is slowed in this state and Running is not allowed.
 - **Knocked Out** - Wrestler’s health bar has been depleted and the fight is over. The Wrestler not in a Knocked Out state is declared the winner.
 
+## Focus (D-037)
+
+- **Facing each other:** a wrestler who is free to act (Standing, Walking, Recovering) faces the opponent left/right every tick, whatever direction they move. Moving away means backing up while still facing the opponent. If the two are exactly vertically aligned, the last left/right facing is kept.
+- **Stance:** if the opponent's feet are more than `focusBackStanceHeightPx` (default 50 px, 60 px = 1 unit) higher on screen, the wrestler uses the **back** stance; otherwise the **front** stance. Equal height: both front. This holds whichever side each wrestler is on.
+- **Locked facing:** while Striking, Struck, Knocked Down / Knocked Out, or in a lock-up or bodyslam, facing is not changed by Focus. It snaps back to the opponent when the wrestler is free to act again.
+- **Running:** Focus is off for the runner, who faces the run direction. A run starts in the left/right direction held when Run is pressed, else toward the opponent. A non-running wrestler keeps focusing on a running opponent.
+- **Input:** movement input never turns a wrestler or chooses the stance. Strikes and lock-ups reach in the facing direction, so while free to act they always reach toward the opponent.
+
 ## Lock Up/Grappling/Irish Whip Rules
 
 - In this description, Wrestler A will be triggering the moves, Wrestler B will be receiving the moves.
@@ -157,6 +165,12 @@ Values marked *Set* were decided by the designer. Values marked *Starting point*
 | Run-collision damage | 0 | Starting point | D-029; running into the opponent knocks both down |
 | Walk speed horizontal / vertical / diagonal | 3.0 / 2.0 / 3.6 units/s | Set | D-029; three separate values |
 | Stomp cooldown | 1.0 s | Set | D-025; from the end of a stomp until the next stomp is allowed |
+
+### Focus
+
+| Value | Default | Status | Notes |
+|---|---|---|---|
+| Focus back-stance height | 50 px | Set | D-037 (was 100 px); opponent this much higher on screen (or more) puts the wrestler in the back stance |
 
 ### Recovery and Knockdown
 

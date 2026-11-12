@@ -69,6 +69,7 @@ MonoBehaviour:
   recoveringWalkSpeedMultiplier: 0.5
   runSpeed: 7
   moveDeadzone: 0.3
+  focusBackStanceHeightPx: 50
   feetHalfWidth: 0.5
   feetHalfDepth: 0
   wrestlerBlockHalfDepth: 0.25

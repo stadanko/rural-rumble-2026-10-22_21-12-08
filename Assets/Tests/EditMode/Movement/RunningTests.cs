@@ -5,10 +5,12 @@ using UnityEngine;
 namespace RuralRumble.Tests.EditMode
 {
     /// <summary>
-    /// D-020 / COMBAT_SPEC Running / CONTROLS.md Running: one press of Run (B / Space) starts a run in the
-    /// facing left/right direction; it continues until an obstacle or the arena edge (hits, strikes and
-    /// Run-cancel are covered in Combat/RunRulesTests). Facing up or down runs toward the last left/right
-    /// facing. Running is left or right only (COMBAT_SPEC: "one of two directions").
+    /// D-020 / COMBAT_SPEC Running / CONTROLS.md Running: one press of Run (B / Space) starts a run; it
+    /// continues until an obstacle or the arena edge (hits, strikes and Run-cancel are covered in
+    /// Combat/RunRulesTests). Running is left or right only (COMBAT_SPEC: "one of two directions").
+    /// Run direction since D-037 (CONTROLS Run, COMBAT_SPEC Focus): "the left/right direction held on the Left
+    /// Stick/D-Pad when Run is pressed; with no left/right held, toward the opponent" (this replaces D-020's
+    /// "facing direction; facing up/down uses the last left/right facing"). The runner faces the run direction.
     /// </summary>
     public class RunningTests
     {
@@ -27,59 +29,102 @@ namespace RuralRumble.Tests.EditMode
             Assert.AreEqual(new Vector2(1f, 0f), h.Player.Facing);
         }
 
+        // D-037: held left on the Run press runs left, even away from the opponent (CPU is to the right).
         [Test]
-        public void Run_FromWalkingLeft_RunsLeft()
+        public void Run_FromWalkingLeft_HoldingLeft_RunsLeft()
         {
             using var h = new MatchHarness(SliceArena.OpenFloor);
             h.PlayerInput.HeldMove = Vector2.left;
             h.Tick(3);
             Assert.AreEqual(CombatState.Walking, h.Player.State);
+            Assert.AreEqual(1, h.Player.HorizontalFacing, "precondition: backing away, still facing the CPU");
             float x0 = h.Player.Position.x;
+            h.PlayerInput.PressRunOnce(); // left still held on the press
             h.PlayerInput.Release();
-            h.PlayerInput.PressRunOnce();
             h.Tick(10);
             Assert.AreEqual(CombatState.Running, h.Player.State);
             Assert.AreEqual(x0 - h.Tuning.runSpeed * 10 * MatchHarness.Dt, h.Player.Position.x, Tol);
+            Assert.AreEqual(new Vector2(-1f, 0f), h.Player.Facing, "the runner faces the run direction");
         }
 
-        // D-020: facing up or down, the run goes toward the last left/right facing.
-        [TestCase(-1f, 0f, 1f, -1)]   // left, then up    -> runs left
-        [TestCase(-1f, 0f, -1f, -1)]  // left, then down  -> runs left
-        [TestCase(1f, 0f, 1f, 1)]     // right, then up   -> runs right
-        [TestCase(1f, 0f, -1f, 1)]    // right, then down -> runs right
-        public void Run_FacingStraightUpOrDown_UsesLastHorizontalFacing(float firstX, float firstY, float thenY, int expectedDir)
+        // D-037: walking left then releasing before Run = nothing held -> toward the opponent (right).
+        [Test]
+        public void Run_FromWalkingLeft_Released_RunsTowardOpponent()
         {
             using var h = new MatchHarness(SliceArena.OpenFloor);
-            h.PlayerInput.HeldMove = new Vector2(firstX, firstY);
-            h.Tick(2);
-            h.PlayerInput.HeldMove = new Vector2(0f, thenY);
-            h.Tick(2);
-            Assert.AreEqual(new Vector2(0f, thenY), h.Player.Facing, "precondition: facing straight up/down");
-            h.PlayerInput.Release();
+            h.PlayerInput.HeldMove = Vector2.left;
+            h.Tick(3);
             float x0 = h.Player.Position.x;
-            float y0 = h.Player.Position.y;
+            h.PlayerInput.Release();
             h.PlayerInput.PressRunOnce();
             h.Tick(10);
             Assert.AreEqual(CombatState.Running, h.Player.State);
-            Assert.AreEqual(x0 + expectedDir * h.Tuning.runSpeed * 10 * MatchHarness.Dt, h.Player.Position.x, Tol);
-            Assert.AreEqual(y0, h.Player.Position.y, 1e-6f, "a run never moves in depth");
+            Assert.AreEqual(x0 + h.Tuning.runSpeed * 10 * MatchHarness.Dt, h.Player.Position.x, Tol);
         }
 
-        // D-020 "facing direction (left or right)": a diagonal facing runs along its horizontal part.
+        // Replaces Run_FacingStraightUpOrDown_UsesLastHorizontalFacing (D-020). D-037: holding straight up or
+        // down (no left/right) on the Run press runs toward the opponent, on either side; the run never moves in depth.
+        [TestCase(1, 1f)]
+        [TestCase(1, -1f)]
+        [TestCase(-1, 1f)]
+        [TestCase(-1, -1f)]
+        public void Run_HoldingStraightUpOrDown_RunsTowardOpponent(int opponentSide, float heldY)
+        {
+            Vector2 p = SliceArena.OpenFloor;
+            using var h = new MatchHarness(p, cpuStart: new Vector2(p.x + opponentSide * 8f, -13.3f));
+            h.PlayerInput.HeldMove = new Vector2(0f, heldY);
+            h.Tick(2);
+            Vector2 p0 = h.Player.Position;
+            h.PlayerInput.PressRunOnce(); // up/down still held on the press
+            h.Tick(10);
+            Assert.AreEqual(CombatState.Running, h.Player.State);
+            Assert.AreEqual(p0.x + opponentSide * h.Tuning.runSpeed * 10 * MatchHarness.Dt, h.Player.Position.x, Tol);
+            Assert.AreEqual(p0.y, h.Player.Position.y, 1e-6f, "a run never moves in depth");
+            Assert.AreEqual(opponentSide, h.Player.HorizontalFacing);
+        }
+
+        // Replaces Run_FacingDiagonal_RunsHorizontally (D-020). D-037: a diagonal held on the Run press runs
+        // along its left/right part (the CPU is to the right, so -x runs away from it), never in depth.
         [TestCase(-1f, 1f, -1)]
         [TestCase(-1f, -1f, -1)]
         [TestCase(1f, 1f, 1)]
-        public void Run_FacingDiagonal_RunsHorizontally(float x, float y, int expectedDir)
+        [TestCase(1f, -1f, 1)]
+        public void Run_HoldingDiagonal_RunsAlongHeldHorizontal(float x, float y, int expectedDir)
         {
             using var h = new MatchHarness(SliceArena.OpenFloor);
             h.PlayerInput.HeldMove = new Vector2(x, y);
             h.Tick(2);
-            h.PlayerInput.Release();
             Vector2 p0 = h.Player.Position;
             h.PlayerInput.PressRunOnce();
             h.Tick(10);
+            Assert.AreEqual(CombatState.Running, h.Player.State);
             Assert.AreEqual(p0.x + expectedDir * h.Tuning.runSpeed * 10 * MatchHarness.Dt, h.Player.Position.x, Tol);
             Assert.AreEqual(p0.y, h.Player.Position.y, 1e-6f);
+        }
+
+        // D-037 "left/right held" uses the movement deadzone: a left tilt inside it counts as nothing held
+        // (toward the opponent, right); just outside it runs left. Deadzone read from tuning.
+        [Test]
+        public void Run_LeftTiltInsideDeadzone_RunsTowardOpponent_OutsideRunsLeft()
+        {
+            using (var h = new MatchHarness(SliceArena.OpenFloor))
+            {
+                float x0 = h.Player.Position.x;
+                h.PlayerInput.Enqueue(new WrestlerIntent(new Vector2(-h.Tuning.moveDeadzone * 0.5f, 0f),
+                    ButtonState.None, new ButtonState(true, true), ButtonState.None));
+                h.Tick(5);
+                Assert.AreEqual(CombatState.Running, h.Player.State);
+                Assert.Greater(h.Player.Position.x, x0, "inside the deadzone: toward the opponent");
+            }
+            using (var h = new MatchHarness(SliceArena.OpenFloor))
+            {
+                float x0 = h.Player.Position.x;
+                h.PlayerInput.Enqueue(new WrestlerIntent(new Vector2(-(h.Tuning.moveDeadzone + 0.1f), 0f),
+                    ButtonState.None, new ButtonState(true, true), ButtonState.None));
+                h.Tick(5);
+                Assert.AreEqual(CombatState.Running, h.Player.State);
+                Assert.Less(h.Player.Position.x, x0, "outside the deadzone: the held direction");
+            }
         }
 
         // COMBAT_SPEC Running: left or right only. Holding a depth direction does not steer the run.
@@ -153,10 +198,11 @@ namespace RuralRumble.Tests.EditMode
             using var h = new MatchHarness(new Vector2(2f, -12f), cpuStart: new Vector2(20f, -12f));
             h.PlayerInput.HeldMove = Vector2.left;
             h.TickSeconds(1f);
+            h.PlayerInput.PressRunOnce(); // D-037: left held on the press -> into the edge
             h.PlayerInput.Release();
-            h.PlayerInput.PressRunOnce();
             h.Tick(1);
             Assert.AreEqual(CombatState.Standing, h.Player.State);
+            Assert.AreEqual(1, h.Player.HorizontalFacing, "Standing again: faces the CPU");
         }
 
         // After a run ends, the wrestler walks normally again (no stuck state).
@@ -170,8 +216,8 @@ namespace RuralRumble.Tests.EditMode
             h.PlayerInput.HeldMove = Vector2.left;
             h.Tick(5);
             Assert.AreEqual(CombatState.Walking, h.Player.State);
+            h.PlayerInput.PressRunOnce(); // D-037: left held on the press
             h.PlayerInput.Release();
-            h.PlayerInput.PressRunOnce();
             h.Tick(5);
             Assert.AreEqual(CombatState.Running, h.Player.State);
             Assert.AreEqual(-1, h.Player.HorizontalFacing);

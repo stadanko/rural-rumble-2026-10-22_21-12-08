@@ -33,6 +33,11 @@ namespace RuralRumble.Match
         [Tooltip("Match opened directly (no GameSession): play roster entry 1 vs 0 instead of 0 vs 1. Testing aid only.")]
         [SerializeField] private bool directPlaySwapWrestlers;
 
+        [Tooltip("Testing aid: the CPU opponent just stands there. It doesn't move, attack, grapple, or mash to get up, " +
+                 "but combat still applies to it, so the player can hit, slam, knock down and knock it out. " +
+                 "Can be switched on or off during Play Mode. Turn it off for real matches.")]
+        [SerializeField] private bool disableCpuAi;
+
         [Header("Spawn feet points (world units)")]
         [SerializeField] private Vector2 playerSpawn = new Vector2(9.0f, -11.6667f);
         [SerializeField] private Vector2 cpuSpawn = new Vector2(17.6667f, -11.6667f);
@@ -42,6 +47,13 @@ namespace RuralRumble.Match
         private WrestlerView playerView;
         private WrestlerView cpuView;
         private readonly InputRelay cpuInput = new InputRelay();
+
+        /// <summary>Testing aid (Inspector "Disable Cpu Ai"): while true the CPU receives no input.</summary>
+        public bool CpuAiDisabled
+        {
+            get => disableCpuAi;
+            set => disableCpuAi = value;
+        }
 
         /// <summary>The running combat match, or null before this component's Start.</summary>
         public CombatMatch Match => combatRunner != null ? combatRunner.Match : null;
@@ -54,6 +66,7 @@ namespace RuralRumble.Match
         private void Awake()
         {
             Current = this;
+            cpuInput.Muted = () => disableCpuAi;
 
             if (combatRunner == null)
             {
@@ -157,6 +170,11 @@ namespace RuralRumble.Match
     {
         public IWrestlerInput Source { get; set; }
 
-        public WrestlerIntent Read() => Source != null ? Source.Read() : WrestlerIntent.None;
+        /// <summary>When it returns true the relay sends no input (MatchBootstrap's "Disable Cpu Ai" testing aid).
+        /// The source isn't read at all, so the CPU brain simply pauses and resumes when re-enabled.</summary>
+        public System.Func<bool> Muted { get; set; }
+
+        public WrestlerIntent Read() =>
+            Source == null || (Muted != null && Muted()) ? WrestlerIntent.None : Source.Read();
     }
 }

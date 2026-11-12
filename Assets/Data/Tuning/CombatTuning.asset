@@ -44,9 +44,9 @@ MonoBehaviour:
     Recovery: 1.11
   bodyslamStartupByInitiator:
   - wrestler: {fileID: 11400000, guid: a759afccac418004080629b857d011a6, type: 2}
-    startup: 1.208
+    startup: 0.525
   - wrestler: {fileID: 11400000, guid: 88fa395ed34cfaa4cb5494a98b84eec2, type: 2}
-    startup: 1.083
+    startup: 0.475
   maxHealth: 100
   recoveringThreshold: 30
   strike1Damage: 3

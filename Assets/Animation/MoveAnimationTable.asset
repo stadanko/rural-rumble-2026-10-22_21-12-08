@@ -76,3 +76,9 @@ MonoBehaviour:
   - Move: 6
     Clip: {fileID: 7400000, guid: 2c8e63803410c664cbfbdb2981b9a885, type: 2}
     ContactTime: 0.525
+  - Move: 4
+    Clip: {fileID: 7400000, guid: c532e0767d65dbd43a7437cdd768bc3a, type: 2}
+    ContactTime: 0.20833333
+  - Move: 4
+    Clip: {fileID: 7400000, guid: c38ee7626991e4b49af9ce6905d4b449, type: 2}
+    ContactTime: 0.20833333

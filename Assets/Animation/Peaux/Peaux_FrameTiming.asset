@@ -651,3 +651,19 @@ MonoBehaviour:
       HoldMs: 100
       DefaultHoldMs: 500
       BuiltInHoldMs: 500
+  - ClipName: Peaux_Stomp
+    Loops: 0
+    Playback: 1
+    ContactStep: 1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: -2957244893191256301, guid: bc250bb67bd3b7d4b80d7feaac4d5408, type: 3}
+      PoseOnly: 0
+      HoldMs: 208.33333
+      DefaultHoldMs: 208.33333
+      BuiltInHoldMs: 208.33333
+    - Sprite: {fileID: -3588385838477756689, guid: bc250bb67bd3b7d4b80d7feaac4d5408, type: 3}
+      PoseOnly: 0
+      HoldMs: 416.66666
+      DefaultHoldMs: 416.66666
+      BuiltInHoldMs: 416.66666

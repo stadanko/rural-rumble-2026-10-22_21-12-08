@@ -267,7 +267,7 @@ Last run: 2026-10-31. EditMode 233/234 (1 known failure, C1.4). PlayMode 15/15.
 | C13.2 | Struck restarts its clip on every hit (`HitLanded`) | D-024, 4.2 | `CombatPresentationTests.Struck_ClipRestartsOnEveryHit` | Auto |
 | C13.3 | Knocked Out while already down holds the lying pose; Knocked Out from standing plays the fall | D-023, 4.2 | `CombatPresentationTests.KnockoutWhileDown_HoldsLyingPose`, `KnockoutFromStanding_PlaysTheFall` | Auto |
 | C13.4 | A right-facing (flipped) wrestler mirrors the clip's x offset and z rotation; the root never moves | 4.2 | `CombatPresentationTests.FlippedWrestler_MirrorsClipOffsetAndRotation` | Auto |
-| C13.5 | The contact frame visibly lands when the hit registers; the placeholder Struck, Knocked Down, Stomp and Recovering clips read correctly | STYLE_GUIDE | none | **Human** |
+| C13.5 | The contact frame visibly lands when the hit registers; the Stomp clip and the placeholder Struck, Knocked Down and Recovering clips read correctly | STYLE_GUIDE | none | **Human** |
 
 ### C14. Match.unity end to end
 

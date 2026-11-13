@@ -651,3 +651,19 @@ MonoBehaviour:
       HoldMs: 100
       DefaultHoldMs: 500
       BuiltInHoldMs: 500
+  - ClipName: Barry_Stomp
+    Loops: 0
+    Playback: 1
+    ContactStep: 1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: -6800784647030584085, guid: 7e13ab5582445b7418438107d8634257, type: 3}
+      PoseOnly: 0
+      HoldMs: 208.33333
+      DefaultHoldMs: 208.33333
+      BuiltInHoldMs: 208.33333
+    - Sprite: {fileID: -6308556412067205980, guid: 7e13ab5582445b7418438107d8634257, type: 3}
+      PoseOnly: 0
+      HoldMs: 416.66666
+      DefaultHoldMs: 416.66666
+      BuiltInHoldMs: 416.66666

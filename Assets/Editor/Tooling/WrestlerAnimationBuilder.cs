@@ -12,8 +12,9 @@ namespace RuralRumble.EditorTooling
     /// <summary>
     /// Builds the shared wrestler Animator graph, one wrestler's clips + AnimatorOverrideController, and the
     /// wrestler's presentation prefab (ARCHITECTURE 4.2, D-021). Re-running updates assets in place so GUIDs
-    /// and references survive. Standing, Walking, Running, the three Striking clips (Strike1-3), and PLACEHOLDER stand-ins
-    /// for Stomp, Struck and Recovering (stand + walk) built from the stand/walk sprites. Knocked Down / Knocked Out
+    /// and references survive. Standing, Walking, Running, the three Striking clips (Strike1-3), Stomp (approved
+    /// sheets; a PLACEHOLDER stand-in only for a wrestler with none), and PLACEHOLDER stand-ins for Struck and
+    /// Recovering (stand + walk) built from the stand/walk sprites. Knocked Down / Knocked Out
     /// hold the wrestler's downed sprite (last Bodyslammed sprite); no fall animation yet.
     ///
     /// Menu: Rural Rumble/Tooling/Build Barry Animations + Prefab, Rural Rumble/Tooling/Build Peaux Animations + Prefab.
@@ -56,7 +57,7 @@ namespace RuralRumble.EditorTooling
         public const string SlotStrike1 = "Slot_Strike1";
         public const string SlotStrike2 = "Slot_Strike2";
         public const string SlotStrike3 = "Slot_Strike3";
-        // Combat-core slice slots. Barry fills these with stand-in (PLACEHOLDER) clips until real art exists.
+        // Combat-core slice slots. Stomp uses the approved stomp sheets; a stand-in (PLACEHOLDER) only without art.
         public const string SlotStomp = "Slot_Stomp";
         public const string SlotStruck = "Slot_Struck";
         public const string SlotKnockedDown = "Slot_KnockedDown";
@@ -115,6 +116,7 @@ namespace RuralRumble.EditorTooling
             public MoveClipSpec Strike1;             // right punch; null -> placeholder (StandFront pose)
             public MoveClipSpec Strike2;             // left punch; null -> placeholder
             public MoveClipSpec Strike3;             // combo finisher; null -> placeholder
+            public MoveClipSpec Stomp;               // stomp on a downed opponent; null -> placeholder (StandFront pose)
             public Sprite[] LockUp;                  // Lock Up hold (A, initiator); null -> placeholder
             public Sprite[] LockedUp;                // Locked Up hold (B, receiver); null -> placeholder
             public MoveClipSpec Bodyslam;            // Bodyslam (A, Grappling); contact = impact frame; null -> LockUp hold stand-in
@@ -191,6 +193,12 @@ namespace RuralRumble.EditorTooling
                     Sprites = LoadSprites(art + "barry_strike3.png"),
                     KeyFrames = new[] { 0, 3 }, LengthFrames = 9, ContactIndex = 1,
                 },
+                // gen-barry-stomp-A-2: designer timing 200/400 ms, contact = frame 2 (boot planted). See StompKeyFrames.
+                Stomp = new MoveClipSpec
+                {
+                    Sprites = LoadSprites(art + "barry_stomp.png"),
+                    KeyFrames = StompKeyFrames, LengthFrames = StompLengthFrames, ContactIndex = StompContactIndex,
+                },
                 // D-032: gen-barry-lockup-5 / gen-barry-lockedup-5 (pair sheets vs Peaux), imported by ImportLockUpSheets.
                 LockUp = LoadSprites(art + "barry_lockup.png"),
                 LockedUp = LoadSprites(art + "barry_lockedup.png"),
@@ -216,7 +224,7 @@ namespace RuralRumble.EditorTooling
         /// <summary>
         /// Peaux (approved 2026-10-31: gen-peaux-stand-front, gen-peaux-walk-front-8, gen-peaux-stand-back-a,
         /// gen-peaux-walk-back-8, gen-peaux-run-6, gen-peaux-strike1-3, gen-peaux-strike2-3, gen-peaux-strike3-2).
-        /// Stomp and the other combat-core slots are PLACEHOLDER stand-ins built from those sprites. The earlier
+        /// Stomp uses gen-peaux-stomp-2; the other combat-core slots are PLACEHOLDER stand-ins built from those sprites. The earlier
         /// Peaux_StandBack / WalkBack / Run / Strike1-3 _PLACEHOLDER clips are no longer referenced by the override
         /// (left for the designer to delete).
         /// </summary>
@@ -262,6 +270,12 @@ namespace RuralRumble.EditorTooling
                     Sprites = LoadSprites(art + "peaux_strike3.png"),
                     KeyFrames = new[] { 0, 3 }, LengthFrames = 9, ContactIndex = 1,
                 },
+                // gen-peaux-stomp-2: same frame roles and timing as Barry's stomp.
+                Stomp = new MoveClipSpec
+                {
+                    Sprites = LoadSprites(art + "peaux_stomp.png"),
+                    KeyFrames = StompKeyFrames, LengthFrames = StompLengthFrames, ContactIndex = StompContactIndex,
+                },
                 // D-032: gen-peaux-lockup-5 / gen-peaux-lockedup-5 (pair sheets vs Barry), imported by ImportLockUpSheets.
                 LockUp = LoadSprites(art + "peaux_lockup.png"),
                 LockedUp = LoadSprites(art + "peaux_lockedup.png"),
@@ -283,7 +297,7 @@ namespace RuralRumble.EditorTooling
 
         /// <summary>Imports Peaux's approved sheets with the wrestler settings: stand front 102x215 and back 92x214
         /// (one sprite each), walk front 8 x 114x219, walk back 8 x 108x222, run 6 x 158x207, strikes 3 x 222x212,
-        /// 3 x 212x223 and 2 x 150x214.</summary>
+        /// 3 x 212x223 and 2 x 150x214, stomp 2 x 174x214.</summary>
         public static string ImportPeauxSheets()
         {
             const string art = "Assets/Art/Wrestlers/Peaux/";
@@ -297,12 +311,14 @@ namespace RuralRumble.EditorTooling
                 ImportSheet(art + "peaux_strike1.png", 222, 212),
                 ImportSheet(art + "peaux_strike2.png", 212, 223),
                 ImportSheet(art + "peaux_strike3.png", 150, 214),
+                ImportSheet(art + "peaux_stomp.png", 174, 214),
             });
         }
 
         /// <summary>
-        /// Imports Barry's strike sheets (approved 2026-10-31) with the wrestler settings and slices them by their
-        /// own cell sizes (ASSET_REGISTRY / designer: 296x243, 236x242, 200x256).
+        /// Imports Barry's strike sheets (approved 2026-10-31) and stomp sheet (gen-barry-stomp-A-2) with the wrestler
+        /// settings and slices them by their own cell sizes (ASSET_REGISTRY / designer: 296x243, 236x242, 200x256;
+        /// stomp 172x256).
         /// </summary>
         public static string ImportBarryStrikeSheets()
         {
@@ -312,6 +328,7 @@ namespace RuralRumble.EditorTooling
                 ImportSheet(art + "barry_strike1.png", 296, 243),
                 ImportSheet(art + "barry_strike2.png", 236, 242),
                 ImportSheet(art + "barry_strike3.png", 200, 256),
+                ImportSheet(art + "barry_stomp.png", 172, 256),
             });
         }
 
@@ -514,6 +531,7 @@ namespace RuralRumble.EditorTooling
             WriteMoveClip(spec.Strike1, $"{folder}/{spec.Name}_Strike1.anim", MoveId.Strike1, SlotStrike1, bySlot, table);
             WriteMoveClip(spec.Strike2, $"{folder}/{spec.Name}_Strike2.anim", MoveId.Strike2, SlotStrike2, bySlot, table);
             WriteMoveClip(spec.Strike3, $"{folder}/{spec.Name}_Strike3.anim", MoveId.Strike3, SlotStrike3, bySlot, table);
+            WriteMoveClip(spec.Stomp, $"{folder}/{spec.Name}_Stomp.anim", MoveId.Stomp, SlotStomp, bySlot, table);
             string standIns = WriteMissingArtStandIns(spec, folder, bySlot, table) + WriteStandIns(spec, folder, bySlot, table)
                               + " " + WriteLockUpStandIns(spec, folder, bySlot, table);
             // D-033: bodyslam sides, played once with the last frame held; contact time = impact frame, so WrestlerView
@@ -550,6 +568,16 @@ namespace RuralRumble.EditorTooling
 
         /// <summary>Stomp stand-in contact frame (boot comes down), in SourceFps frames: 5 = 0.208 s at 1x.</summary>
         public const int StompStandInContactFrame = 5;
+
+        /// <summary>
+        /// Approved stomp timing (gen-barry-stomp-A-2, gen-peaux-stomp-2): frame 0 wind-up (knee chamber) 200 ms,
+        /// frame 1 contact (boot planted) held 400 ms. Rounded per frame to 24 fps like the strikes: 5 / 10 samples =
+        /// 208.3 / 416.7 ms, 625 ms total; contact at sample 5 (0.208 s, same as the stand-in). WrestlerView scales it
+        /// to the tuned Stomp Startup (0.2 s -> 1.04x), so the clip ends at Startup + Active + Recovery (0.6 s).
+        /// </summary>
+        public static readonly int[] StompKeyFrames = { 0, 5 };
+        public const int StompLengthFrames = 15;
+        public const int StompContactIndex = 1;
 
         private static readonly Color HitTint = new Color(1f, 0.45f, 0.45f, 1f);
         private static readonly Color HitTintFade = new Color(1f, 0.7f, 0.7f, 1f);
@@ -613,20 +641,24 @@ namespace RuralRumble.EditorTooling
             AnimationClip recWalkBack = WriteSpriteClip(P("RecoveringWalkBack"), walkBack, halfSpeedBack,
                 walkBack.Length * 6, loop: true, null);
 
-            // Stomp: rises 10 px leaning back (wind-up), slams down 2 px leaning forward onto the boot at the contact
-            // frame (5 = 0.208 s), settles by frame 9. 0.5 s long; WrestlerView scales it to the tuned Startup.
-            TimedClip stompTimed = WriteTimedClip(P("Stomp"), stand, one, 12, false, new[]
+            // Stomp, only for a wrestler with no stomp art (spec.Stomp == null): rises 10 px leaning back (wind-up),
+            // slams down 2 px leaning forward onto the boot at the contact frame (5 = 0.208 s), settles by frame 9.
+            // 0.5 s long; WrestlerView scales it to the tuned Startup.
+            if (spec.Stomp == null)
             {
-                new PoseKey(0, 0, 0, 0),
-                new PoseKey(1, 0, 2, -4),
-                new PoseKey(2, 0, 6, -8),
-                new PoseKey(3, 0, 10, -10),
-                new PoseKey(StompStandInContactFrame, 0, -2, 6),
-                new PoseKey(7, 0, 0, 3),
-                new PoseKey(9, 0, 0, 0),
-            }, ClipPlayback.ContactScaled, StompStandInContactFrame);
-            AnimationClip stomp = stompTimed.Clip;
-            table.SetEntry(MoveId.Stomp, stomp, stompTimed.ContactTime);
+                TimedClip stompTimed = WriteTimedClip(P("Stomp"), stand, one, 12, false, new[]
+                {
+                    new PoseKey(0, 0, 0, 0),
+                    new PoseKey(1, 0, 2, -4),
+                    new PoseKey(2, 0, 6, -8),
+                    new PoseKey(3, 0, 10, -10),
+                    new PoseKey(StompStandInContactFrame, 0, -2, 6),
+                    new PoseKey(7, 0, 0, 3),
+                    new PoseKey(9, 0, 0, 0),
+                }, ClipPlayback.ContactScaled, StompStandInContactFrame);
+                table.SetEntry(MoveId.Stomp, stompTimed.Clip, stompTimed.ContactTime);
+                bySlot[SlotStomp] = stompTimed.Clip;
+            }
 
             bySlot[SlotStruck] = struck;
             bySlot[SlotKnockedDown] = knockedDown;
@@ -635,8 +667,8 @@ namespace RuralRumble.EditorTooling
             bySlot[SlotRecoveringStandBack] = recStandBack;
             bySlot[SlotRecoveringWalkFront] = recWalk;
             bySlot[SlotRecoveringWalkBack] = recWalkBack;
-            bySlot[SlotStomp] = stomp;
-            return "Struck KnockedDown(+KnockedOut) RecoveringStand RecoveringStandBack RecoveringWalk RecoveringWalkBack Stomp";
+            return "Struck KnockedDown(+KnockedOut) RecoveringStand RecoveringStandBack RecoveringWalk RecoveringWalkBack" +
+                   (spec.Stomp == null ? " Stomp" : "");
         }
 
         // ---------- lock-up slice stand-ins (PLACEHOLDER) ----------
@@ -1598,6 +1630,7 @@ namespace RuralRumble.EditorTooling
             CheckMove("Strike1", spec.Strike1);
             CheckMove("Strike2", spec.Strike2);
             CheckMove("Strike3", spec.Strike3);
+            CheckMove("Stomp", spec.Stomp);
             if (spec.LockUp != null)
                 CheckSheet("LockUp", spec.LockUp, LockUpHoldKeyFrames, LockUpHoldLengthFrames);
             if (spec.LockedUp != null)

@@ -13,7 +13,8 @@ namespace RuralRumble.EditorTooling
     /// Builds the shared wrestler Animator graph, one wrestler's clips + AnimatorOverrideController, and the
     /// wrestler's presentation prefab (ARCHITECTURE 4.2, D-021). Re-running updates assets in place so GUIDs
     /// and references survive. Standing, Walking, Running, the three Striking clips (Strike1-3), Stomp (approved
-    /// sheets; a PLACEHOLDER stand-in only for a wrestler with none), and PLACEHOLDER stand-ins for Struck and
+    /// sheets; a PLACEHOLDER stand-in only for a wrestler with none), Struck A / B (approved single sprites that
+    /// WrestlerView alternates on consecutive hits; run ImportStruckSheets first), and PLACEHOLDER stand-ins for
     /// Recovering (stand + walk) built from the stand/walk sprites. Knocked Down / Knocked Out
     /// hold the wrestler's downed sprite (last Bodyslammed sprite); no fall animation yet.
     ///
@@ -60,6 +61,10 @@ namespace RuralRumble.EditorTooling
         // Combat-core slice slots. Stomp uses the approved stomp sheets; a stand-in (PLACEHOLDER) only without art.
         public const string SlotStomp = "Slot_Stomp";
         public const string SlotStruck = "Slot_Struck";
+        /// <summary>Second hit reaction; WrestlerView alternates Struck / StruckB on consecutive hits (presentation only).</summary>
+        public const string SlotStruckB = "Slot_" + WrestlerView.StruckBStateName;
+        /// <summary>Animator bool parameter: show the second hit reaction (StruckB). Set by WrestlerView on each hit.</summary>
+        public const string StruckBParam = "StruckB";
         public const string SlotKnockedDown = "Slot_KnockedDown";
         public const string SlotKnockedOut = "Slot_KnockedOut";
         public const string SlotRecoveringStandFront = "Slot_RecoveringStandFront";
@@ -117,6 +122,8 @@ namespace RuralRumble.EditorTooling
             public MoveClipSpec Strike2;             // left punch; null -> placeholder
             public MoveClipSpec Strike3;             // combo finisher; null -> placeholder
             public MoveClipSpec Stomp;               // stomp on a downed opponent; null -> placeholder (StandFront pose)
+            public Sprite StruckA;                   // hit reaction A (lean back); null (either) -> placeholder for both
+            public Sprite StruckB;                   // hit reaction B (head snap), alternates with A on consecutive hits
             public Sprite[] LockUp;                  // Lock Up hold (A, initiator); null -> placeholder
             public Sprite[] LockedUp;                // Locked Up hold (B, receiver); null -> placeholder
             public MoveClipSpec Bodyslam;            // Bodyslam (A, Grappling); contact = impact frame; null -> LockUp hold stand-in
@@ -199,6 +206,9 @@ namespace RuralRumble.EditorTooling
                     Sprites = LoadSprites(art + "barry_stomp.png"),
                     KeyFrames = StompKeyFrames, LengthFrames = StompLengthFrames, ContactIndex = StompContactIndex,
                 },
+                // gen-barry-struck2-B-1 (lean back) and gen-barry-struck3-B-1 (head snap), imported by ImportStruckSheets.
+                StruckA = LoadSprites(art + "barry_struck_a.png").Single(),
+                StruckB = LoadSprites(art + "barry_struck_b.png").Single(),
                 // D-032: gen-barry-lockup-5 / gen-barry-lockedup-5 (pair sheets vs Peaux), imported by ImportLockUpSheets.
                 LockUp = LoadSprites(art + "barry_lockup.png"),
                 LockedUp = LoadSprites(art + "barry_lockedup.png"),
@@ -276,6 +286,9 @@ namespace RuralRumble.EditorTooling
                     Sprites = LoadSprites(art + "peaux_stomp.png"),
                     KeyFrames = StompKeyFrames, LengthFrames = StompLengthFrames, ContactIndex = StompContactIndex,
                 },
+                // gen-peaux-struck-a-1 (lean back) and gen-peaux-struck-b-1 (head snap), imported by ImportStruckSheets.
+                StruckA = LoadSprites(art + "peaux_struck_a.png").Single(),
+                StruckB = LoadSprites(art + "peaux_struck_b.png").Single(),
                 // D-032: gen-peaux-lockup-5 / gen-peaux-lockedup-5 (pair sheets vs Barry), imported by ImportLockUpSheets.
                 LockUp = LoadSprites(art + "peaux_lockup.png"),
                 LockedUp = LoadSprites(art + "peaux_lockedup.png"),
@@ -388,6 +401,20 @@ namespace RuralRumble.EditorTooling
                 ImportSheet("Assets/Art/Wrestlers/Peaux/peaux_bodyslam.png", 360, 266, shift),
                 ImportSheet("Assets/Art/Wrestlers/Barry/barry_bodyslammed.png", 526, 322, shift, 1),
             }) + $"\nBodyslam pivot shift: {shift} px toward the opponent.";
+        }
+
+        /// <summary>Imports the approved single-frame Struck sprites (gen-barry-struck2-B-1, gen-barry-struck3-B-1,
+        /// gen-peaux-struck-a-1, gen-peaux-struck-b-1) with the wrestler settings, one sprite each, pivot Bottom
+        /// Center: Barry A 186x197, B 132x230; Peaux A 172x187, B 124x213. Run before the Barry / Peaux builders.</summary>
+        public static string ImportStruckSheets()
+        {
+            return string.Join("\n", new[]
+            {
+                ImportSheet("Assets/Art/Wrestlers/Barry/barry_struck_a.png", 186, 197),
+                ImportSheet("Assets/Art/Wrestlers/Barry/barry_struck_b.png", 132, 230),
+                ImportSheet("Assets/Art/Wrestlers/Peaux/peaux_struck_a.png", 172, 187),
+                ImportSheet("Assets/Art/Wrestlers/Peaux/peaux_struck_b.png", 124, 213),
+            });
         }
 
         // ---------- sprite import ----------
@@ -598,15 +625,35 @@ namespace RuralRumble.EditorTooling
             Sprite[] standBack = { spec.StandBack != null ? spec.StandBack : spec.StandFront };
             int[] one = { 0 };
 
-            // Struck: red flash that fades, knocked back 6 px and leaning back 6 deg, recovering over 0.25 s. 0.417 s long
-            // (Struck lasts 0.4 s by default, D-024); restarted on every hit.
-            AnimationClip struck = WriteSpriteClip(P("Struck"), stand, one, 10, loop: false, new[]
+            // Struck: two approved hit reactions (StruckA lean back, StruckB head snap) that WrestlerView alternates on
+            // consecutive hits (Slot_Struck / Slot_StruckB). Each holds its sprite for 10 frames (0.417 s; Struck lasts
+            // 0.4 s by default, D-024) and is restarted on every hit. Same red flash and 6 px knockback as the old
+            // stand-in, fading over 0.25 s, but no rotation: the sprites already lean, and rotating them about the feet
+            // would lift a boot off the ground. Without both sprites, the PLACEHOLDER (stand sprite, leaning back
+            // 6 deg) fills both slots.
+            AnimationClip struck, struckB;
+            if (spec.StruckA != null && spec.StruckB != null)
             {
-                new PoseKey(0, 6, 0, -6, HitTint),
-                new PoseKey(2, 4, 0, -4, HitTintFade),
-                new PoseKey(4, 2, 0, -2, HitTintFaint),
-                new PoseKey(6, 0, 0, 0),
-            });
+                PoseKey[] hit =
+                {
+                    new PoseKey(0, 6, 0, 0, HitTint),
+                    new PoseKey(2, 4, 0, 0, HitTintFade),
+                    new PoseKey(4, 2, 0, 0, HitTintFaint),
+                    new PoseKey(6, 0, 0, 0),
+                };
+                struck = WriteSpriteClip($"{folder}/{spec.Name}_StruckA.anim", new[] { spec.StruckA }, one, 10, loop: false, hit);
+                struckB = WriteSpriteClip($"{folder}/{spec.Name}_StruckB.anim", new[] { spec.StruckB }, one, 10, loop: false, hit);
+            }
+            else
+            {
+                struck = struckB = WriteSpriteClip(P("Struck"), stand, one, 10, loop: false, new[]
+                {
+                    new PoseKey(0, 6, 0, -6, HitTint),
+                    new PoseKey(2, 4, 0, -4, HitTintFade),
+                    new PoseKey(4, 2, 0, -2, HitTintFaint),
+                    new PoseKey(6, 0, 0, 0),
+                });
+            }
 
             // Knocked Down (designer, 2026-11-12): every knockdown shows the wrestler's downed sprite = the last sprite
             // of their own Bodyslammed clip (the same Sprite asset, so the same pivot), held with the rest pose (no
@@ -661,13 +708,15 @@ namespace RuralRumble.EditorTooling
             }
 
             bySlot[SlotStruck] = struck;
+            bySlot[SlotStruckB] = struckB;
             bySlot[SlotKnockedDown] = knockedDown;
             bySlot[SlotKnockedOut] = knockedDown; // D-023: Knocked Out reuses Knocked Down
             bySlot[SlotRecoveringStandFront] = recStand;
             bySlot[SlotRecoveringStandBack] = recStandBack;
             bySlot[SlotRecoveringWalkFront] = recWalk;
             bySlot[SlotRecoveringWalkBack] = recWalkBack;
-            return "Struck KnockedDown(+KnockedOut) RecoveringStand RecoveringStandBack RecoveringWalk RecoveringWalkBack" +
+            return (struck == struckB ? "Struck(+StruckB) " : "") +
+                   "KnockedDown(+KnockedOut) RecoveringStand RecoveringStandBack RecoveringWalk RecoveringWalkBack" +
                    (spec.Stomp == null ? " Stomp" : "");
         }
 
@@ -1001,6 +1050,7 @@ namespace RuralRumble.EditorTooling
             AnimatorStateMachine sm = controller.layers[0].stateMachine;
             changed |= EnsureMoveState(sm, MoveId.Stomp, SlotStomp, new Vector3(560, 240));
             changed |= EnsureClipState(sm, CombatState.Struck, SlotStruck, new Vector3(300, 240));
+            changed |= EnsureStruckBState(controller, sm);
             changed |= EnsureClipState(sm, CombatState.KnockedDown, SlotKnockedDown, new Vector3(300, 320));
             changed |= EnsureClipState(sm, CombatState.KnockedOut, SlotKnockedOut, new Vector3(300, 400));
 
@@ -1081,6 +1131,41 @@ namespace RuralRumble.EditorTooling
             if (paired.HasValue)
                 t.AddCondition(paired.Value ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0f, PairedParam);
             return true;
+        }
+
+        /// <summary>
+        /// Second hit reaction (presentation only; Combat has one Struck state): parameter StruckB (bool, set by
+        /// WrestlerView, toggled on each hit); state StruckB playing Slot_StruckB, Any State when State == Struck and
+        /// StruckB; the existing Any State -> Struck transition gets the matching "StruckB false" condition. Instant,
+        /// no exit time, no self-transition. Adds only what is missing.
+        /// </summary>
+        private static bool EnsureStruckBState(AnimatorController controller, AnimatorStateMachine sm)
+        {
+            bool changed = false;
+            if (controller.parameters.All(p => p.name != StruckBParam))
+            {
+                controller.AddParameter(StruckBParam, AnimatorControllerParameterType.Bool);
+                changed = true;
+            }
+            foreach (AnimatorStateTransition t in sm.anyStateTransitions)
+            {
+                if (t.destinationState == null || t.destinationState.name != WrestlerView.StruckStateName)
+                    continue;
+                if (t.conditions.Any(c => c.parameter == StruckBParam))
+                    continue;
+                t.AddCondition(AnimatorConditionMode.IfNot, 0f, StruckBParam);
+                changed = true;
+            }
+            if (sm.states.All(s => s.state.name != WrestlerView.StruckBStateName))
+            {
+                AnimatorState state = sm.AddState(WrestlerView.StruckBStateName, new Vector3(300, 160));
+                state.motion = WriteSlotClip(SlotStruckB, loop: false);
+                state.writeDefaultValues = false;
+                AnimatorStateTransition t = AddAnyStateTransition(sm, state, CombatState.Struck);
+                t.AddCondition(AnimatorConditionMode.If, 0f, StruckBParam);
+                changed = true;
+            }
+            return changed;
         }
 
         private static bool EnsureClipState(AnimatorStateMachine sm, CombatState combatState, string slotName, Vector3 position)

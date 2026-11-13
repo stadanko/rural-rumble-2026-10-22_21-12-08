@@ -16,7 +16,8 @@ namespace RuralRumble.Presentation
     /// Steady state comes from polling the view each frame, so a transition that goes out and back inside
     /// one combat tick (e.g. Standing -> Running -> Standing against a wall) never reaches the Animator.
     /// Events are used only for what polling cannot see: a move that restarts on the same tick the previous
-    /// one ends (MoveStarted while staying Striking) and Struck restarting on every hit (HitLanded, D-024).
+    /// one ends (MoveStarted while staying Striking) and Struck restarting on every hit (HitLanded, D-024),
+    /// alternating between the two hit reactions "Struck" and "StruckB" on each hit (presentation only).
     /// Event handlers only queue a restart; it is applied in <see cref="Update"/> after the state is read,
     /// and only if the view still shows that state, so an event from a tick that also changed state
     /// (Strike 3 -> Knocked Down) cannot flash the wrong clip.
@@ -56,8 +57,16 @@ namespace RuralRumble.Presentation
         /// </summary>
         public static readonly int PairedParam = Animator.StringToHash("Paired");
 
+        /// <summary>
+        /// Animator bool parameter: show the second hit reaction (state "StruckB") instead of "Struck". Presentation
+        /// only: Combat has a single Struck state. Toggled on every hit this wrestler takes, so consecutive hits
+        /// alternate the two reactions (first hit = Struck, second = StruckB, third = Struck, ...).
+        /// </summary>
+        public static readonly int StruckBParam = Animator.StringToHash("StruckB");
+
         /// <summary>Animator state names used for restarts (match WrestlerAnimationBuilder).</summary>
         public const string StruckStateName = "Struck";
+        public const string StruckBStateName = "StruckB";
         public const string KnockedOutStateName = "KnockedOut";
         /// <summary>Lock-up slice states. Each plays the slot clip "Slot_" + state name.</summary>
         public const string LockUpStateName = "LockUp";                    // A, paired, holding
@@ -145,6 +154,9 @@ namespace RuralRumble.Presentation
         private MoveId pendingMove;
         private MoveTiming pendingTiming;
         private bool pendingStruckRestart;
+        // Which hit reaction the current / next hit shows (alternates per hit taken; presentation only).
+        private bool struckB;
+        private bool nextStruckB;
 
         // Lock-up slice: in a paired move (from PairedMoveStarted), and the sprite's sorting order outside it.
         private bool paired;
@@ -319,6 +331,15 @@ namespace RuralRumble.Presentation
                 animator.SetBool(MovingParam, moving);
                 animator.SetBool(PairedParam, showPaired);
 
+                // A new hit picks the other reaction than the previous hit, before the Animator evaluates.
+                bool struckRestart = pendingStruckRestart && state == CombatState.Struck;
+                if (struckRestart)
+                {
+                    struckB = nextStruckB;
+                    nextStruckB = !nextStruckB;
+                }
+                animator.SetBool(StruckBParam, struckB);
+
                 if (pendingMoveRestart && IsTimedMoveState(state) && currentMove == pendingMove)
                 {
                     string moveState = MoveStateName(state, currentMove, showPaired);
@@ -329,8 +350,8 @@ namespace RuralRumble.Presentation
                     }
                 }
 
-                if (pendingStruckRestart && state == CombatState.Struck)
-                    PlayFromStart(StruckStateName, 0f);
+                if (struckRestart)
+                    PlayFromStart(struckB ? StruckBStateName : StruckStateName, 0f);
 
                 // D-023: Knocked Out reuses the Knocked Down clip (the held downed sprite). Knocked out while
                 // already down (a stomp) jumps to the clip's end instead of replaying it from the start.

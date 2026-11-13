@@ -667,3 +667,55 @@ MonoBehaviour:
       HoldMs: 416.66666
       DefaultHoldMs: 416.66666
       BuiltInHoldMs: 416.66666
+  - ClipName: Barry_StruckA
+    Loops: 0
+    Playback: 0
+    ContactStep: -1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: 4339097396219477855, guid: 2cadb093ce329324aa1a6a189603abfa, type: 3}
+      PoseOnly: 0
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: 4339097396219477855, guid: 2cadb093ce329324aa1a6a189603abfa, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: 4339097396219477855, guid: 2cadb093ce329324aa1a6a189603abfa, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: 4339097396219477855, guid: 2cadb093ce329324aa1a6a189603abfa, type: 3}
+      PoseOnly: 1
+      HoldMs: 166.66667
+      DefaultHoldMs: 166.66667
+      BuiltInHoldMs: 166.66667
+  - ClipName: Barry_StruckB
+    Loops: 0
+    Playback: 0
+    ContactStep: -1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: -3148241902795076572, guid: 57753388d176890459eb472e039c129b, type: 3}
+      PoseOnly: 0
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: -3148241902795076572, guid: 57753388d176890459eb472e039c129b, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: -3148241902795076572, guid: 57753388d176890459eb472e039c129b, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: -3148241902795076572, guid: 57753388d176890459eb472e039c129b, type: 3}
+      PoseOnly: 1
+      HoldMs: 166.66667
+      DefaultHoldMs: 166.66667
+      BuiltInHoldMs: 166.66667

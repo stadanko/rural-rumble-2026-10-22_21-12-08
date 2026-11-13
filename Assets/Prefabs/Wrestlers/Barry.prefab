@@ -49,6 +49,7 @@ MonoBehaviour:
   spriteRenderer: {fileID: 8537620702652509090}
   artFacesLeft: 1
   moveTable: {fileID: 11400000, guid: dfa47a7266e8db645b488236bd2b81c3, type: 2}
+  downedMirrorShift: 3.0666666
 --- !u!1 &7028627840796225473
 GameObject:
   m_ObjectHideFlags: 0

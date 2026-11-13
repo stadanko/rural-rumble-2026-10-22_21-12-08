@@ -367,6 +367,18 @@ Agents: read this before starting work. If a task conflicts with a decision here
 - **Open point:** Q-006 (Irish Whip direction under Focus).
 - **Playtest (2026-11-12):** designer accepted Focus (facing, stance at 50 px, running, locked facing, CPU).
 
+## D-038: One downed sprite for every knockdown; shorter bodyslam recovery
+
+- **Date:** 2026-11-12
+- **Decided by:** Designer
+- **Decision:**
+  - **Downed sprite:** every Knocked Down / Knocked Out shows the wrestler's **last Bodyslammed sprite** (replacing the rotated standing-sprite stand-in). After a bodyslam the wrestler stays exactly as they landed, head toward the slammer. Every other knockdown (strike, run collision, obstacle, knockout from standing) shows the same sprite mirrored in place, so the body lies **feet toward the opponent**. There is no fall animation yet.
+  - **Bug fixed:** a bodyslammed wrestler used to swap head and feet when the Knocked Down clip started (the old stand-in pose). Combat was not involved.
+  - **Bodyslam Recovery 1.11 → 0.3 s** (`CombatTuning.bodyslamTiming`): both wrestlers act again much sooner after a bodyslam. The receiver is knocked down about 0.4 s after impact, so the rest of the Bodyslammed clip is cut short by the (seamless) switch to the same downed sprite.
+- **Why:** Reuse existing art for every knockdown, fix the visible flip, and speed up the pace after a slam.
+- **Affects:** WrestlerAnimationBuilder, WrestlerView (`downedMirrorShift` on the wrestler prefabs), the KnockedDown clips and FrameTiming entries, CombatTuning.asset, docs/ARCHITECTURE.md §6.
+- **Playtest (2026-11-12):** designer accepted.
+
 ---
 
 ## Open Questions

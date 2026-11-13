@@ -182,8 +182,9 @@ namespace RuralRumble.Tests.PlayMode
             Assert.Less(after.normalizedTime, before.normalizedTime - 0.25f, "the Struck clip should restart on the second hit");
         }
 
-        // D-023 / ARCHITECTURE 4.2: Knocked Out reuses the knockdown fall. Knocked out while already lying down (a
-        // stomp, D-025) holds the lying pose instead of replaying the fall.
+        // D-023 / ARCHITECTURE 4.2: Knocked Out reuses the Knocked Down clip, which holds the downed sprite (the last
+        // Bodyslammed sprite, designer 2026-11-12). Knocked out while already lying down (a stomp, D-025) jumps to the
+        // end of the clip and keeps the downed sprite exactly as it lay (same sprite, flip and offset).
         [UnityTest]
         public IEnumerator KnockoutWhileDown_HoldsLyingPose()
         {
@@ -198,8 +199,10 @@ namespace RuralRumble.Tests.PlayMode
             yield return Settle();
             yield return new WaitForSeconds(0.8f); // knockdown fall finishes
             Assert.IsTrue(StateOf(cpuView).IsName("KnockedDown"));
-            float lyingRot = SpriteRotZ(cpuView);
-            Assert.Greater(Mathf.Abs(lyingRot), 45f, "setup: the knocked-down pose is lying (rotated)");
+            Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, "setup: Knocked Down shows the downed sprite");
+            Assert.IsTrue(cpuView.DownedMirrored, "setup: a strike knockdown shows the downed sprite mirrored");
+            bool lyingFlip = cpuView.SpriteRenderer.flipX;
+            Vector3 lyingPos = cpuView.SpriteRenderer.transform.localPosition;
 
             playerInput.PressStrikeAt(0); // stomp
             TickUntil(() => match.IsOver);
@@ -208,7 +211,9 @@ namespace RuralRumble.Tests.PlayMode
             AnimatorStateInfo ko = StateOf(cpuView);
             Assert.IsTrue(ko.IsName("KnockedOut"), "Animator should be in KnockedOut");
             Assert.GreaterOrEqual(ko.normalizedTime, 0.99f, "KO while down should jump to the end of the fall");
-            Assert.AreEqual(lyingRot, SpriteRotZ(cpuView), 1f, "the lying pose is held (no replayed fall)");
+            Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, "the downed sprite is held");
+            Assert.AreEqual(lyingFlip, cpuView.SpriteRenderer.flipX, "the downed sprite keeps its flip");
+            Assert.AreEqual(lyingPos.x, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f, "the downed sprite keeps its offset");
         }
 
         // Contrast: knocked out from standing plays the fall from its start.
@@ -226,33 +231,57 @@ namespace RuralRumble.Tests.PlayMode
             Assert.Less(ko.normalizedTime, 0.9f, "a KO from standing plays the fall");
         }
 
-        // WrestlerView: clips are authored for left-facing art; a right-facing (flipped) wrestler mirrors the clip's
-        // x offset and z rotation so the fall still goes away from where it faces. A run collision (D-029) knocks
-        // both down on the same tick, so the two lie in the same clip pose, facing opposite ways.
+        // Designer 2026-11-12: a knockdown that does not follow a bodyslam (here a run collision, D-029, which knocks
+        // both down on the same tick) shows the downed sprite mirrored in place: the opposite flip to the facing flip,
+        // shifted by downedMirrorShift so the body covers the same ground behind the root with head and feet swapped
+        // (feet toward the opponent). The two wrestlers face opposite ways, so they lie as exact mirror images.
         [UnityTest]
-        public IEnumerator FlippedWrestler_MirrorsClipOffsetAndRotation()
+        public IEnumerator RunCollisionKnockdown_ShowsDownedSpriteMirroredInPlace()
         {
             Build(new Vector2(5f, -12f), new Vector2(12f, -12f), t => { t.minKnockdownTime = 20f; t.maxKnockdownTime = 20f; });
             yield return null;
             playerInput.PressRunAt(0);
             TickUntil(() => match.Player.State == CombatState.KnockedDown && match.Cpu.State == CombatState.KnockedDown);
             yield return Settle();
-            yield return new WaitForSeconds(0.8f);
+            yield return new WaitForSeconds(0.2f);
 
             Assert.AreEqual(1, match.Player.HorizontalFacing, "setup: player faces right");
             Assert.AreEqual(-1, match.Cpu.HorizontalFacing, "setup: CPU faces left");
-            Assert.IsTrue(playerView.SpriteRenderer.flipX, "right-facing Barry is flipped");
-            Assert.IsFalse(cpuView.SpriteRenderer.flipX);
+            Assert.AreEqual(BarryDownedSprite(), playerView.SpriteRenderer.sprite, "player shows the downed sprite");
+            Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, "CPU shows the downed sprite");
+            Assert.IsTrue(playerView.DownedMirrored && cpuView.DownedMirrored, "a run-collision knockdown is mirrored");
+            Assert.IsFalse(playerView.SpriteRenderer.flipX, "right-facing, mirrored: not flipped");
+            Assert.IsTrue(cpuView.SpriteRenderer.flipX, "left-facing, mirrored: flipped");
 
-            Vector3 left = cpuView.SpriteRenderer.transform.localPosition;
-            Vector3 right = playerView.SpriteRenderer.transform.localPosition;
-            float leftRot = SpriteRotZ(cpuView), rightRot = SpriteRotZ(playerView);
-            Assert.Greater(Mathf.Abs(left.x), 0.1f, "setup: the knockdown clip offsets the sprite in x");
-            Assert.Greater(Mathf.Abs(leftRot), 10f, "setup: the knockdown clip rotates the sprite");
-            Assert.AreEqual(-left.x, right.x, 1e-3f, "x offset mirrored");
-            Assert.AreEqual(left.y, right.y, 1e-3f, "y offset unchanged");
-            Assert.AreEqual(-leftRot, rightRot, 0.5f, "z rotation mirrored");
+            float shift = cpuView.DownedMirrorShift;
+            Assert.Greater(shift, 0.5f, "setup: the prefab has a downed mirror shift");
+            Assert.AreEqual(shift, cpuView.SpriteRenderer.transform.localPosition.x, 1e-3f, "left-facing: shifted +shift");
+            Assert.AreEqual(-shift, playerView.SpriteRenderer.transform.localPosition.x, 1e-3f, "right-facing: shifted -shift");
+            Assert.AreEqual(0f, SpriteRotZ(cpuView), 0.01f, "no rotation");
+
+            Bounds cb = cpuView.SpriteRenderer.bounds, pb = playerView.SpriteRenderer.bounds;
+            float cRoot = cpuGo.transform.position.x, pRoot = playerGo.transform.position.x;
+            Assert.AreEqual(-(cb.min.x - cRoot), pb.max.x - pRoot, 1e-3f, "mirror images about their roots");
+            Assert.AreEqual(-(cb.max.x - cRoot), pb.min.x - pRoot, 1e-3f, "mirror images about their roots");
             Assert.AreEqual(new Vector3(5f, -12f, 0f), playerGo.transform.position, "the root never moves");
+        }
+
+        /// <summary>Barry's downed sprite: the last sprite of Barry_Bodyslammed.</summary>
+        private static Sprite BarryDownedSprite()
+        {
+#if UNITY_EDITOR
+            Sprite last = null;
+            int lastIndex = -1;
+            foreach (Object o in UnityEditor.AssetDatabase.LoadAllAssetsAtPath("Assets/Art/Wrestlers/Barry/barry_bodyslammed.png"))
+                if (o is Sprite s && int.TryParse(s.name.Substring(s.name.LastIndexOf('_') + 1), out int i) && i > lastIndex)
+                {
+                    lastIndex = i;
+                    last = s;
+                }
+            return last;
+#else
+            return null;
+#endif
         }
 
         /// <summary>Queued test input (EditMode's ScriptedInput lives in another assembly).</summary>

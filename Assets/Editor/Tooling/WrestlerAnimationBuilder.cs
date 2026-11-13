@@ -13,7 +13,8 @@ namespace RuralRumble.EditorTooling
     /// Builds the shared wrestler Animator graph, one wrestler's clips + AnimatorOverrideController, and the
     /// wrestler's presentation prefab (ARCHITECTURE 4.2, D-021). Re-running updates assets in place so GUIDs
     /// and references survive. Standing, Walking, Running, the three Striking clips (Strike1-3), and PLACEHOLDER stand-ins
-    /// for Stomp, Struck, Knocked Down / Knocked Out and Recovering (stand + walk) built from the stand/walk sprites.
+    /// for Stomp, Struck and Recovering (stand + walk) built from the stand/walk sprites. Knocked Down / Knocked Out
+    /// hold the wrestler's downed sprite (last Bodyslammed sprite); no fall animation yet.
     ///
     /// Menu: Rural Rumble/Tooling/Build Barry Animations + Prefab, Rural Rumble/Tooling/Build Peaux Animations + Prefab.
     /// A wrestler with no run or strike art gets PLACEHOLDER stand-ins for those too (WriteMissingArtStandIns).
@@ -536,6 +537,9 @@ namespace RuralRumble.EditorTooling
             AnimatorOverrideController overrides = WriteOverride($"{folder}/{spec.Name}.overrideController", controller, bySlot);
 
             string prefabPath = writePrefab ? WritePrefab(spec, overrides, table) : "(not rebuilt)";
+            // Knockdowns not caused by a bodyslam show the downed sprite mirrored in place (WrestlerView). Kept in sync
+            // on every rebuild, also when the prefab is otherwise left alone (only this one value is written).
+            WriteDownedMirrorShift(spec);
             AssetDatabase.SaveAssets();
 
             return $"Built {spec.Name}: controller {ControllerPath}, override {AssetDatabase.GetAssetPath(overrides)}, prefab {prefabPath}. " +
@@ -555,7 +559,8 @@ namespace RuralRumble.EditorTooling
         /// Temporary clips for states with no art yet, built only from the wrestler's approved stand/walk sprites
         /// with child-sprite offset, rotation and tint (ARCHITECTURE 6). Named {Name}_{State}_PLACEHOLDER.anim.
         /// All keys are stepped at SourceFps. Offsets are whole native pixels, authored for left-facing art.
-        /// Knocked Out maps to the Knocked Down clip (D-023). Returns the list of stand-in names for the summary.
+        /// Knocked Down holds the downed sprite (last Bodyslammed sprite) instead of a posed stand sprite; Knocked Out
+        /// maps to the Knocked Down clip (D-023). Returns the list of stand-in names for the summary.
         /// </summary>
         private static string WriteStandIns(WrestlerArtSpec spec, string folder, Dictionary<string, AnimationClip> bySlot,
             MoveAnimationTable table)
@@ -575,24 +580,18 @@ namespace RuralRumble.EditorTooling
                 new PoseKey(6, 0, 0, 0),
             });
 
-            // Knocked Down: falls backwards over 4 frames (red flash on the first), bounces 9 px, then lies on the back.
-            // Lying pose: rotated -90 about the feet (head toward +x = behind the wrestler), shifted -120 px so the
-            // 240 px body is centered on the feet point (spans root x -2..+2 units), and raised 45 px so the
-            // 102 px-thick body rests on the feet line (bottom edge 6 px below it). The sort point (sprite pivot)
-            // is then 45 px (0.75 units) behind the feet, so a stomper within stomp range draws in front.
-            // The x offsets are authored for a 240 px stand sprite and scale with the wrestler's stand height
-            // (whole pixels; exactly the authored values for Barry's 240 px).
-            float h = spec.StandFront.rect.height;
-            float L(float xPx) => Mathf.Round(xPx * h / 240f);
-            AnimationClip knockedDown = WriteSpriteClip(P("KnockedDown"), stand, one, 12, loop: false, new[]
-            {
-                new PoseKey(0, 4, 0, -12, HitTint),
-                new PoseKey(1, L(-20), 6, -30, HitTintFade),
-                new PoseKey(2, L(-60), 18, -55),
-                new PoseKey(3, L(-100), 36, -80),
-                new PoseKey(4, L(-120), 54, -90),
-                new PoseKey(6, L(-120), 45, -90),
-            });
+            // Knocked Down (designer, 2026-11-12): every knockdown shows the wrestler's downed sprite = the last sprite
+            // of their own Bodyslammed clip (the same Sprite asset, so the same pivot), held with the rest pose (no
+            // offset, rotation or tint). A bodyslam therefore ends in Knocked Down with no visible change (head toward
+            // the slammer). Every other knockdown (strike, run collision, obstacle) is a backward fall: WrestlerView
+            // mirrors this same sprite in place (flip + downedMirrorShift), so the body covers the same ground behind
+            // the root but lies feet toward the opponent (designer, 2026-11-12). No fall animation yet: the sprite appears at
+            // once. 12 frames (0.5 s) long, not looped; the length only matters for WrestlerView's KO-while-down
+            // jump to the end (D-023). Still named _PLACEHOLDER (no fall art), so references stay stable.
+            if (spec.Bodyslammed == null || spec.Bodyslammed.Sprites == null || spec.Bodyslammed.Sprites.Length == 0)
+                throw new ArgumentException($"{spec.Name}: Knocked Down uses the last Bodyslammed sprite; no Bodyslammed art.");
+            Sprite[] downed = { spec.Bodyslammed.Sprites[spec.Bodyslammed.Sprites.Length - 1] };
+            AnimationClip knockedDown = WriteSpriteClip(P("KnockedDown"), downed, one, 12, loop: false);
 
             // Recovering (D-023: clutching ribs, walking slowly). Stand: hunched forward 6 deg with a 2 px breathing bob
             // (1 s loop). Walk: the walk cycle at half speed (6 frames per sprite, 2 s loop; Recovering walk speed is
@@ -1430,6 +1429,74 @@ namespace RuralRumble.EditorTooling
         /// No combat components. An existing prefab is edited in place (LoadPrefabContents) so its file IDs, and the
         /// WrestlerDefinition references to its root, survive; only the presentation fields are rewritten.
         /// </summary>
+        /// <summary>
+        /// Opaque x-extent of a sprite relative to its pivot, in world units as drawn (left-facing art): the first
+        /// and one-past-last pixel columns with any alpha. Reads the source PNG (the texture is not readable).
+        /// </summary>
+        public static Vector2 OpaqueExtentX(Sprite sprite)
+        {
+            string path = AssetDatabase.GetAssetPath(sprite);
+            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            try
+            {
+                if (!tex.LoadImage(System.IO.File.ReadAllBytes(path)))
+                    throw new InvalidOperationException($"Could not read {path}.");
+                Rect r = sprite.rect;
+                Color32[] px = tex.GetPixels32();
+                int min = int.MaxValue, max = -1;
+                for (int y = (int)r.y; y < (int)(r.y + r.height); y++)
+                    for (int x = (int)r.x; x < (int)(r.x + r.width); x++)
+                        if (px[y * tex.width + x].a > 0)
+                        {
+                            int col = x - (int)r.x;
+                            if (col < min) min = col;
+                            if (col > max) max = col;
+                        }
+                if (max < 0)
+                    throw new InvalidOperationException($"{sprite.name} is fully transparent.");
+                return new Vector2((min - sprite.pivot.x) / sprite.pixelsPerUnit, (max + 1 - sprite.pivot.x) / sprite.pixelsPerUnit);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(tex);
+            }
+        }
+
+        /// <summary>
+        /// Sets the prefab's WrestlerView.downedMirrorShift to (left + right) of the downed sprite's opaque x-extent:
+        /// the x shift that puts the mirrored downed sprite back on the same ground as the unmirrored one. Writes the
+        /// prefab only when the value changes. No-op if the prefab does not exist yet.
+        /// </summary>
+        private static void WriteDownedMirrorShift(WrestlerArtSpec spec)
+        {
+            string path = $"{PrefabFolder}/{spec.Name}.prefab";
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab == null || spec.Bodyslammed == null)
+                return;
+            Vector2 extent = OpaqueExtentX(spec.Bodyslammed.Sprites[spec.Bodyslammed.Sprites.Length - 1]);
+            float shift = extent.x + extent.y;
+            var current = prefab.GetComponent<WrestlerView>();
+            if (current != null && Mathf.Abs(current.DownedMirrorShift - shift) < 1e-4f)
+                return;
+            GameObject contents = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                var view = contents.GetComponent<WrestlerView>();
+                if (view == null)
+                    return;
+                var so = new SerializedObject(view);
+                so.FindProperty("downedMirrorShift").floatValue = shift;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(contents, path, out bool ok);
+                if (!ok)
+                    Debug.LogError($"WrestlerAnimationBuilder: could not save {path}.");
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(contents);
+            }
+        }
+
         private static string WritePrefab(WrestlerArtSpec spec, AnimatorOverrideController overrides, MoveAnimationTable table)
         {
             EnsureFolder(PrefabFolder);

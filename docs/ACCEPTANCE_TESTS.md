@@ -264,10 +264,10 @@ Last run: 2026-10-31. EditMode 233/234 (1 known failure, C1.4). PlayMode 15/15.
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
 | C13.1 | On `MoveStarted` the strike clip plays from its start at speed = clip contact time (MoveAnimationTable) / tuned Startup, read at that moment; a buffered combo strike (no state change) still restarts its clip; speed returns to 1 after the move | 4.2 Attack timing | `CombatPresentationTests.Strike_MoveSpeedFromTable_AndBufferedComboRestartsTheClip` | Auto |
-| C13.2 | Struck restarts its clip on every hit (`HitLanded`) | D-024, 4.2 | `CombatPresentationTests.Struck_ClipRestartsOnEveryHit` | Auto |
+| C13.2 | Struck restarts its clip on every hit (`HitLanded`), alternating the two hit reactions (Struck A, Struck B) on consecutive hits | D-024, 4.2 | `CombatPresentationTests.Struck_ClipRestartsOnEveryHit_AlternatingReactions` | Auto |
 | C13.3 | Knocked Out while already down holds the lying pose; Knocked Out from standing plays the fall | D-023, 4.2 | `CombatPresentationTests.KnockoutWhileDown_HoldsLyingPose`, `KnockoutFromStanding_PlaysTheFall` | Auto |
 | C13.4 | A right-facing (flipped) wrestler mirrors the clip's x offset and z rotation; the root never moves | 4.2 | `CombatPresentationTests.FlippedWrestler_MirrorsClipOffsetAndRotation` | Auto |
-| C13.5 | The contact frame visibly lands when the hit registers; the Stomp clip and the placeholder Struck, Knocked Down and Recovering clips read correctly | STYLE_GUIDE | none | **Human** |
+| C13.5 | The contact frame visibly lands when the hit registers; the Stomp and Struck clips and the placeholder Knocked Down and Recovering clips read correctly | STYLE_GUIDE | none | **Human** |
 
 ### C14. Match.unity end to end
 
@@ -284,7 +284,7 @@ Last run: 2026-10-31. EditMode 233/234 (1 known failure, C1.4). PlayMode 15/15.
 2. Buffered combo timing: press twice quickly, then wait a little before the third press. Today the third press is accepted up to 0.5 s after Strike 2 *starts* (the C1.4 failure). Which feels right: that, or 0.5 s from your second press, as D-030 says?
 3. Strike reach and depth: do punches and the kick connect when they look like they should, and whiff when they look like they miss? Try slightly different depths. (C1.10)
 4. Strike trades: both wrestlers swinging at once. Is it clear who won? (C2)
-5. Struck: does the 0.4 s stagger read well, and does it visibly restart on each combo hit? (C3, C13.2)
+5. Struck: does the 0.4 s stagger read well, does it visibly restart on each combo hit, and do the two reactions alternate readably? (C3, C13.2)
 6. Knockdowns: low health gives noticeably longer knockdowns; mashing J/K visibly speeds getting up; the shortest knockdown (0.5 s) still feels like a knockdown. (C4.3, C5)
 7. Stomp: stand over a downed CPU and press Strike. Is the stomp range (2 units) right? Does the 1.0 s cooldown feel right? (C6)
 8. Recovering: below 30 health the walk is half speed, Run does nothing, and standing still heals slowly to 30. Are the slow walk and 1 health/s OK? (C7)

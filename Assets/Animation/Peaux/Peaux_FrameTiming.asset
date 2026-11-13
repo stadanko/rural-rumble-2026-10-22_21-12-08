@@ -667,3 +667,55 @@ MonoBehaviour:
       HoldMs: 416.66666
       DefaultHoldMs: 416.66666
       BuiltInHoldMs: 416.66666
+  - ClipName: Peaux_StruckA
+    Loops: 0
+    Playback: 0
+    ContactStep: -1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: -7531575793964827369, guid: 522ee932dd86c774fb06727c63e9d0c8, type: 3}
+      PoseOnly: 0
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: -7531575793964827369, guid: 522ee932dd86c774fb06727c63e9d0c8, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: -7531575793964827369, guid: 522ee932dd86c774fb06727c63e9d0c8, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: -7531575793964827369, guid: 522ee932dd86c774fb06727c63e9d0c8, type: 3}
+      PoseOnly: 1
+      HoldMs: 166.66667
+      DefaultHoldMs: 166.66667
+      BuiltInHoldMs: 166.66667
+  - ClipName: Peaux_StruckB
+    Loops: 0
+    Playback: 0
+    ContactStep: -1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: 2164188865768848142, guid: f5170b60f88e6fd439a014b81401c7d7, type: 3}
+      PoseOnly: 0
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: 2164188865768848142, guid: f5170b60f88e6fd439a014b81401c7d7, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: 2164188865768848142, guid: f5170b60f88e6fd439a014b81401c7d7, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: 2164188865768848142, guid: f5170b60f88e6fd439a014b81401c7d7, type: 3}
+      PoseOnly: 1
+      HoldMs: 166.66667
+      DefaultHoldMs: 166.66667
+      BuiltInHoldMs: 166.66667

@@ -41,7 +41,7 @@ MonoBehaviour:
   bodyslamTiming:
     Startup: 1.15
     Active: 0.1
-    Recovery: 1.11
+    Recovery: 0.3
   bodyslamStartupByInitiator:
   - wrestler: {fileID: 11400000, guid: a759afccac418004080629b857d011a6, type: 2}
     startup: 0.525

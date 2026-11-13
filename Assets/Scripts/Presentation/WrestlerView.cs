@@ -131,6 +131,10 @@ namespace RuralRumble.Presentation
         [SerializeField] private bool artFacesLeft = true;
         [Tooltip("Contact time of each move clip at native speed (Assets/Animation/MoveAnimationTable.asset).")]
         [SerializeField] private MoveAnimationTable moveTable;
+        [Tooltip("World units, set by WrestlerAnimationBuilder: left + right edge of the downed sprite's opaque pixels " +
+                 "relative to its pivot (left-facing art). A knockdown that did not come from a bodyslam shows the downed " +
+                 "sprite mirrored and shifted by this, so the body stays on the same ground with head and feet swapped.")]
+        [SerializeField] private float downedMirrorShift;
 
         private IWrestlerView view;
         private CombatEvents events;
@@ -149,6 +153,13 @@ namespace RuralRumble.Presentation
 
         private float moveSpeed = 1f;
         private CombatState? lastState;
+
+        // Downed orientation (designer, 2026-11-12). The downed sprite is the last Bodyslammed frame, which lies head
+        // toward the slammer. A knockdown that follows a bodyslam (entered from Grappled) shows it as is; every other
+        // knockdown is a backward fall and shows it mirrored in place (feet toward the opponent).
+        private bool downedFromSlam;
+        private bool downedMirrored;
+        private bool facingFlip;
         private Vector2 lastPosition;
         private bool hasLastPosition;
         private float movingHold;
@@ -158,6 +169,9 @@ namespace RuralRumble.Presentation
         private bool mirrorWritten;
         private float lastWrittenX;
         private float lastWrittenRotZ;
+        // The Animator's own (unmirrored) values behind the last write.
+        private float lastAnimatorX;
+        private float lastAnimatorRotZ;
 
         /// <summary>The bound combat view, or null before <see cref="Bind"/>.</summary>
         public IWrestlerView View => view;
@@ -272,7 +286,12 @@ namespace RuralRumble.Presentation
                 return;
 
             CombatState state = view.State;
-            bool flip = ShouldFlip(view.HorizontalFacing, artFacesLeft);
+            facingFlip = ShouldFlip(view.HorizontalFacing, artFacesLeft);
+            bool downed = IsDownedState(state);
+            if (downed && !(lastState.HasValue && IsDownedState(lastState.Value)))
+                downedFromSlam = lastState == CombatState.Grappled; // KO while down keeps how they went down
+            downedMirrored = downed && !downedFromSlam;
+            bool flip = facingFlip ^ downedMirrored;
 
             // Recovering stand vs walk: did the combat position change since the last frame (ARCHITECTURE 4.2)?
             Vector2 position = view.Position;
@@ -313,8 +332,8 @@ namespace RuralRumble.Presentation
                 if (pendingStruckRestart && state == CombatState.Struck)
                     PlayFromStart(StruckStateName, 0f);
 
-                // D-023: Knocked Out reuses the Knocked Down clip. Knocked out while already down (a stomp)
-                // holds the lying pose instead of replaying the fall.
+                // D-023: Knocked Out reuses the Knocked Down clip (the held downed sprite). Knocked out while
+                // already down (a stomp) jumps to the clip's end instead of replaying it from the start.
                 if (state == CombatState.KnockedOut && lastState == CombatState.KnockedDown)
                     PlayFromStart(KnockedOutStateName, 1f);
             }
@@ -338,7 +357,8 @@ namespace RuralRumble.Presentation
         }
 
         // After the Animator has written this frame's pose: mirror the clip's x offset and z rotation for a
-        // flipped sprite (clips are authored for left-facing art).
+        // flipped sprite (clips are authored for left-facing art), and shift a mirrored downed sprite back onto
+        // the ground the unmirrored one covers.
         private void LateUpdate()
         {
             if (view == null || spriteRenderer == null)
@@ -349,25 +369,56 @@ namespace RuralRumble.Presentation
 
             Vector3 p = t.localPosition;
             Vector3 e = t.localEulerAngles;
-            float rotZ = NormalizeAngle(e.z);
-            if (mirrorWritten && Mathf.Abs(p.x - lastWrittenX) < 1e-4f && Mathf.Abs(rotZ - lastWrittenRotZ) < 0.01f)
-                return; // the Animator did not write since our last mirror; don't mirror twice
+            float currentX = p.x, currentRotZ = NormalizeAngle(e.z);
+            float animX = currentX, animRotZ = currentRotZ;
+            if (mirrorWritten && Mathf.Abs(currentX - lastWrittenX) < 1e-4f && Mathf.Abs(currentRotZ - lastWrittenRotZ) < 0.01f)
+            {
+                // The Animator did not write since our last write: start again from the values it last wrote, so
+                // nothing is mirrored twice but a change of flip or downed offset (e.g. knocked down) still applies.
+                animX = lastAnimatorX;
+                animRotZ = lastAnimatorRotZ;
+            }
+            lastAnimatorX = animX;
+            lastAnimatorRotZ = animRotZ;
 
+            float x = animX, r = animRotZ;
             if (spriteRenderer.flipX)
             {
-                p.x = -p.x;
-                rotZ = -rotZ;
-                t.localPosition = p;
-                t.localEulerAngles = new Vector3(e.x, e.y, rotZ);
-                mirrorWritten = true;
-                lastWrittenX = p.x;
-                lastWrittenRotZ = rotZ;
+                x = -x;
+                r = -r;
             }
-            else
+            x += DownedMirrorOffset(downedMirrored, facingFlip, downedMirrorShift);
+
+            bool changed = Mathf.Abs(x - currentX) > 1e-5f || Mathf.Abs(r - currentRotZ) > 1e-3f;
+            if (changed)
             {
-                mirrorWritten = false;
+                p.x = x;
+                t.localPosition = p;
+                t.localEulerAngles = new Vector3(e.x, e.y, r);
             }
+            // Bookkeeping only when our value differs from the Animator's (a later identical value means "not rewritten").
+            mirrorWritten = Mathf.Abs(x - animX) > 1e-5f || Mathf.Abs(r - animRotZ) > 1e-3f;
+            lastWrittenX = x;
+            lastWrittenRotZ = r;
         }
+
+        /// <summary>Knocked Down or Knocked Out: the states that show the downed sprite.</summary>
+        public static bool IsDownedState(CombatState state) =>
+            state == CombatState.KnockedDown || state == CombatState.KnockedOut;
+
+        /// <summary>
+        /// Child x offset that keeps a mirrored downed sprite on the same ground as the unmirrored one: the sprite's
+        /// opaque span [a, b] (left-facing art, relative to the pivot) drawn with the facing flip covers [a, b] or
+        /// [-b, -a]; drawn with the opposite flip and shifted by this it covers the same span. 0 when not mirrored.
+        /// </summary>
+        public static float DownedMirrorOffset(bool mirrored, bool facingFlip, float shift) =>
+            mirrored ? (facingFlip ? -shift : shift) : 0f;
+
+        /// <summary>See the Inspector tooltip; set by WrestlerAnimationBuilder.</summary>
+        public float DownedMirrorShift => downedMirrorShift;
+
+        /// <summary>True while the downed sprite is shown mirrored (a knockdown that did not follow a bodyslam).</summary>
+        public bool DownedMirrored => downedMirrored;
 
         private void SetMoveSpeed(float speed)
         {

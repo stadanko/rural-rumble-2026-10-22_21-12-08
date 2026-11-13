@@ -254,36 +254,11 @@ MonoBehaviour:
     ContactStep: -1
     CustomDefaults: 0
     Steps:
-    - Sprite: {fileID: 1886176580217378589, guid: 1056c001445f8564fa108e52f7437346, type: 3}
+    - Sprite: {fileID: -5474145498823552266, guid: fded4a23b092d0642ab548e1c112c2e0, type: 3}
       PoseOnly: 0
-      HoldMs: 41.666668
-      DefaultHoldMs: 41.666668
-      BuiltInHoldMs: 41.666668
-    - Sprite: {fileID: 1886176580217378589, guid: 1056c001445f8564fa108e52f7437346, type: 3}
-      PoseOnly: 1
-      HoldMs: 41.666668
-      DefaultHoldMs: 41.666668
-      BuiltInHoldMs: 41.666668
-    - Sprite: {fileID: 1886176580217378589, guid: 1056c001445f8564fa108e52f7437346, type: 3}
-      PoseOnly: 1
-      HoldMs: 41.666668
-      DefaultHoldMs: 41.666668
-      BuiltInHoldMs: 41.666668
-    - Sprite: {fileID: 1886176580217378589, guid: 1056c001445f8564fa108e52f7437346, type: 3}
-      PoseOnly: 1
-      HoldMs: 41.666668
-      DefaultHoldMs: 41.666668
-      BuiltInHoldMs: 41.666668
-    - Sprite: {fileID: 1886176580217378589, guid: 1056c001445f8564fa108e52f7437346, type: 3}
-      PoseOnly: 1
-      HoldMs: 83.333336
-      DefaultHoldMs: 83.333336
-      BuiltInHoldMs: 83.333336
-    - Sprite: {fileID: 1886176580217378589, guid: 1056c001445f8564fa108e52f7437346, type: 3}
-      PoseOnly: 1
-      HoldMs: 250
-      DefaultHoldMs: 250
-      BuiltInHoldMs: 250
+      HoldMs: 500
+      DefaultHoldMs: 500
+      BuiltInHoldMs: 500
   - ClipName: Peaux_RecoveringStand_PLACEHOLDER
     Loops: 1
     Playback: 0

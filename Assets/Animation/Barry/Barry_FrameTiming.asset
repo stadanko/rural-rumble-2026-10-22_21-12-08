@@ -254,36 +254,11 @@ MonoBehaviour:
     ContactStep: -1
     CustomDefaults: 0
     Steps:
-    - Sprite: {fileID: 21300000, guid: 74acf5b2c663dd347902f07745173362, type: 3}
+    - Sprite: {fileID: 6759615120426611279, guid: 8a5e886631e4e244d86a273f9df66709, type: 3}
       PoseOnly: 0
-      HoldMs: 41.666668
-      DefaultHoldMs: 41.666668
-      BuiltInHoldMs: 41.666668
-    - Sprite: {fileID: 21300000, guid: 74acf5b2c663dd347902f07745173362, type: 3}
-      PoseOnly: 1
-      HoldMs: 41.666668
-      DefaultHoldMs: 41.666668
-      BuiltInHoldMs: 41.666668
-    - Sprite: {fileID: 21300000, guid: 74acf5b2c663dd347902f07745173362, type: 3}
-      PoseOnly: 1
-      HoldMs: 41.666668
-      DefaultHoldMs: 41.666668
-      BuiltInHoldMs: 41.666668
-    - Sprite: {fileID: 21300000, guid: 74acf5b2c663dd347902f07745173362, type: 3}
-      PoseOnly: 1
-      HoldMs: 41.666668
-      DefaultHoldMs: 41.666668
-      BuiltInHoldMs: 41.666668
-    - Sprite: {fileID: 21300000, guid: 74acf5b2c663dd347902f07745173362, type: 3}
-      PoseOnly: 1
-      HoldMs: 83.333336
-      DefaultHoldMs: 83.333336
-      BuiltInHoldMs: 83.333336
-    - Sprite: {fileID: 21300000, guid: 74acf5b2c663dd347902f07745173362, type: 3}
-      PoseOnly: 1
-      HoldMs: 250
-      DefaultHoldMs: 250
-      BuiltInHoldMs: 250
+      HoldMs: 500
+      DefaultHoldMs: 500
+      BuiltInHoldMs: 500
   - ClipName: Barry_RecoveringStand_PLACEHOLDER
     Loops: 1
     Playback: 0

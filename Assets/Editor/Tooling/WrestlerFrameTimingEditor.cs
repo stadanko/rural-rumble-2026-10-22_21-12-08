@@ -161,9 +161,14 @@ namespace RuralRumble.EditorTooling
             switch (clip.Playback)
             {
                 case ClipPlayback.ContactScaled:
-                    return "Speed-scaled in game: the whole clip is sped up or slowed down so the HIT sprite appears at the " +
-                           "move's Startup in CombatTuning. Hold (ms) sets the rhythm and proportions; it does not change " +
-                           "when the hit lands.";
+                    return clip.ClipName.EndsWith("_IrishWhip")
+                        ? "Speed-scaled in game: the whole clip is sped up or slowed down so the HIT sprite (f4, the release) " +
+                          "appears at the end of the combat f3 time. Keep each Hold (ms) equal to the combat frame time below: " +
+                          "the runner's position is keyed to those times. To change the whip speed, edit the holds, click " +
+                          "'Match combat to this clip', then rebuild."
+                        : "Speed-scaled in game: the whole clip is sped up or slowed down so the HIT sprite appears at the " +
+                          "move's Startup in CombatTuning. Hold (ms) sets the rhythm and proportions; it does not change " +
+                          "when the hit lands.";
                 case ClipPlayback.FittedToMove:
                     return "Fitted in game: the whole clip is stretched to the move's total time in CombatTuning. " +
                            "Hold (ms) sets the proportions between sprites only.";
@@ -319,11 +324,14 @@ namespace RuralRumble.EditorTooling
                 case "BreakLockUp": case "BreakLockUpReceiver":
                     moveTiming = tuningSo?.FindProperty(nameof(CombatTuning.breakLockUpTiming));
                     break;
-                case "Struck":
+                case "Struck": case "StruckA": case "StruckB":
                     single = tuningSo?.FindProperty(nameof(CombatTuning.struckDuration));
                     singleLabel = "Struck lasts (s)";
                     note = "How long the hit reaction lasts in combat; the clip itself plays at the times above.";
                     break;
+                case "IrishWhip":
+                    DrawIrishWhipCombatTiming(clip);
+                    return;
                 case "LockUp": case "LockedUp":
                     single = tuningSo?.FindProperty(nameof(CombatTuning.lockUpTimer));
                     singleLabel = "Lock-up lasts up to (s)";
@@ -421,6 +429,126 @@ namespace RuralRumble.EditorTooling
                 type = MessageType.Warning;
             }
             EditorGUILayout.HelpBox(text, type);
+        }
+
+        // ---------------------------------------------------------------- Irish Whip (D-039)
+
+        private static readonly string[] WhipFrameFields =
+        {
+            nameof(IrishWhipChoreography.frame1), nameof(IrishWhipChoreography.frame2),
+            nameof(IrishWhipChoreography.frame3), nameof(IrishWhipChoreography.followThrough),
+        };
+
+        private static readonly string[] WhipFrameLabels =
+        {
+            "f1 push start (s)", "f2 turn (s)", "f3 final push (s)", "f4 follow-through (s)",
+        };
+
+        /// <summary>
+        /// The whipper's Irish Whip combat timing (CombatTuning.irishWhipByWhipper entry for this wrestler, else the
+        /// shared irishWhip fallback): the four frame times, editable in place with Undo, next to the clip's holds.
+        /// Combat keys the runner's position to these times, so the clip's holds should equal them (then it plays at
+        /// 1x and every frame change lines up with the runner). "Match combat to this clip" copies the four holds in.
+        /// </summary>
+        private void DrawIrishWhipCombatTiming(WrestlerFrameTiming.ClipTiming clip)
+        {
+            if (tuningSo == null)
+            {
+                EditorGUILayout.HelpBox("CombatTuning asset not found, so its timing can't be shown here.", MessageType.Warning);
+                return;
+            }
+            SerializedProperty whip = IrishWhipFor(selfDef);
+            bool shared = whip == null;
+            if (shared)
+                whip = tuningSo.FindProperty(nameof(CombatTuning.irishWhip));
+            if (whip == null)
+                return;
+            string who = selfDef != null ? selfDef.DisplayName : "this wrestler";
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField(new GUIContent("Combat timing  (CombatTuning: changes gameplay)",
+                    "The whipper's Irish Whip frame times in Assets/Data/Tuning/CombatTuning.asset, edited in place. " +
+                    "No rebuild needed for these."), EditorStyles.miniBoldLabel);
+                EditorGUILayout.LabelField(shared
+                        ? $"No Irish Whip entry for {who} in 'Irish Whip By Whipper'; showing the shared fallback (Irish Whip)."
+                        : $"When {who} whips (Irish Whip By Whipper). The runner's position is keyed to these times: " +
+                          "it jumps to its next spot when each frame time ends, and starts running at the release (end of f3).",
+                    EditorStyles.wordWrappedMiniLabel);
+
+                var props = new SerializedProperty[4];
+                for (int i = 0; i < 4; i++)
+                {
+                    props[i] = whip.FindPropertyRelative(WhipFrameFields[i]);
+                    EditorGUILayout.PropertyField(props[i], new GUIContent(WhipFrameLabels[i], i == 3
+                        ? "Seconds f4 is held after the release while the runner runs clear. The whipper is free when it ends."
+                        : "Seconds this whipper frame is shown. The runner holds its keyed spot for the whole frame."));
+                }
+                EditorGUILayout.PropertyField(whip.FindPropertyRelative(nameof(IrishWhipChoreography.throughPx)),
+                    new GUIContent("Runner spots, whip through (px)",
+                        "Runner root x minus whipper root x along the whip direction, per whipper frame (60 px = 1 unit)."), true);
+                EditorGUILayout.PropertyField(whip.FindPropertyRelative(nameof(IrishWhipChoreography.awayPx)),
+                    new GUIContent("Runner spots, whip away (px)",
+                        "Runner root x minus whipper root x along the whip direction, per whipper frame (60 px = 1 unit)."), true);
+
+                if (clip.Steps.Count != 4 || clip.ContactStep < 0)
+                {
+                    EditorGUILayout.HelpBox("This clip doesn't have the 4 whip frames, so it can't be compared with combat.", MessageType.Warning);
+                    return;
+                }
+
+                // Frame-by-frame: what the clip shows vs. when combat moves the runner.
+                bool allMatch = true;
+                for (int i = 0; i < 4; i++)
+                {
+                    float holdMs = clip.Steps[i].HoldMs, combatMs = props[i].floatValue * 1000f;
+                    bool match = Mathf.Abs(holdMs - combatMs) < 0.5f;
+                    allMatch &= match;
+                    EditorGUILayout.LabelField($"f{i + 1}: clip {holdMs:0.#} ms, combat {combatMs:0.#} ms" + (match ? "" : "   <- differs"),
+                        EditorStyles.miniLabel);
+                }
+                float contactS = clip.StartMs(clip.ContactStep) / 1000f;
+                float release = props[0].floatValue + props[1].floatValue + props[2].floatValue;
+                DrawSpeedReadout(contactS, release,
+                    $"the release (HIT = f4) is {contactS * 1000f:0.#} ms into the clip and at {release * 1000f:0.#} ms in game");
+                if (!allMatch)
+                    EditorGUILayout.HelpBox("The clip's holds differ from the combat frame times, so the whipper's frames change " +
+                                            "at different times than the runner jumps: the pushing arm can show past the runner. " +
+                                            "Use the button below (or edit the holds and rebuild) to line them up.", MessageType.Warning);
+
+                using (new EditorGUI.DisabledScope(allMatch))
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button(new GUIContent("Match combat to this clip",
+                            "Copies the four Hold (ms) values into the whipper's combat frame times (f1, f2, f3, follow-through). " +
+                            "This changes the whip's timing in gameplay."), GUILayout.Width(240)) &&
+                        EditorUtility.DisplayDialog("Change combat timing?",
+                            $"Set {who}'s Irish Whip frame times to {clip.Steps[0].HoldMs:0.#} / {clip.Steps[1].HoldMs:0.#} / " +
+                            $"{clip.Steps[2].HoldMs:0.#} / {clip.Steps[3].HoldMs:0.#} ms " +
+                            $"(now {props[0].floatValue * 1000f:0.#} / {props[1].floatValue * 1000f:0.#} / " +
+                            $"{props[2].floatValue * 1000f:0.#} / {props[3].floatValue * 1000f:0.#} ms)?\n\n" +
+                            "The runner's positions are keyed to these times, and the whipper stays rooted until the last one " +
+                            "ends, in every match, for the player and the CPU.",
+                            "Change it", "Cancel"))
+                        for (int i = 0; i < 4; i++)
+                            props[i].floatValue = clip.Steps[i].HoldMs / 1000f;
+                }
+            }
+        }
+
+        /// <summary>The irishWhipByWhipper entry for this whipper, or null if it has none.</summary>
+        private SerializedProperty IrishWhipFor(WrestlerDefinition whipper)
+        {
+            SerializedProperty list = tuningSo?.FindProperty(nameof(CombatTuning.irishWhipByWhipper));
+            if (list == null || whipper == null) return null;
+            for (int i = 0; i < list.arraySize; i++)
+            {
+                SerializedProperty e = list.GetArrayElementAtIndex(i);
+                if (e.FindPropertyRelative(nameof(IrishWhipChoreography.whipper)).objectReferenceValue == whipper)
+                    return e;
+            }
+            return null;
         }
 
         /// <summary>The bodyslamStartupByInitiator entry for this slammer, or null if it has none.</summary>

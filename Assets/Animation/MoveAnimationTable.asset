@@ -16,69 +16,100 @@ MonoBehaviour:
   - Move: 1
     Clip: {fileID: 7400000, guid: bc53eb42acfaceb49a5d02c68187963f, type: 2}
     ContactTime: 0.20833333
+    TurnTime: 0
   - Move: 2
     Clip: {fileID: 7400000, guid: 93ab27bbbdb47294babbf467985d4ee4, type: 2}
     ContactTime: 0.20833333
+    TurnTime: 0
   - Move: 3
     Clip: {fileID: 7400000, guid: 60f3818e2aafda7449fbe0a9c7d1225b, type: 2}
     ContactTime: 0.125
+    TurnTime: 0
   - Move: 4
     Clip: {fileID: 7400000, guid: a853ca7eadb6a144d9c547cda3ba041e, type: 2}
     ContactTime: 0.20833333
+    TurnTime: 0
   - Move: 1
     Clip: {fileID: 7400000, guid: 584aa403a47989a48906b9757b6b85b6, type: 2}
     ContactTime: 0.20833333
+    TurnTime: 0
   - Move: 2
     Clip: {fileID: 7400000, guid: c423be3db4893cc43961cc32c0060245, type: 2}
     ContactTime: 0.20833333
+    TurnTime: 0
   - Move: 3
     Clip: {fileID: 7400000, guid: b715c3b6391e03847819d53418f68ddb, type: 2}
     ContactTime: 0.125
+    TurnTime: 0
   - Move: 4
     Clip: {fileID: 7400000, guid: 8e2449524529435469c9f78981c299e1, type: 2}
     ContactTime: 0.20833333
+    TurnTime: 0
   - Move: 1
     Clip: {fileID: 7400000, guid: d8a24d56215266047b4803b7954d5440, type: 2}
     ContactTime: 0.20833333
+    TurnTime: 0
   - Move: 2
     Clip: {fileID: 7400000, guid: 7fe921662206f434589259549d9287dc, type: 2}
     ContactTime: 0.20833333
+    TurnTime: 0
   - Move: 3
     Clip: {fileID: 7400000, guid: 56a4c55ca1504ae4f9fe11bc3c155951, type: 2}
     ContactTime: 0.125
+    TurnTime: 0
   - Move: 5
     Clip: {fileID: 7400000, guid: 312be9965f6a0f246af3843ab2835eff, type: 2}
     ContactTime: 0
+    TurnTime: 0
   - Move: 8
     Clip: {fileID: 7400000, guid: 8508f9c05ac3ad2479a6cd7371b17491, type: 2}
     ContactTime: 0
+    TurnTime: 0
   - Move: 8
     Clip: {fileID: 7400000, guid: 129197201e951b44ca10714260e30827, type: 2}
     ContactTime: 0
+    TurnTime: 0
   - Move: 5
     Clip: {fileID: 7400000, guid: 56cbaacbadd8dc043acbfdd549b2ad5b, type: 2}
     ContactTime: 0
+    TurnTime: 0
   - Move: 8
     Clip: {fileID: 7400000, guid: ab81850441c787b4bb32847e5d6cffd5, type: 2}
     ContactTime: 0
+    TurnTime: 0
   - Move: 8
     Clip: {fileID: 7400000, guid: a1eb8116c8a92724582f1e5c68fe2dd6, type: 2}
     ContactTime: 0
+    TurnTime: 0
   - Move: 6
     Clip: {fileID: 7400000, guid: b6b6d982418a7c94aab7e41f6557cc4d, type: 2}
     ContactTime: 0.525
+    TurnTime: 0
   - Move: 6
     Clip: {fileID: 7400000, guid: b0afdbfa4df07c54e803bb296f39d568, type: 2}
     ContactTime: 0.5
+    TurnTime: 0
   - Move: 6
     Clip: {fileID: 7400000, guid: 773c8385054bcd144a3d58d0027f643f, type: 2}
     ContactTime: 0.5
+    TurnTime: 0
   - Move: 6
     Clip: {fileID: 7400000, guid: 2c8e63803410c664cbfbdb2981b9a885, type: 2}
     ContactTime: 0.525
+    TurnTime: 0
   - Move: 4
     Clip: {fileID: 7400000, guid: c532e0767d65dbd43a7437cdd768bc3a, type: 2}
     ContactTime: 0.20833333
+    TurnTime: 0
   - Move: 4
     Clip: {fileID: 7400000, guid: c38ee7626991e4b49af9ce6905d4b449, type: 2}
     ContactTime: 0.20833333
+    TurnTime: 0
+  - Move: 7
+    Clip: {fileID: 7400000, guid: 77deec0018c2ad4478e48585dc4eeb24, type: 2}
+    ContactTime: 0.34
+    TurnTime: 0.12
+  - Move: 7
+    Clip: {fileID: 7400000, guid: 7e46733033502ed44911f0afd6068a23, type: 2}
+    ContactTime: 0.34
+    TurnTime: 0.12

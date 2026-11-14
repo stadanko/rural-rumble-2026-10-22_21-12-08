@@ -381,6 +381,21 @@ Agents: read this before starting work. If a task conflicts with a decision here
 
 ---
 
+## D-039: Irish Whip direction, choreography and art
+
+- **Date:** 2026-11-13
+- **Decided by:** Designer
+- **Decision:**
+  - **Direction (resolves Q-006):** with no left/right held, the whipped wrestler runs the way they faced in the lock-up, which carries them **past the whipper**. Holding left or right whips that way (left/right component of the stick or D-pad; up/down alone counts as no direction). The CONTROLS.md wording ("the direction the opponent is currently facing") stands.
+  - **Choreography** (designer's reference `Staging/Art/wrestler/Irish Whip Mechanics in WWF Superstars.pdf`, used as a written motion description only): four whipper frames, then stand. f1 push start: whipper still faces the opponent, pushing arm hidden behind the runner. f2 turn: whipper faces the whip direction, mostly covered by the runner. f3 final push: pushing arm goes into the runner's back and is hidden by the runner. f4 follow-through: runner clear, open hand near the runner's back. The same arm pushes in every frame. The runner is drawn in front of the whipper and faces/moves in the whip direction from f1. Both wrestlers' facing follows the whip direction. No part of the whipper's arm may show past the runner in f1–f3. The whip ends when the runner is about 1.5 body widths past the whipper's hand; the whipper is then free, facing the whip direction.
+  - **Art:** the 4-frame whipper candidates `gen-barry-irishwhip-4` and `gen-peaux-irishwhip-4` are approved.
+  - **Timing** is designer-tunable like the other moves: per-frame holds in each wrestler's FrameTiming asset, and the whip's combat timing in CombatTuning (shown in the same Inspector).
+- **Why:** The first 3-frame whip art switched pushing arms, didn't flip the whipper with the whip direction, and showed the arm past the runner. The reference document defines how the frames connect.
+- **Affects:** docs/CONTROLS.md, docs/COMBAT_SPEC.md, docs/ARCHITECTURE.md §6, docs/ASSET_REGISTRY.csv, docs/CREDITS.md, Combat (LockUpController, CombatWrestler, CombatTuning, OpponentBrain), presentation (whip clips, FrameTiming, WrestlerView).
+- **Playtest (2026-11-14):** designer accepted the Irish Whip. Credits: one entry covers all AI-generated sprites (designer, 2026-11-14).
+
+---
+
 ## Open Questions
 
 Not yet decided. Agents must not resolve these on their own.
@@ -390,4 +405,4 @@ Not yet decided. Agents must not resolve these on their own.
 - **Q-003: When to start the Art Wrangler.** Resolved by D-008.
 - **Q-004: Master copies of design documents.** The `.docx` files in docs/ are older than the `.md` versions. Recommended: treat the `.md` files as the source of truth.
 - **Q-005: Craftpix license.** Resolved by D-011.
-- **Q-006: Irish Whip direction under Focus (D-037).** CONTROLS says that with no direction held, the whip goes "in the direction the opponent is currently facing". Under Focus, the locked-up opponent faces the initiator, so that would whip them *into* the initiator. Decide when the Irish Whip is built (lock-up slice step 3).
+- **Q-006: Irish Whip direction under Focus.** Resolved by D-039.

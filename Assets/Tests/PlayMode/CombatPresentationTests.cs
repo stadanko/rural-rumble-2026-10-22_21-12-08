@@ -154,8 +154,10 @@ namespace RuralRumble.Tests.PlayMode
         }
 
         // D-024: each hit restarts Struck without a StateChanged; presentation restarts the Struck clip on HitLanded.
+        // The two approved hit reactions alternate per hit (presentation only): first hit "Struck" (StruckA sprite),
+        // second hit "StruckB" (StruckB sprite), each played from the start.
         [UnityTest]
-        public IEnumerator Struck_ClipRestartsOnEveryHit()
+        public IEnumerator Struck_ClipRestartsOnEveryHit_AlternatingReactions()
         {
             Build(new Vector2(10f, -12f), new Vector2(12f, -12f), t => t.struckDuration = 2f);
             yield return null;
@@ -164,8 +166,9 @@ namespace RuralRumble.Tests.PlayMode
             yield return Settle();
             yield return new WaitForSeconds(0.3f);
             AnimatorStateInfo before = StateOf(cpuView);
-            Assert.IsTrue(before.IsName("Struck"), "Animator should be in Struck");
+            Assert.IsTrue(before.IsName("Struck"), "Animator should be in Struck (first reaction) on the first hit");
             Assert.Greater(before.normalizedTime, 0.4f, "setup: the Struck clip has advanced");
+            Assert.AreEqual("barry_struck_a_0", cpuView.SpriteRenderer.sprite.name, "first hit shows the StruckA sprite");
 
             int struckEntries = 0;
             match.Events.StateChanged += (id, from, to) => { if (id == WrestlerId.Cpu && to == CombatState.Struck) struckEntries++; };
@@ -178,8 +181,9 @@ namespace RuralRumble.Tests.PlayMode
 
             yield return Settle();
             AnimatorStateInfo after = StateOf(cpuView);
-            Assert.IsTrue(after.IsName("Struck"));
-            Assert.Less(after.normalizedTime, before.normalizedTime - 0.25f, "the Struck clip should restart on the second hit");
+            Assert.IsTrue(after.IsName("StruckB"), "the second consecutive hit shows the other reaction");
+            Assert.Less(after.normalizedTime, before.normalizedTime - 0.25f, "the reaction should play from the start on the second hit");
+            Assert.AreEqual("barry_struck_b_0", cpuView.SpriteRenderer.sprite.name, "second hit shows the StruckB sprite");
         }
 
         // D-023 / ARCHITECTURE 4.2: Knocked Out reuses the Knocked Down clip, which holds the downed sprite (the last

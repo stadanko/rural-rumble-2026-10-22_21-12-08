@@ -13,7 +13,8 @@ namespace RuralRumble.EditorTooling
     /// Builds the shared wrestler Animator graph, one wrestler's clips + AnimatorOverrideController, and the
     /// wrestler's presentation prefab (ARCHITECTURE 4.2, D-021). Re-running updates assets in place so GUIDs
     /// and references survive. Standing, Walking, Running, the three Striking clips (Strike1-3), Stomp (approved
-    /// sheets; a PLACEHOLDER stand-in only for a wrestler with none), and PLACEHOLDER stand-ins for Struck and
+    /// sheets; a PLACEHOLDER stand-in only for a wrestler with none), Struck A / B (approved single sprites that
+    /// WrestlerView alternates on consecutive hits; run ImportStruckSheets first), and PLACEHOLDER stand-ins for
     /// Recovering (stand + walk) built from the stand/walk sprites. Knocked Down / Knocked Out
     /// hold the wrestler's downed sprite (last Bodyslammed sprite); no fall animation yet.
     ///
@@ -21,7 +22,8 @@ namespace RuralRumble.EditorTooling
     /// A wrestler with no run or strike art gets PLACEHOLDER stand-ins for those too (WriteMissingArtStandIns).
     /// Lock Up / Locked Up use the approved pair sheets (D-032; run ImportLockUpSheets first); lock-up whiff and
     /// break stay PLACEHOLDER stand-ins. Bodyslam / Bodyslammed use the approved bodyslam pair sheets (D-033; run
-    /// ImportBodyslamSheets first).
+    /// ImportBodyslamSheets first). IrishWhip (the whipper's side) uses the approved 4-frame whip sheets (D-039; run
+    /// ImportIrishWhipSheets first); the whipped runner plays its normal Run clip.
     ///
     /// Timing: the key frames below (SourceFps frames) are only the defaults. Each wrestler has a
     /// WrestlerFrameTiming asset (Assets/Animation/{Name}/{Name}_FrameTiming.asset, created from these defaults if
@@ -60,6 +62,10 @@ namespace RuralRumble.EditorTooling
         // Combat-core slice slots. Stomp uses the approved stomp sheets; a stand-in (PLACEHOLDER) only without art.
         public const string SlotStomp = "Slot_Stomp";
         public const string SlotStruck = "Slot_Struck";
+        /// <summary>Second hit reaction; WrestlerView alternates Struck / StruckB on consecutive hits (presentation only).</summary>
+        public const string SlotStruckB = "Slot_" + WrestlerView.StruckBStateName;
+        /// <summary>Animator bool parameter: show the second hit reaction (StruckB). Set by WrestlerView on each hit.</summary>
+        public const string StruckBParam = "StruckB";
         public const string SlotKnockedDown = "Slot_KnockedDown";
         public const string SlotKnockedOut = "Slot_KnockedOut";
         public const string SlotRecoveringStandFront = "Slot_RecoveringStandFront";
@@ -75,6 +81,8 @@ namespace RuralRumble.EditorTooling
         public const string SlotBreakLockUpReceiver = "Slot_" + WrestlerView.BreakLockUpReceiverStateName;
         public const string SlotBodyslam = "Slot_" + WrestlerView.BodyslamStateName;
         public const string SlotBodyslammed = "Slot_" + WrestlerView.BodyslammedStateName;
+        /// <summary>Irish Whip, the whipper's side (D-039). The runner plays its normal Run clip.</summary>
+        public const string SlotIrishWhip = "Slot_" + WrestlerView.IrishWhipStateName;
 
         /// <summary>Animator bool parameter: in a paired move (set by WrestlerView from PairedMoveStarted). Tells the
         /// Lock Up hold from a whiff, which share State = LockUp and Move = LockUp.</summary>
@@ -93,6 +101,13 @@ namespace RuralRumble.EditorTooling
             public int[] KeyFrames;
             public int LengthFrames;
             public int ContactIndex;
+            /// <summary>Optional built-in Hold (ms) per sprite, used instead of the SourceFps frame spacing when the
+            /// default timing is not a whole number of 24 fps frames (Irish Whip: the combat frame times, D-039).
+            /// KeyFrames / LengthFrames then only give the step structure.</summary>
+            public float[] DefaultHoldsMs;
+            /// <summary>Optional sprite index where the art turns to face a second direction (Irish Whip f2, D-039);
+            /// recorded as MoveAnimationTable TurnTime. -1 = none.</summary>
+            public int TurnIndex = -1;
             /// <summary>Built-in default only; the built clip's contact time comes from the WrestlerFrameTiming asset.</summary>
             public float ContactTime => KeyFrames[ContactIndex] / SourceFps;
         }
@@ -117,10 +132,13 @@ namespace RuralRumble.EditorTooling
             public MoveClipSpec Strike2;             // left punch; null -> placeholder
             public MoveClipSpec Strike3;             // combo finisher; null -> placeholder
             public MoveClipSpec Stomp;               // stomp on a downed opponent; null -> placeholder (StandFront pose)
+            public Sprite StruckA;                   // hit reaction A (lean back); null (either) -> placeholder for both
+            public Sprite StruckB;                   // hit reaction B (head snap), alternates with A on consecutive hits
             public Sprite[] LockUp;                  // Lock Up hold (A, initiator); null -> placeholder
             public Sprite[] LockedUp;                // Locked Up hold (B, receiver); null -> placeholder
             public MoveClipSpec Bodyslam;            // Bodyslam (A, Grappling); contact = impact frame; null -> LockUp hold stand-in
             public MoveClipSpec Bodyslammed;         // Bodyslammed (B, Grappled); contact = impact frame; null -> LockedUp hold stand-in
+            public MoveClipSpec IrishWhip;           // Irish Whip whipper (A, Grappling, D-039); contact = release (f4); turn = f2; null -> LockUp hold stand-in
         }
 
         public const string RebuildMenuPath = "Rural Rumble/Rebuild Wrestler Animations";
@@ -199,6 +217,9 @@ namespace RuralRumble.EditorTooling
                     Sprites = LoadSprites(art + "barry_stomp.png"),
                     KeyFrames = StompKeyFrames, LengthFrames = StompLengthFrames, ContactIndex = StompContactIndex,
                 },
+                // gen-barry-struck2-B-1 (lean back) and gen-barry-struck3-B-1 (head snap), imported by ImportStruckSheets.
+                StruckA = LoadSprites(art + "barry_struck_a.png").Single(),
+                StruckB = LoadSprites(art + "barry_struck_b.png").Single(),
                 // D-032: gen-barry-lockup-5 / gen-barry-lockedup-5 (pair sheets vs Peaux), imported by ImportLockUpSheets.
                 LockUp = LoadSprites(art + "barry_lockup.png"),
                 LockedUp = LoadSprites(art + "barry_lockedup.png"),
@@ -214,6 +235,8 @@ namespace RuralRumble.EditorTooling
                     Sprites = LoadSprites(art + "barry_bodyslammed.png"),
                     KeyFrames = BodyslamKeyFrames6, LengthFrames = BodyslamLengthFrames6, ContactIndex = BodyslamImpactIndex6,
                 },
+                // D-039: gen-barry-irishwhip-4 (Barry whips, 4 frames), imported by ImportIrishWhipSheets.
+                IrishWhip = IrishWhipSpec(LoadSprites(art + "barry_irishwhip.png"), RuralRumble.Combat.IrishWhipChoreography.BarryStaged),
             };
             return Build(spec, writePrefab);
         }
@@ -276,6 +299,9 @@ namespace RuralRumble.EditorTooling
                     Sprites = LoadSprites(art + "peaux_stomp.png"),
                     KeyFrames = StompKeyFrames, LengthFrames = StompLengthFrames, ContactIndex = StompContactIndex,
                 },
+                // gen-peaux-struck-a-1 (lean back) and gen-peaux-struck-b-1 (head snap), imported by ImportStruckSheets.
+                StruckA = LoadSprites(art + "peaux_struck_a.png").Single(),
+                StruckB = LoadSprites(art + "peaux_struck_b.png").Single(),
                 // D-032: gen-peaux-lockup-5 / gen-peaux-lockedup-5 (pair sheets vs Barry), imported by ImportLockUpSheets.
                 LockUp = LoadSprites(art + "peaux_lockup.png"),
                 LockedUp = LoadSprites(art + "peaux_lockedup.png"),
@@ -291,8 +317,44 @@ namespace RuralRumble.EditorTooling
                     Sprites = LoadSprites(art + "peaux_bodyslammed.png"),
                     KeyFrames = BodyslamKeyFrames7, LengthFrames = BodyslamLengthFrames7, ContactIndex = BodyslamImpactIndex7,
                 },
+                // D-039: gen-peaux-irishwhip-4 (Peaux whips, 4 frames), imported by ImportIrishWhipSheets.
+                IrishWhip = IrishWhipSpec(LoadSprites(art + "peaux_irishwhip.png"), RuralRumble.Combat.IrishWhipChoreography.PeauxStaged),
             };
             return Build(spec, writePrefab);
+        }
+
+        /// <summary>
+        /// The whipper's Irish Whip clip (D-039): f1 push start, f2 turn, f3 final push, f4 follow-through, played once
+        /// with f4 held. Built-in holds = the staged combat frame times (frame1 / frame2 / frame3 / followThrough: Barry
+        /// 120 / 100 / 120 / 330 ms, Peaux 120 / 100 / 120 / 250 ms), because Combat keys the runner's root to those
+        /// times. Contact (HIT) = f4, the release, so WrestlerView contact-scales the clip onto the whip's Startup
+        /// (f1 + f2 + f3); turn = f2 (WrestlerView draws f2-f4 facing the whip direction).
+        /// </summary>
+        private static MoveClipSpec IrishWhipSpec(Sprite[] sprites, RuralRumble.Combat.IrishWhipChoreography staged) =>
+            new MoveClipSpec
+            {
+                Sprites = sprites,
+                KeyFrames = new[] { 0, 1, 2, 3 }, LengthFrames = 4, ContactIndex = 3, TurnIndex = 1,
+                DefaultHoldsMs = new[]
+                {
+                    staged.frame1 * 1000f, staged.frame2 * 1000f, staged.frame3 * 1000f, staged.followThrough * 1000f,
+                },
+            };
+
+        /// <summary>
+        /// Imports the approved Irish Whip whipper sheets (D-039, ASSET_REGISTRY gen-barry-irishwhip-4 /
+        /// gen-peaux-irishwhip-4): barry_irishwhip 4 x 288x196, peaux_irishwhip 4 x 258x178, wrestler settings, pivot
+        /// Bottom Center. Each frame is packed so the rear boot centre sits where it does in the wrestler's stand_front
+        /// (39 / 33 px right of the cell centre), so the plain bottom-centre pivot is the stand_front convention and
+        /// the one the staged runner offsets were measured with (cell centre to cell centre). Run before the builders.
+        /// </summary>
+        public static string ImportIrishWhipSheets()
+        {
+            return string.Join("\n", new[]
+            {
+                ImportSheet("Assets/Art/Wrestlers/Barry/barry_irishwhip.png", 288, 196),
+                ImportSheet("Assets/Art/Wrestlers/Peaux/peaux_irishwhip.png", 258, 178),
+            });
         }
 
         /// <summary>Imports Peaux's approved sheets with the wrestler settings: stand front 102x215 and back 92x214
@@ -388,6 +450,20 @@ namespace RuralRumble.EditorTooling
                 ImportSheet("Assets/Art/Wrestlers/Peaux/peaux_bodyslam.png", 360, 266, shift),
                 ImportSheet("Assets/Art/Wrestlers/Barry/barry_bodyslammed.png", 526, 322, shift, 1),
             }) + $"\nBodyslam pivot shift: {shift} px toward the opponent.";
+        }
+
+        /// <summary>Imports the approved single-frame Struck sprites (gen-barry-struck2-B-1, gen-barry-struck3-B-1,
+        /// gen-peaux-struck-a-1, gen-peaux-struck-b-1) with the wrestler settings, one sprite each, pivot Bottom
+        /// Center: Barry A 186x197, B 132x230; Peaux A 172x187, B 124x213. Run before the Barry / Peaux builders.</summary>
+        public static string ImportStruckSheets()
+        {
+            return string.Join("\n", new[]
+            {
+                ImportSheet("Assets/Art/Wrestlers/Barry/barry_struck_a.png", 186, 197),
+                ImportSheet("Assets/Art/Wrestlers/Barry/barry_struck_b.png", 132, 230),
+                ImportSheet("Assets/Art/Wrestlers/Peaux/peaux_struck_a.png", 172, 187),
+                ImportSheet("Assets/Art/Wrestlers/Peaux/peaux_struck_b.png", 124, 213),
+            });
         }
 
         // ---------- sprite import ----------
@@ -550,6 +626,15 @@ namespace RuralRumble.EditorTooling
                 bySlot[SlotBodyslammed] = bySlot[SlotLockedUp];
                 standIns += " Bodyslammed(=LockedUp)";
             }
+            // D-039: the whipper's Irish Whip, played once with f4 held; contact = release (f4), turn = f2. No art: the
+            // lock-up hold clip stands in (no table entry, no turn).
+            WriteMoveClip(spec.IrishWhip, $"{folder}/{spec.Name}_{WrestlerView.IrishWhipStateName}.anim", MoveId.IrishWhip,
+                SlotIrishWhip, bySlot, table);
+            if (spec.IrishWhip == null)
+            {
+                bySlot[SlotIrishWhip] = bySlot[SlotLockUp];
+                standIns += " IrishWhip(=LockUp)";
+            }
             EditorUtility.SetDirty(table);
 
             AnimatorOverrideController overrides = WriteOverride($"{folder}/{spec.Name}.overrideController", controller, bySlot);
@@ -598,15 +683,35 @@ namespace RuralRumble.EditorTooling
             Sprite[] standBack = { spec.StandBack != null ? spec.StandBack : spec.StandFront };
             int[] one = { 0 };
 
-            // Struck: red flash that fades, knocked back 6 px and leaning back 6 deg, recovering over 0.25 s. 0.417 s long
-            // (Struck lasts 0.4 s by default, D-024); restarted on every hit.
-            AnimationClip struck = WriteSpriteClip(P("Struck"), stand, one, 10, loop: false, new[]
+            // Struck: two approved hit reactions (StruckA lean back, StruckB head snap) that WrestlerView alternates on
+            // consecutive hits (Slot_Struck / Slot_StruckB). Each holds its sprite for 10 frames (0.417 s; Struck lasts
+            // 0.4 s by default, D-024) and is restarted on every hit. Same red flash and 6 px knockback as the old
+            // stand-in, fading over 0.25 s, but no rotation: the sprites already lean, and rotating them about the feet
+            // would lift a boot off the ground. Without both sprites, the PLACEHOLDER (stand sprite, leaning back
+            // 6 deg) fills both slots.
+            AnimationClip struck, struckB;
+            if (spec.StruckA != null && spec.StruckB != null)
             {
-                new PoseKey(0, 6, 0, -6, HitTint),
-                new PoseKey(2, 4, 0, -4, HitTintFade),
-                new PoseKey(4, 2, 0, -2, HitTintFaint),
-                new PoseKey(6, 0, 0, 0),
-            });
+                PoseKey[] hit =
+                {
+                    new PoseKey(0, 6, 0, 0, HitTint),
+                    new PoseKey(2, 4, 0, 0, HitTintFade),
+                    new PoseKey(4, 2, 0, 0, HitTintFaint),
+                    new PoseKey(6, 0, 0, 0),
+                };
+                struck = WriteSpriteClip($"{folder}/{spec.Name}_StruckA.anim", new[] { spec.StruckA }, one, 10, loop: false, hit);
+                struckB = WriteSpriteClip($"{folder}/{spec.Name}_StruckB.anim", new[] { spec.StruckB }, one, 10, loop: false, hit);
+            }
+            else
+            {
+                struck = struckB = WriteSpriteClip(P("Struck"), stand, one, 10, loop: false, new[]
+                {
+                    new PoseKey(0, 6, 0, -6, HitTint),
+                    new PoseKey(2, 4, 0, -4, HitTintFade),
+                    new PoseKey(4, 2, 0, -2, HitTintFaint),
+                    new PoseKey(6, 0, 0, 0),
+                });
+            }
 
             // Knocked Down (designer, 2026-11-12): every knockdown shows the wrestler's downed sprite = the last sprite
             // of their own Bodyslammed clip (the same Sprite asset, so the same pivot), held with the rest pose (no
@@ -661,13 +766,15 @@ namespace RuralRumble.EditorTooling
             }
 
             bySlot[SlotStruck] = struck;
+            bySlot[SlotStruckB] = struckB;
             bySlot[SlotKnockedDown] = knockedDown;
             bySlot[SlotKnockedOut] = knockedDown; // D-023: Knocked Out reuses Knocked Down
             bySlot[SlotRecoveringStandFront] = recStand;
             bySlot[SlotRecoveringStandBack] = recStandBack;
             bySlot[SlotRecoveringWalkFront] = recWalk;
             bySlot[SlotRecoveringWalkBack] = recWalkBack;
-            return "Struck KnockedDown(+KnockedOut) RecoveringStand RecoveringStandBack RecoveringWalk RecoveringWalkBack" +
+            return (struck == struckB ? "Struck(+StruckB) " : "") +
+                   "KnockedDown(+KnockedOut) RecoveringStand RecoveringStandBack RecoveringWalk RecoveringWalkBack" +
                    (spec.Stomp == null ? " Stomp" : "");
         }
 
@@ -1001,6 +1108,7 @@ namespace RuralRumble.EditorTooling
             AnimatorStateMachine sm = controller.layers[0].stateMachine;
             changed |= EnsureMoveState(sm, MoveId.Stomp, SlotStomp, new Vector3(560, 240));
             changed |= EnsureClipState(sm, CombatState.Struck, SlotStruck, new Vector3(300, 240));
+            changed |= EnsureStruckBState(controller, sm);
             changed |= EnsureClipState(sm, CombatState.KnockedDown, SlotKnockedDown, new Vector3(300, 320));
             changed |= EnsureClipState(sm, CombatState.KnockedOut, SlotKnockedOut, new Vector3(300, 400));
 
@@ -1032,6 +1140,8 @@ namespace RuralRumble.EditorTooling
         ///   LockedUp            State == LockedUp and Move == LockUp                   (B held, loops)
         ///   BreakLockUp         State == LockUp   and Move == BreakLockUp              (A)
         ///   BreakLockUpReceiver State == LockedUp and Move == BreakLockUp              (B)
+        ///   Bodyslam / Bodyslammed  State == Grappling / Grappled and Move == Bodyslam (D-033)
+        ///   IrishWhip           State == Grappling and Move == IrishWhip               (whipper, D-039)
         /// Existing states untouched.
         /// </summary>
         public static bool EnsureLockUpStates(AnimatorController controller)
@@ -1060,6 +1170,10 @@ namespace RuralRumble.EditorTooling
                 MoveId.Bodyslam, null, new Vector3(820, 400));
             changed |= EnsureTimedState(sm, WrestlerView.BodyslammedStateName, SlotBodyslammed, false, CombatState.Grappled,
                 MoveId.Bodyslam, null, new Vector3(820, 480));
+            // D-039 Irish Whip: IrishWhip (A, the whipper) State == Grappling and Move == IrishWhip. Not looping (f4
+            // held), at MoveSpeed. The runner (B) is State Running and plays the Run state (Move is ignored there).
+            changed |= EnsureTimedState(sm, WrestlerView.IrishWhipStateName, SlotIrishWhip, false, CombatState.Grappling,
+                MoveId.IrishWhip, null, new Vector3(820, 560));
             return changed;
         }
 
@@ -1081,6 +1195,41 @@ namespace RuralRumble.EditorTooling
             if (paired.HasValue)
                 t.AddCondition(paired.Value ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0f, PairedParam);
             return true;
+        }
+
+        /// <summary>
+        /// Second hit reaction (presentation only; Combat has one Struck state): parameter StruckB (bool, set by
+        /// WrestlerView, toggled on each hit); state StruckB playing Slot_StruckB, Any State when State == Struck and
+        /// StruckB; the existing Any State -> Struck transition gets the matching "StruckB false" condition. Instant,
+        /// no exit time, no self-transition. Adds only what is missing.
+        /// </summary>
+        private static bool EnsureStruckBState(AnimatorController controller, AnimatorStateMachine sm)
+        {
+            bool changed = false;
+            if (controller.parameters.All(p => p.name != StruckBParam))
+            {
+                controller.AddParameter(StruckBParam, AnimatorControllerParameterType.Bool);
+                changed = true;
+            }
+            foreach (AnimatorStateTransition t in sm.anyStateTransitions)
+            {
+                if (t.destinationState == null || t.destinationState.name != WrestlerView.StruckStateName)
+                    continue;
+                if (t.conditions.Any(c => c.parameter == StruckBParam))
+                    continue;
+                t.AddCondition(AnimatorConditionMode.IfNot, 0f, StruckBParam);
+                changed = true;
+            }
+            if (sm.states.All(s => s.state.name != WrestlerView.StruckBStateName))
+            {
+                AnimatorState state = sm.AddState(WrestlerView.StruckBStateName, new Vector3(300, 160));
+                state.motion = WriteSlotClip(SlotStruckB, loop: false);
+                state.writeDefaultValues = false;
+                AnimatorStateTransition t = AddAnyStateTransition(sm, state, CombatState.Struck);
+                t.AddCondition(AnimatorConditionMode.If, 0f, StruckBParam);
+                changed = true;
+            }
+            return changed;
         }
 
         private static bool EnsureClipState(AnimatorStateMachine sm, CombatState combatState, string slotName, Vector3 position)
@@ -1163,9 +1312,10 @@ namespace RuralRumble.EditorTooling
             if (move == null)
                 return;
             TimedClip timed = WriteTimedClip(path, move.Sprites, move.KeyFrames, move.LengthFrames, false, null,
-                ClipPlayback.ContactScaled, move.KeyFrames[move.ContactIndex]);
+                ClipPlayback.ContactScaled, move.KeyFrames[move.ContactIndex], move.DefaultHoldsMs,
+                move.TurnIndex >= 0 ? move.KeyFrames[move.TurnIndex] : -1);
             bySlot[slotName] = timed.Clip;
-            table.SetEntry(moveId, timed.Clip, timed.ContactTime);
+            table.SetEntry(moveId, timed.Clip, timed.ContactTime, timed.TurnTime);
         }
 
         // ---------- per-wrestler clips ----------
@@ -1240,6 +1390,8 @@ namespace RuralRumble.EditorTooling
         {
             public AnimationClip Clip;
             public float ContactTime;
+            /// <summary>Seconds (native) to the turn sprite (Irish Whip f2); 0 when the clip has none.</summary>
+            public float TurnTime;
         }
 
         private static AnimationClip WriteSpriteClip(string path, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop,
@@ -1291,7 +1443,7 @@ namespace RuralRumble.EditorTooling
         /// count matches; an entry whose holds all still equal the stored defaults follows new built-in defaults.
         /// </summary>
         private static double[] ResolveStepTimes(string clipName, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop,
-            PoseKey[] poses, ClipPlayback playback, int contactFrame, out int[] stepFrames)
+            PoseKey[] poses, ClipPlayback playback, int contactFrame, float[] defaultHoldsMs, out int[] stepFrames)
         {
             var frames = new SortedSet<int>(keyFrames);
             if (poses != null)
@@ -1317,6 +1469,14 @@ namespace RuralRumble.EditorTooling
                 int next = s + 1 < n ? stepFrames[s + 1] : loopFrames;
                 defaults[s] = (next - f) * 1000f / SourceFps;
                 if (f == contactFrame) contactStep = s;
+            }
+            if (defaultHoldsMs != null)
+            {
+                // Built-in holds given in ms (not whole 24 fps frames): the steps are the sprites, one hold each.
+                if (defaultHoldsMs.Length != n)
+                    throw new ArgumentException($"{clipName}: {defaultHoldsMs.Length} default holds for {n} steps.");
+                for (int s = 0; s < n; s++)
+                    defaults[s] = Mathf.Max(MinHoldMs, defaultHoldsMs[s]);
             }
             if (contactFrame >= 0 && contactStep < 0)
                 throw new ArgumentException($"{clipName}: contact frame {contactFrame} is not a step of the clip.");
@@ -1371,11 +1531,11 @@ namespace RuralRumble.EditorTooling
         }
 
         private static TimedClip WriteTimedClip(string path, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop,
-            PoseKey[] poses, ClipPlayback playback, int contactFrame)
+            PoseKey[] poses, ClipPlayback playback, int contactFrame, float[] defaultHoldsMs = null, int turnFrame = -1)
         {
             string clipName = System.IO.Path.GetFileNameWithoutExtension(path);
             double[] startMs = ResolveStepTimes(clipName, sprites, keyFrames, loopFrames, loop, poses, playback, contactFrame,
-                out int[] stepFrames);
+                defaultHoldsMs, out int[] stepFrames);
             double totalMs = startMs[startMs.Length - 1];
             double MsOfFrame(int frame)
             {
@@ -1415,6 +1575,7 @@ namespace RuralRumble.EditorTooling
             {
                 Clip = clip,
                 ContactTime = contactFrame >= 0 ? MsToSeconds(MsOfFrame(contactFrame)) : 0f,
+                TurnTime = turnFrame >= 0 ? MsToSeconds(MsOfFrame(turnFrame)) : 0f,
             };
         }
 
@@ -1637,6 +1798,9 @@ namespace RuralRumble.EditorTooling
                 CheckSheet("LockedUp", spec.LockedUp, LockUpHoldKeyFrames, LockUpHoldLengthFrames);
             CheckMove("Bodyslam", spec.Bodyslam);
             CheckMove("Bodyslammed", spec.Bodyslammed);
+            CheckMove("IrishWhip", spec.IrishWhip);
+            if (spec.IrishWhip != null && (spec.IrishWhip.TurnIndex < 1 || spec.IrishWhip.TurnIndex >= spec.IrishWhip.Sprites.Length))
+                throw new ArgumentException("IrishWhip: turn index out of range.");
         }
 
         private static void CheckMove(string label, MoveClipSpec move)

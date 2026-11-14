@@ -91,9 +91,9 @@ namespace RuralRumble.Tests.EditMode
         }
 
         [Test]
-        public void BodyslamChanceZero_HoldsTheLockUpUntilTheBreak()
+        public void BodyslamAndWhipChanceZero_HoldsTheLockUpUntilTheBreak()
         {
-            using var h = new MatchHarness(PlayerStart, CpuStart, configure: t => { Aggressive(t); t.cpuBodyslamChance = 0f; });
+            using var h = new MatchHarness(PlayerStart, CpuStart, configure: t => { Aggressive(t); t.cpuBodyslamChance = 0f; t.cpuWhipChance = 0f; });
             var (_, rec) = AttachBrain(h);
             h.TickUntil(() => h.PairedMoves.Count > 0, 10f, Dt);
             int from = rec.Reads.Count;

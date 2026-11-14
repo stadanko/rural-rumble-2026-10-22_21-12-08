@@ -35,8 +35,8 @@ namespace RuralRumble.Combat
 
         /// <summary>
         /// A two-wrestler synchronized move started (ARCHITECTURE 6): lock-up, break lock-up (lock-up slice
-        /// step 1), bodyslam and Irish Whip (later steps). Both positions are already snapped to the pair
-        /// anchor and both states set (Lock Up / Locked Up). Paired moves raise this instead of
+        /// step 1), bodyslam (step 2) and Irish Whip (step 3). Both positions are already snapped to the pair
+        /// anchor (Irish Whip: the runner is on its f1 key) and both states set. Paired moves raise this instead of
         /// <see cref="MoveStarted"/>; <see cref="MovePhaseChanged"/> still fires for each wrestler.
         /// A lock-up whiff (D-031) is a one-wrestler move and raises <see cref="MoveStarted"/> (LockUp) only.
         /// </summary>

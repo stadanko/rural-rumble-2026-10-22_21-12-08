@@ -11,8 +11,8 @@ namespace RuralRumble.Combat
     /// the project asset's tuned values.
     /// Tooltips say where each default comes from: "Set" / "Starting point" = COMBAT_SPEC Tuning Values
     /// (with the decision that set it); "Combat starting point" = not in COMBAT_SPEC, chosen by Combat,
-    /// needs designer review. Lock-up slice step 1 adds the lock-up values, step 2 the bodyslam values;
-    /// Irish Whip values come with step 3.
+    /// needs designer review. Lock-up slice step 1 adds the lock-up values, step 2 the bodyslam values,
+    /// step 3 the Irish Whip values (D-028, D-039).
     /// </summary>
     [CreateAssetMenu(fileName = "CombatTuning", menuName = "Rural Rumble/Combat Tuning")]
     public sealed class CombatTuning : ScriptableObject
@@ -52,6 +52,15 @@ namespace RuralRumble.Combat
         [Tooltip("Set (D-036, designer-retimed; was D-033). Bodyslam Startup (impact time) per initiator, matched to each slammer's clip so it plays at about native speed: Barry 0.525 s (slams Peaux), Peaux 0.475 s (slams Barry). Editable from the FrameTiming Inspector too. An initiator not listed uses bodyslamTiming's Startup. Matched against the WrestlerDefinitions the match was built with.")]
         public WrestlerStartup[] bodyslamStartupByInitiator = new WrestlerStartup[0];
 
+        // ------------------------------------------------------------------ Irish Whip
+        [Header("Irish Whip")]
+        [Tooltip("COMBAT_SPEC Set (D-028). Seconds from the start of an Irish Whip during which the whipped wrestler has no control at all (no strikes, lock-ups or cancelling). After this the whip run is a normal run: Run cancels it, Strike ends it with Strike 1.")]
+        [Min(0f)] public float whipNoControlTime = 3.0f;
+        [Tooltip("Irish Whip choreography (D-039) for a whipper with no entry below. Frame times: f1, f2, f3, then f4 (follow-through) held; the whipper is rooted for all four and free when f4 ends. Runner offsets: where the whipped wrestler's root is during each frame, in pixels (60 px = 1 unit) along the whip direction from the whipper's root. Combat starting point = Barry's staged values.")]
+        public IrishWhipChoreography irishWhip = IrishWhipChoreography.BarryStaged;
+        [Tooltip("D-039 per-whipper choreography (Barry whipping, Peaux whipping), matched against the WrestlerDefinitions the match was built with. Frame times are Starting points from the art (f1 120 ms, f2 100 ms, f3 120 ms, f4 330 ms Barry / 250 ms Peaux); offsets are the staged art positions. A whipper not listed uses Irish Whip above.")]
+        public IrishWhipChoreography[] irishWhipByWhipper = new IrishWhipChoreography[0];
+
         // ------------------------------------------------------------------ Health and Damage
         [Header("Health and Damage")]
         [Tooltip("COMBAT_SPEC: Set. Full health bar.")]
@@ -74,6 +83,8 @@ namespace RuralRumble.Combat
         [Min(0f)] public float obstacleCollisionDamage = 8f;
         [Tooltip("COMBAT_SPEC Starting point (D-029). Damage to each wrestler when a runner runs into the opponent (both are knocked down).")]
         [Min(0f)] public float runCollisionDamage = 0f;
+        [Tooltip("COMBAT_SPEC Starting point. Damage to a whipped wrestler whose whip run hits the truck or pool (used instead of Obstacle Collision Damage for the whole whip run). Arena ends and the back wall just end the run (D-027). Strikes on a whipped wrestler deal normal strike damage (D-028).")]
+        [Min(0f)] public float irishWhipImpactDamage = 8f;
 
         // ------------------------------------------------------------------ Recovery and Knockdown
         [Header("Recovery and Knockdown")]
@@ -156,6 +167,8 @@ namespace RuralRumble.Combat
         [Range(0f, 1f)] public float cpuLockUpChance = 0.25f;
         [Tooltip("Starting point (COMBAT_SPEC CPU AI Lock Up/Grapple gives no value). Chance per CPU decision, while the CPU holds a lock-up it started, that it presses Grapple (bodyslam). The first roll comes one decision interval into the lock-up; with no bodyslam the lock-up breaks on the timer as usual.")]
         [Range(0f, 1f)] public float cpuBodyslamChance = 0.5f;
+        [Tooltip("Starting point (COMBAT_SPEC CPU AI Lock Up/Grapple: 'performs a grapple or Irish Whip'). Chance per CPU decision, while the CPU holds a lock-up it started and its bodyslam roll failed, that it presses Irish Whip with no direction held (the runner goes past the CPU, D-039). Per decision: bodyslam = b, whip = (1 - b) x this.")]
+        [Range(0f, 1f)] public float cpuWhipChance = 0.5f;
         [Tooltip("Combat starting point. Horizontal distance (feet to feet) the CPU walks to before striking, world units.")]
         [Min(0f)] public float cpuStrikeDistance = 1.6f;
         [Tooltip("Combat starting point. How close (world units) the CPU must get to its approach point before it stops walking.")]
@@ -178,6 +191,7 @@ namespace RuralRumble.Combat
                 case MoveId.LockUp: return LockUpHoldTiming;
                 case MoveId.BreakLockUp: return breakLockUpTiming;
                 case MoveId.Bodyslam: return bodyslamTiming;
+                case MoveId.IrishWhip: return irishWhip.Timing;
                 default: return default;
             }
         }
@@ -201,6 +215,23 @@ namespace RuralRumble.Combat
                 }
             }
             return t;
+        }
+
+        /// <summary>
+        /// The Irish Whip choreography for this whipper, read now: the whipper's <see cref="irishWhipByWhipper"/>
+        /// entry, or <see cref="irishWhip"/> for a null or unlisted whipper (D-039).
+        /// </summary>
+        public IrishWhipChoreography IrishWhipFor(WrestlerDefinition whipper)
+        {
+            if (whipper != null && irishWhipByWhipper != null)
+            {
+                foreach (IrishWhipChoreography entry in irishWhipByWhipper)
+                {
+                    if (entry.whipper == whipper)
+                        return entry;
+                }
+            }
+            return irishWhip;
         }
 
         /// <summary>

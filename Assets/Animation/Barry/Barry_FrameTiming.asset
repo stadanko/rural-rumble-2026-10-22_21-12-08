@@ -667,3 +667,81 @@ MonoBehaviour:
       HoldMs: 416.66666
       DefaultHoldMs: 416.66666
       BuiltInHoldMs: 416.66666
+  - ClipName: Barry_StruckA
+    Loops: 0
+    Playback: 0
+    ContactStep: -1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: 4339097396219477855, guid: 2cadb093ce329324aa1a6a189603abfa, type: 3}
+      PoseOnly: 0
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: 4339097396219477855, guid: 2cadb093ce329324aa1a6a189603abfa, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: 4339097396219477855, guid: 2cadb093ce329324aa1a6a189603abfa, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: 4339097396219477855, guid: 2cadb093ce329324aa1a6a189603abfa, type: 3}
+      PoseOnly: 1
+      HoldMs: 166.66667
+      DefaultHoldMs: 166.66667
+      BuiltInHoldMs: 166.66667
+  - ClipName: Barry_StruckB
+    Loops: 0
+    Playback: 0
+    ContactStep: -1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: -3148241902795076572, guid: 57753388d176890459eb472e039c129b, type: 3}
+      PoseOnly: 0
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: -3148241902795076572, guid: 57753388d176890459eb472e039c129b, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: -3148241902795076572, guid: 57753388d176890459eb472e039c129b, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: -3148241902795076572, guid: 57753388d176890459eb472e039c129b, type: 3}
+      PoseOnly: 1
+      HoldMs: 166.66667
+      DefaultHoldMs: 166.66667
+      BuiltInHoldMs: 166.66667
+  - ClipName: Barry_IrishWhip
+    Loops: 0
+    Playback: 1
+    ContactStep: 3
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: 4241254501868132712, guid: a9ac5f6b734fdeb41ac1e0e310c7fd29, type: 3}
+      PoseOnly: 0
+      HoldMs: 120
+      DefaultHoldMs: 120
+      BuiltInHoldMs: 120
+    - Sprite: {fileID: 2120713163173634083, guid: a9ac5f6b734fdeb41ac1e0e310c7fd29, type: 3}
+      PoseOnly: 0
+      HoldMs: 100
+      DefaultHoldMs: 100
+      BuiltInHoldMs: 100
+    - Sprite: {fileID: 5504603321008391673, guid: a9ac5f6b734fdeb41ac1e0e310c7fd29, type: 3}
+      PoseOnly: 0
+      HoldMs: 120
+      DefaultHoldMs: 120
+      BuiltInHoldMs: 120
+    - Sprite: {fileID: 5741367272812834802, guid: a9ac5f6b734fdeb41ac1e0e310c7fd29, type: 3}
+      PoseOnly: 0
+      HoldMs: 330
+      DefaultHoldMs: 330
+      BuiltInHoldMs: 330

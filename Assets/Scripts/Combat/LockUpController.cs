@@ -21,7 +21,7 @@ namespace RuralRumble.Combat
     /// snapped to the pair anchor, A = Lock Up, B = Locked Up, and PairedMoveStarted(LockUp) is raised. The
     /// LockUp move's Active phase is the lock-up timer. Wrestler B has no control; Wrestler A's Strike and
     /// movement are ignored (D-031). Wrestler A's Grapple (A) and Irish Whip (B) presses reach
-    /// <see cref="OnGrapplePressed"/> / <see cref="OnIrishWhipPressed"/> (the whip does nothing yet, step 3).
+    /// <see cref="OnGrapplePressed"/> / <see cref="OnIrishWhipPressed"/>.
     /// When the timer runs out, PairedMoveStarted(BreakLockUp) is raised; when the break's timing ends both
     /// return to Standing or Recovering by health.</para>
     ///
@@ -31,6 +31,19 @@ namespace RuralRumble.Combat
     /// clips play at native speed). End of Startup = impact: bodyslam damage to B (HitLanded, HealthChanged); a
     /// knockout ends the pair at once. End of Recovery: B is Knocked Down (length from health then), A returns
     /// to Standing or Recovering. Neither wrestler has any control during the bodyslam.</para>
+    ///
+    /// <para><b>The Irish Whip (step 3, D-028, D-039).</b> Irish Whip (B) during the lock-up window. Direction W: the
+    /// sign of the held Move x outside the deadzone, else the way the receiver faces (toward the whipper, so the
+    /// runner passes the whipper: "through"). A = Grappling, CurrentMove = IrishWhip, rooted, facing locked; B =
+    /// Running (a whip-origin run, no control for <see cref="CombatTuning.whipNoControlTime"/>), facing W,
+    /// CurrentMove = IrishWhip while on the whip path. PairedMoveStarted(IrishWhip) carries W, through/away and
+    /// the whipper's choreography as a MoveTiming (<see cref="CombatTuning.IrishWhipFor"/>). For the whole whip
+    /// this controller places B's root at whipper x + W x the keyed offset (f1, f2, f3 held for their frame, then
+    /// the f4 offset + runSpeed from the release), at B's depth, swept through the arena like a run: a forward key
+    /// stopped by an arena end ends the run there (D-027); one stopped by the truck or pool is an Irish Whip
+    /// impact. Either releases B from the path early. No wrestler blocking or run collision between the two while
+    /// the whip plays (CombatMatch). When f4 ends: A faces W and returns to Standing or Recovering; B leaves the
+    /// path and keeps running under the normal run rules.</para>
     /// </summary>
     public sealed class LockUpController
     {
@@ -45,6 +58,12 @@ namespace RuralRumble.Combat
         private MovePhase phase = MovePhase.None;
         private float phaseTime;
 
+        // Irish Whip (D-039).
+        private int whipDirection;
+        private bool whipThrough;
+        private float whipTime;
+        private bool runnerOnPath;
+
         /// <param name="random01">Returns a value in [0, 1); below 0.5 the player wins a simultaneous lock-up.</param>
         internal LockUpController(CombatTuning tuning, CombatEvents events, ArenaGeometry arena, Func<float> random01)
         {
@@ -54,12 +73,32 @@ namespace RuralRumble.Combat
             this.random01 = random01;
         }
 
-        /// <summary>A paired move (lock-up, bodyslam or break) is playing.</summary>
+        /// <summary>A paired move (lock-up, bodyslam, Irish Whip or break) is playing.</summary>
         public bool IsActive => initiator != null;
         public WrestlerId? Initiator => initiator?.Id;
         public WrestlerId? Receiver => receiver?.Id;
-        /// <summary>The paired move playing (LockUp, Bodyslam or BreakLockUp), or None.</summary>
+        /// <summary>The paired move playing (LockUp, Bodyslam, IrishWhip or BreakLockUp), or None.</summary>
         public MoveId CurrentMove => move;
+        /// <summary>During an Irish Whip: the whip direction, +1 right / -1 left; 0 otherwise.</summary>
+        public int WhipDirection => move == MoveId.IrishWhip ? whipDirection : 0;
+        /// <summary>During an Irish Whip: whether the runner passes the whipper (D-039 "through").</summary>
+        public bool WhipThrough => move == MoveId.IrishWhip && whipThrough;
+        /// <summary>Seconds since the Irish Whip press while one plays; 0 otherwise.</summary>
+        public float WhipElapsed => move == MoveId.IrishWhip ? whipTime : 0f;
+        /// <summary>During an Irish Whip: the runner is still on the whip path (its root is placed by this controller).</summary>
+        public bool RunnerOnWhipPath => move == MoveId.IrishWhip && runnerOnPath;
+
+        /// <summary>
+        /// True when this controller writes the wrestler's position this tick, so CombatMatch must not move it: both
+        /// wrestlers during a lock-up, bodyslam or break; during an Irish Whip, the whipper (rooted) and the runner
+        /// while it is on the whip path.
+        /// </summary>
+        internal bool HoldsPosition(CombatWrestler w)
+        {
+            if (!IsActive) return false;
+            if (move != MoveId.IrishWhip) return w == initiator || w == receiver;
+            return w == initiator || (w == receiver && runnerOnPath);
+        }
         /// <summary>Seconds left on the lock-up timer while the LockUp move's window is open; 0 otherwise.</summary>
         public float LockUpTimeRemaining =>
             move == MoveId.LockUp && phase == MovePhase.Active ? Mathf.Max(0f, tuning.lockUpTimer - phaseTime) : 0f;
@@ -193,6 +232,12 @@ namespace RuralRumble.Combat
 
         private void Advance(float dt, in WrestlerIntent initiatorIntent)
         {
+            if (move == MoveId.IrishWhip)
+            {
+                AdvanceWhip(dt);
+                return;
+            }
+
             // Nothing can knock a wrestler out of a paired move (strikes don't land on Locked Up, Grappling or
             // Grappled); if something ever does, drop the pair.
             ExpectedStates(move, out CombatState aState, out CombatState bState);
@@ -319,6 +364,10 @@ namespace RuralRumble.Combat
 
         private void Clear()
         {
+            whipDirection = 0;
+            whipThrough = false;
+            whipTime = 0f;
+            runnerOnPath = false;
             initiator = null;
             receiver = null;
             move = MoveId.None;
@@ -340,9 +389,120 @@ namespace RuralRumble.Combat
         }
 
         /// <summary>
-        /// Wrestler A pressed Irish Whip (B) during the lock-up window; <paramref name="intent"/>.Move gives the
-        /// whip direction. Lock-up slice step 3 starts the whip here and returns true. Step 1: ignored.
+        /// Wrestler A pressed Irish Whip (B) during the lock-up window (COMBAT_SPEC "Wrestler A presses Irish Whip
+        /// button", D-039). Direction: the left/right of the held Move outside the deadzone (up/down alone counts as
+        /// none); otherwise the direction Wrestler B faces, which is toward A, so B runs past A ("through").
         /// </summary>
-        private bool OnIrishWhipPressed(in WrestlerIntent intent) => false;
+        private bool OnIrishWhipPressed(in WrestlerIntent intent)
+        {
+            int lockUpFacing = initiator.HorizontalFacing;
+            int w = WhipDirectionFor(intent.Move.x, tuning.moveDeadzone, receiver.HorizontalFacing);
+            CombatWrestler a = initiator, b = receiver;
+
+            move = MoveId.IrishWhip;
+            phase = MovePhase.Startup;
+            phaseTime = 0f;
+            whipDirection = w;
+            whipThrough = w != lockUpFacing;
+            whipTime = 0f;
+            runnerOnPath = true;
+
+            a.SwitchPairedMove(MoveId.IrishWhip, CombatState.Grappling); // rooted, facing locked
+            b.BeginWhipRun(w);
+            IrishWhipChoreography c = tuning.IrishWhipFor(a.Definition);
+            PlaceRunner(c); // the f1 key, snapped on the press tick
+
+            Vector2 anchor = (a.Position + b.Position) * 0.5f;
+            events.RaisePairedMoveStarted(new PairedMoveInfo(a.Id, b.Id, MoveId.IrishWhip, anchor,
+                lockUpFacing, c.Timing, w, w != lockUpFacing));
+            return true;
+        }
+
+        /// <summary>D-039 whip direction: held left/right (outside the deadzone), else the receiver's facing.</summary>
+        public static int WhipDirectionFor(float moveX, float deadzone, int receiverFacing)
+        {
+            if (Mathf.Abs(moveX) > deadzone)
+                return moveX > 0f ? 1 : -1;
+            return receiverFacing >= 0 ? 1 : -1;
+        }
+
+        /// <summary>
+        /// One tick of the Irish Whip. Choreography and timing are read now (Play Mode edits apply at once). Phases
+        /// for both (the runner only while on the path): Startup until the release (f1 + f2 + f3), then Active (zero
+        /// length) and Recovery (f4), then None when the whip ends.
+        /// </summary>
+        private void AdvanceWhip(float dt)
+        {
+            if (initiator.State != CombatState.Grappling)
+            {
+                // Nothing can take the whipper out of the whip; if something ever does, drop the pair.
+                ReleaseRunner();
+                initiator.LeavePair();
+                Clear();
+                return;
+            }
+            if (runnerOnPath && (receiver.State != CombatState.Running || receiver.CurrentMove != MoveId.IrishWhip))
+                ReleaseRunner(); // the runner left the path itself (only with a no-control time shorter than the whip)
+
+            whipTime += dt;
+            IrishWhipChoreography c = tuning.IrishWhipFor(initiator.Definition);
+            MoveTiming t = c.Timing;
+
+            if (runnerOnPath)
+                PlaceRunner(c);
+
+            if (phase == MovePhase.Startup && whipTime >= t.Startup)
+                SetWhipPhase(MovePhase.Active);
+            if (phase == MovePhase.Active && whipTime >= t.Startup + t.Active)
+                SetWhipPhase(MovePhase.Recovery);
+            if (phase == MovePhase.Recovery && whipTime >= t.Total)
+            {
+                CombatWrestler a = initiator;
+                int w = whipDirection;
+                ReleaseRunner(); // keeps running: a whip run under the normal run rules
+                Clear();
+                a.EndWhip(w); // D-039: free, facing the whip direction
+            }
+        }
+
+        /// <summary>
+        /// Puts the runner's root on the whip path for the current whip time: whipper x + W x the keyed offset, at
+        /// the runner's depth. The move is swept through the arena like a run. A key that moves the runner forward
+        /// (in W) and is stopped by an arena end ends the run there (D-027); stopped by the truck or pool, it is an
+        /// Irish Whip impact (COMBAT_SPEC). Both release the runner from the path; the whipper's whip plays on. A key
+        /// that moves the runner backward (the through f1 snap, a few px) is only clamped.
+        /// </summary>
+        private void PlaceRunner(in IrishWhipChoreography c)
+        {
+            float offset = c.RunnerOffset(whipThrough, Mathf.Min(whipTime, c.Timing.Total), tuning.runSpeed);
+            Vector2 from = receiver.Position;
+            float dx = initiator.Position.x + whipDirection * offset - from.x;
+            ArenaMoveResult r = arena.Move(from, new Vector2(dx, 0f), receiver.FeetHalfExtents);
+            receiver.SetPosition(r.Position);
+
+            if (!r.BlockedX || dx * whipDirection <= 0f)
+                return;
+            ReleaseRunner();
+            if (r.HitObstacleX)
+                receiver.HitObstacle(new Vector2(r.Position.x + whipDirection * tuning.feetHalfWidth, r.Position.y));
+            else
+                receiver.EndRun();
+        }
+
+        private void ReleaseRunner()
+        {
+            if (!runnerOnPath)
+                return;
+            runnerOnPath = false;
+            receiver.LeaveWhipPath();
+        }
+
+        private void SetWhipPhase(MovePhase next)
+        {
+            phase = next;
+            initiator.SetPairedPhase(next);
+            if (runnerOnPath)
+                receiver.SetPairedPhase(next);
+        }
     }
 }

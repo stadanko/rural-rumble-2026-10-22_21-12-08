@@ -264,10 +264,10 @@ Last run: 2026-10-31. EditMode 233/234 (1 known failure, C1.4). PlayMode 15/15.
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
 | C13.1 | On `MoveStarted` the strike clip plays from its start at speed = clip contact time (MoveAnimationTable) / tuned Startup, read at that moment; a buffered combo strike (no state change) still restarts its clip; speed returns to 1 after the move | 4.2 Attack timing | `CombatPresentationTests.Strike_MoveSpeedFromTable_AndBufferedComboRestartsTheClip` | Auto |
-| C13.2 | Struck restarts its clip on every hit (`HitLanded`) | D-024, 4.2 | `CombatPresentationTests.Struck_ClipRestartsOnEveryHit` | Auto |
+| C13.2 | Struck restarts its clip on every hit (`HitLanded`), alternating the two hit reactions (Struck A, Struck B) on consecutive hits | D-024, 4.2 | `CombatPresentationTests.Struck_ClipRestartsOnEveryHit_AlternatingReactions` | Auto |
 | C13.3 | Knocked Out while already down holds the lying pose; Knocked Out from standing plays the fall | D-023, 4.2 | `CombatPresentationTests.KnockoutWhileDown_HoldsLyingPose`, `KnockoutFromStanding_PlaysTheFall` | Auto |
 | C13.4 | A right-facing (flipped) wrestler mirrors the clip's x offset and z rotation; the root never moves | 4.2 | `CombatPresentationTests.FlippedWrestler_MirrorsClipOffsetAndRotation` | Auto |
-| C13.5 | The contact frame visibly lands when the hit registers; the Stomp clip and the placeholder Struck, Knocked Down and Recovering clips read correctly | STYLE_GUIDE | none | **Human** |
+| C13.5 | The contact frame visibly lands when the hit registers; the Stomp and Struck clips and the placeholder Knocked Down and Recovering clips read correctly | STYLE_GUIDE | none | **Human** |
 
 ### C14. Match.unity end to end
 
@@ -284,7 +284,7 @@ Last run: 2026-10-31. EditMode 233/234 (1 known failure, C1.4). PlayMode 15/15.
 2. Buffered combo timing: press twice quickly, then wait a little before the third press. Today the third press is accepted up to 0.5 s after Strike 2 *starts* (the C1.4 failure). Which feels right: that, or 0.5 s from your second press, as D-030 says?
 3. Strike reach and depth: do punches and the kick connect when they look like they should, and whiff when they look like they miss? Try slightly different depths. (C1.10)
 4. Strike trades: both wrestlers swinging at once. Is it clear who won? (C2)
-5. Struck: does the 0.4 s stagger read well, and does it visibly restart on each combo hit? (C3, C13.2)
+5. Struck: does the 0.4 s stagger read well, does it visibly restart on each combo hit, and do the two reactions alternate readably? (C3, C13.2)
 6. Knockdowns: low health gives noticeably longer knockdowns; mashing J/K visibly speeds getting up; the shortest knockdown (0.5 s) still feels like a knockdown. (C4.3, C5)
 7. Stomp: stand over a downed CPU and press Strike. Is the stomp range (2 units) right? Does the 1.0 s cooldown feel right? (C6)
 8. Recovering: below 30 health the walk is half speed, Run does nothing, and standing still heals slowly to 30. Are the slow walk and 1 health/s OK? (C7)
@@ -325,7 +325,7 @@ Step 1: the standing lock-up, the whiff and the break (COMBAT_SPEC Lock Up/Grapp
 |---|---|---|---|---|
 | L3.1 | Wrestler B has no control: no moves, no movement, no strikes | D-031 | `LockUpTests.DuringLockUp_LockedUpWrestler_HasNoControl` | Auto |
 | L3.2 | Wrestler A's Strike and movement are ignored | D-031 | `LockUpTests.DuringLockUp_InitiatorStrikeAndMovement_AreIgnored` | Auto |
-| L3.3 | A's Irish Whip press does nothing yet (step 3); the timer still runs. (Step 1 also covered Grapple; since step 2 Grapple starts the bodyslam, see L5.) | Slice plan | `LockUpTests.DuringLockUp_InitiatorWhipPresses_DoNothingYet` | Auto |
+| L3.3 | ~~A's Irish Whip press does nothing yet (step 3).~~ Since step 3, A's Irish Whip press starts the whip and the lock-up ends without a break (see L7). (Step 1 also covered Grapple; since step 2 Grapple starts the bodyslam, see L5.) | Slice plan, step 3 | `LockUpTests.DuringLockUp_InitiatorWhipPress_StartsTheIrishWhip_NoBreak` | Auto |
 | L3.4 | Timer (2.0 s, read at use) runs out: `PairedMoveStarted(BreakLockUp)`; when the break's timing ends both return to Standing or Recovering by health and have normal control | Spec | `LockUpTests.Timer_Expires_BreakLockUp_ThenBothStanding`, `Break_ReturnsLowHealthWrestlerToRecovering`, `AfterBreak_BothHaveNormalControl`, `LockUpTimer_IsReadAtUse` | Auto |
 | L3.5 | New tuning carries lock-up timer 2.0 s and whiff time 0.4 s | Spec table | `LockUpTests.NewTuning_HasLockUpDefaults` | Auto |
 
@@ -334,7 +334,7 @@ Step 1: the standing lock-up, the whiff and the break (COMBAT_SPEC Lock Up/Grapp
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
 | L4.1 | When it would strike a lockable player, the CPU goes for a lock-up at `cpuLockUpChance` (stepping into lock-up reach first if needed, never whiffing on purpose); at 0 it never does | Spec CPU AI | `OpponentBrainLockUpTests.LockUpChanceCertain_ApproachesAndLocksUpThePlayer`, `LockUpChanceZero_NeverLocksUp_Strikes` | Auto |
-| L4.2 | In Lock Up with `cpuBodyslamChance` 0 the CPU holds (no input) until the break, then decides again; Locked Up gives no input. (Step 2 adds the bodyslam choice, L6.) | Spec, D-031 | `OpponentBrainLockUpTests.InLockUp_CpuHoldsUntilTheBreak_ThenActsAgain`, `LockedUpCpu_GivesNoInput_UntilTheBreak` | Auto |
+| L4.2 | In Lock Up with `cpuBodyslamChance` and `cpuWhipChance` 0 the CPU holds (no input) until the break, then decides again; Locked Up gives no input. (Step 2 adds the bodyslam choice, L6.) | Spec, D-031 | `OpponentBrainLockUpTests.InLockUp_CpuHoldsUntilTheBreak_ThenActsAgain`, `LockedUpCpu_GivesNoInput_UntilTheBreak` | Auto |
 | L4.3 | Same seed, same choices | Spec CPU AI | `OpponentBrainLockUpTests.LockUpChoice_IsRepeatableWithTheSameSeed` | Auto |
 
 ### Lock-Up Slice step 1: human playtest checklist
@@ -376,7 +376,7 @@ Timeline (default tuning): Grapple press → A Grappling, B Grappled, `CurrentMo
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
 | L6.1 | Holding a lock-up it started, the CPU presses Grapple at `cpuBodyslamChance` per decision tick, the first roll one decision interval into the lock-up; the player is knocked down with bodyslam damage | Spec CPU AI, demo step 6 | `OpponentBrainBodyslamTests.BodyslamChanceCertain_LocksUp_ThenBodyslams_OneIntervalIn` | Auto |
-| L6.2 | At chance 0 the CPU holds until the break | Spec CPU AI | `OpponentBrainBodyslamTests.BodyslamChanceZero_HoldsTheLockUpUntilTheBreak` | Auto |
+| L6.2 | At bodyslam and whip chance 0 the CPU holds until the break | Spec CPU AI | `OpponentBrainBodyslamTests.BodyslamAndWhipChanceZero_HoldsTheLockUpUntilTheBreak` | Auto |
 | L6.3 | No CPU input while Grappling; afterwards back to Idle / Evaluate | Demo step 7 | `OpponentBrainBodyslamTests.DuringItsBodyslam_CpuGivesNoInput_ThenReturnsToIdleEvaluate` | Auto |
 | L6.4 | A Grappled CPU gives no input, then mashes once Knocked Down | D-031, D-025 | `OpponentBrainBodyslamTests.GrappledCpu_GivesNoInput_ThenIsKnockedDownAndMashes` | Auto |
 | L6.5 | Same seed, same choices | Spec CPU AI | `OpponentBrainBodyslamTests.BodyslamChoice_IsRepeatableWithTheSameSeed` | Auto |
@@ -389,6 +389,64 @@ Timeline (default tuning): Grapple press → A Grappling, B Grappled, `CurrentMo
 4. Is 12 damage plus a knockdown the right reward compared with a 13-damage strike combo? (L5.3)
 5. The CPU: with a 50% roll every 0.25 s it almost always slams within about half a second of locking up. Too predictable? Too punishing? (L6.1)
 6. Bodyslam to knock out (low health): does the freeze on the impact frame read as a finish? (L5.5)
+
+## Lock-Up Slice step 3: Irish Whip
+
+Irish Whip (B / Space) during a lock-up whips the opponent (COMBAT_SPEC Lock Up/Grappling/Irish Whip Rules "Wrestler A presses Irish Whip button", Running, Tuning Values; CONTROLS B button; D-028; D-039 direction, choreography and art; ARCHITECTURE 6). Tests: `Assets/Tests/EditMode/Combat/IrishWhipTests.cs`, `Assets/Tests/EditMode/AI/OpponentBrainIrishWhipTests.cs`.
+
+Timeline (Barry's staged choreography, also the fallback): B press → A Grappling (rooted, facing locked), B Running (whip run, faces the whip direction), both `CurrentMove` IrishWhip, `PairedMoveStarted(IrishWhip)` → runner root held on the f1 key (0–0.12 s), f2 key (0.12–0.22 s), f3 key (0.22–0.34 s) → release at 0.34 s (Active and Recovery phases start): runner at the f4 key, then runs at `runSpeed` → 0.67 s (Peaux whipping: 0.59 s) whip ends: A Standing or Recovering facing the whip direction; B keeps running (whip run, no control until 3.0 s after the press).
+
+### L7. The Irish Whip (COMBAT_SPEC, D-028, D-039, ARCHITECTURE 6)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| L7.1 | B pressed by A in the lock-up window: A = Grappling, B = Running (whip run, no control), `CurrentMove` IrishWhip for both, `PairedMoveStarted(IrishWhip)` with initiator, receiver, A's lock-up facing, anchor, `WhipDirection`, `WhipThrough` and the timing (Startup = f1 + f2 + f3, Active 0, Recovery = f4); no `MoveStarted`; no break | Spec, ARCHITECTURE 6 | `IrishWhipTests.WhipInLockUp_NoDirection_WhipsThrough_GrapplingAndRunning_RaisesPairedMoveStarted`, `CpuInitiator_SameRules`, `LockUpTests.DuringLockUp_InitiatorWhipPress_StartsTheIrishWhip_NoBreak` | Auto |
+| L7.2 | Direction: the left/right part of the held stick outside the deadzone; with none (or up/down only) the way B faces, so B runs past A ("through") | D-039, CONTROLS | `IrishWhipTests.WhipDirection_FromHeldLeftRight_ElseReceiverFacing` (6 cases), `WhipDirectionFor_PureRule` | Auto |
+| L7.3 | The runner faces the whip direction from the first tick; A's facing is locked during the whip and A has no control | D-039, D-028 | `IrishWhipTests.WhipDirection_*`, `DuringWhip_WhipperHasNoControl` | Auto |
+| L7.4 | Runner path: root at whipper x + W x the per-frame keyed offset (held for each of f1, f2, f3, snapped on the frame change), then from the f4 key at `runSpeed`; same depth; whipper rooted. Keys and frame times per whipper (Barry / Peaux entries), else the shared fallback | D-039 | `IrishWhipTests.RunnerPath_Through_HoldsEachFrameKey_ThenRunsFromF4`, `RunnerPath_Away_HoldsEachFrameKey`, `PerWhipper_Choreography_FromTheWhippersDefinition` | Auto |
+| L7.5 | The runner passes through the whipper: no wrestler blocking, no D-029 run-collision knockdown, no damage | D-039 | `IrishWhipTests.RunnerPassesTheWhipper_NoRunCollision_NoBlocking` | Auto |
+| L7.6 | When f4 ends: A Standing (or Recovering), facing the whip direction, normal control; B still Running (whip run, `CurrentMove` None); phase events IrishWhip Active → Recovery → None for both | D-028, D-039 | `IrishWhipTests.WhipEnds_WhipperFree_FacingWhipDirection_RunnerKeepsRunning` | Auto |
+| L7.7 | Whipped wrestler: no control at all (strikes, lock-ups, Run, movement) for `whipNoControlTime` (3.0 s, read at use); after it Run cancels the run and Strike ends it with Strike 1 | D-028, D-029 | `IrishWhipTests.WhippedWrestler_NoControlForNoControlTime_ThenRunCancels`, `AfterNoControlTime_StrikeEndsTheWhipRun_WithStrike1`, `NoControlTime_IsReadAtUse` | Auto |
+| L7.8 | Whip run into the truck or pool: Irish Whip impact damage (8, not obstacle collision damage), `ObstacleHit`, Struck, or Knocked Down below 30; also when a frame key is stopped by the obstacle during the whip (the whipper's whip plays on) | Spec Tuning Values, D-027, D-030 | `IrishWhipTests.WhipRun_IntoObstacleAfterTheWhip_IrishWhipImpactDamage_Struck`, `WhipPath_KeyStoppedByObstacle_ImpactDuringTheWhip_WhipperPlaysOn`, `WhipImpact_BelowThreshold_KnocksDown` | Auto |
+| L7.9 | Whip run into an arena end just ends the run (no damage), including a whip started near an arena end whose keyed path crosses the end (the runner stops at the end; the whipper's whip plays on) | D-027 | `IrishWhipTests.WhipRun_EndsAtTheArenaEnd_WithoutDamage`, `WhipThroughNearArenaEnd_RunEndsAtTheEnd_NoDamage_WhipperPlaysOn` | Auto |
+| L7.10 | A strike on a whipped runner deals that strike's normal damage and puts it in Struck | D-028 | `IrishWhipTests.StrikeOnWhippedRunner_DealsNormalStrikeDamage` | Auto |
+| L7.11 | No whip outside the lock-up window: Locked Up B's B press does nothing; B during the break does nothing | Spec, D-031 | `IrishWhipTests.LockedUpWrestlerPressingWhip_DoesNothing`, `WhipDuringBreak_DoesNothing` | Auto |
+| L7.12 | New tuning: whip no-control time 3.0, Irish Whip impact damage 8, `cpuWhipChance` 0.5, fallback whip timing 0.34 / 0 / 0.33; whip timing read at use | Spec table, D-005 | `IrishWhipTests.NewTuning_HasIrishWhipDefaults`, `WhipTiming_IsReadAtUse` | Auto |
+
+### L8. CPU Irish Whip (COMBAT_SPEC CPU AI "performs a grapple or Irish Whip")
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| L8.1 | Holding its own lock-up, on each decision tick the CPU rolls `cpuBodyslamChance` first, then `cpuWhipChance`; a whip press holds no direction (through); the first roll is one decision interval in | Spec CPU AI, D-039 | `OpponentBrainIrishWhipTests.WhipChanceCertain_LocksUp_ThenWhips_OneIntervalIn_NoDirection`, `BodyslamRollFirst_WhipOnlyWhenTheBodyslamRollFails` | Auto |
+| L8.2 | No CPU input while it whips; afterwards back to Idle / Evaluate | Spec CPU AI | `OpponentBrainIrishWhipTests.DuringItsWhip_CpuGivesNoInput_ThenReturnsToIdleEvaluate` | Auto |
+| L8.3 | Whipped, the CPU gives no input until its run ends (Stunned), then evaluates again | D-028 | `OpponentBrainIrishWhipTests.WhippedCpu_GivesNoInput_UntilTheRunEnds` | Auto |
+| L8.4 | Same seed, same choices | Spec CPU AI | `OpponentBrainIrishWhipTests.WhipChoice_IsRepeatableWithTheSameSeed` | Auto |
+
+### L9. Irish Whip presentation (ARCHITECTURE 6 presentation contract, D-039)
+
+Tests: `Assets/Tests/PlayMode/IrishWhipPresentationTests.cs` (real `CombatMatch` ticked every frame before `WrestlerView`, project `CombatTuning`, real Barry / Peaux prefabs and definitions, fixed 60 fps step; four cases: Barry whips Peaux and Peaux whips Barry, through and away).
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| L9.1 | The whipper (Grappling + IrishWhip) plays its own 4-frame `IrishWhip` clip once, f4 held; the runner plays its normal Run clip | ARCHITECTURE 6, D-039 | `IrishWhipPresentationTests.*` | Auto |
+| L9.2 | Clip holds equal the whipper's `irishWhipByWhipper` frame times (Barry 120/100/120/330 ms, Peaux 120/100/120/250 ms), the release (f4) is the HIT sprite, and the clip plays at 1x; on every rendered frame the whipper's sprite is the frame combat is on (never ahead of the runner's keyed spot) | ARCHITECTURE 6, D-039 | `IrishWhipPresentationTests.*` | Auto |
+| L9.3 | f1 is drawn facing the lock-up facing, f2–f4 facing the whip direction: the whipper turns at f2 for a whip through only; combat facing is not changed by presentation | D-039 | `IrishWhipPresentationTests.*` | Auto |
+| L9.4 | The runner is drawn in front of the whipper on every frame of the whip; both return to their own sorting order when the whip ends | D-039 | `IrishWhipPresentationTests.*` | Auto |
+| L9.5 | The FrameTiming Inspector shows each whip clip with Hold (ms), HIT on f4, the whipper's four combat frame times and runner offsets (editable, Undo), a per-frame clip-vs-combat comparison, and "Match combat to this clip" (with confirmation) | D-039, ARCHITECTURE 4.2 | — | Manual |
+
+### Lock-Up Slice step 3: human playtest checklist
+
+The whipper's Irish Whip clips are in (L9).
+
+1. Lock up, then Space / B with no direction: the CPU should run past you. Hold the other way: it runs away from you. Does each direction match what you expected to happen? (L7.2)
+2. With the clips: is the pushing arm hidden behind the runner in f1–f3, and does the runner's per-frame stepping (no easing between keys) read as a push or as a jitter? (L7.4)
+3. Does the whipper turn to the whip direction at the right moment (f2), and is control back at the right time after the follow-through (Barry 0.33 s, Peaux 0.25 s)? (L7.6)
+4. Being whipped: do 3.0 s with no control feel fair? On most of the arena the run hits the end in about 1–2 s, so the no-control time rarely matters. (L7.7)
+5. Whip into the truck or pool: is 8 damage plus Struck a good reward? Whip near an arena end: the runner stops at the end right next to you; does that look acceptable? (L7.8, L7.9)
+6. Chase and strike the runner after your whip: is that possible and rewarding at the current run speed? (L7.10)
+7. The CPU now whips about 1 in 3 of its lock-up moves (bodyslam 50%, then whip 50% each decision). Is the mix right? (L8.1)
+8. Peaux's f2 sprite has a thin dark vertical line at the trimmed hand (visible above the runner's shoulder in the f2 frame of the capture): is it noticeable at game speed? (L9.1)
+9. FrameTiming: change a whip hold, click "Match combat to this clip", rebuild, and play: does the whip speed change as expected with the arm still hidden? (L9.5)
 
 ---
 

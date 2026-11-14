@@ -30,4 +30,9 @@ To be added.
 
 ## Art
 
-Art sources are recorded in `docs/ASSET_REGISTRY.csv` and will be listed here later.
+### AI-generated sprites
+
+- **Created by:** the Rural Rumble designer, from their own concept art (made with ChatGPT), with AI image generation in Unity
+- **Tools:** Unity AI Asset Generation (gpt-image-1-5, gemini-3.0-pro, flux-2-dev, video-seedance-2-5, video-kling-v3-i2v-pro, photoroom background removal), with Claude cleanup scripts
+- **Used for:** all wrestler sprites for Barry and Peaux (stand, walk, run, strikes, stomp, struck, lock-up, bodyslam, Irish Whip), the arena backdrop, pickup truck and pool, and the character select cards and HUD portraits
+- **Details:** each sprite's tools, prompts and approval are recorded in `docs/ASSET_REGISTRY.csv`.

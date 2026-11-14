@@ -719,3 +719,29 @@ MonoBehaviour:
       HoldMs: 166.66667
       DefaultHoldMs: 166.66667
       BuiltInHoldMs: 166.66667
+  - ClipName: Peaux_IrishWhip
+    Loops: 0
+    Playback: 1
+    ContactStep: 3
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: -7311589182307341026, guid: 2281c3f2362582f4e84acfa70d99f8d4, type: 3}
+      PoseOnly: 0
+      HoldMs: 120
+      DefaultHoldMs: 120
+      BuiltInHoldMs: 120
+    - Sprite: {fileID: -4706419032441833629, guid: 2281c3f2362582f4e84acfa70d99f8d4, type: 3}
+      PoseOnly: 0
+      HoldMs: 100
+      DefaultHoldMs: 100
+      BuiltInHoldMs: 100
+    - Sprite: {fileID: -3444914786939977529, guid: 2281c3f2362582f4e84acfa70d99f8d4, type: 3}
+      PoseOnly: 0
+      HoldMs: 120
+      DefaultHoldMs: 120
+      BuiltInHoldMs: 120
+    - Sprite: {fileID: 4240269265786863266, guid: 2281c3f2362582f4e84acfa70d99f8d4, type: 3}
+      PoseOnly: 0
+      HoldMs: 250
+      DefaultHoldMs: 250
+      BuiltInHoldMs: 250

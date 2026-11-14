@@ -5,7 +5,7 @@
 - Note: Wrestler and Opponent are used to describe the entity performing the move and the entity that is the victim of the move. These terms are interchangeable between the Player and AI Opponent, as either can be a Wrestler or Opponent in these definitions.
 - **Standing** - Wrestler is standing in the arena and not moving.
 - **Walking** - Wrestler is walking in one of eight directions around the arena.
-- **Running** - Wrestler is running in one of two directions(left or right) around the arena. One press of Run starts it; it continues until the wrestler hits an obstacle or the arena edge, gets hit, performs another action, or presses Run again (D-020, D-027). Hitting the truck or pool puts the runner in Struck with obstacle collision damage; the trailer/fence line and arena ends just end the run (D-027). Pressing Strike while running ends the run and throws Strike 1; Lock Up isn't allowed while running. A runner below 30 health after obstacle damage is knocked down; a runner passes over a downed opponent (D-030). Running into the opponent knocks both wrestlers down (run-collision damage, tunable, starts at 0) (D-029). A whipped wrestler has no control at all until 3 s into the whip, then may cancel with Run. The whipper regains normal control when the Irish Whip animation finishes. A strike on a whipped wrestler deals normal strike damage (D-028).
+- **Running** - Wrestler is running in one of two directions(left or right) around the arena. One press of Run starts it; it continues until the wrestler hits an obstacle or the arena edge, gets hit, performs another action, or presses Run again (D-020, D-027). Hitting the truck or pool puts the runner in Struck with obstacle collision damage; the trailer/fence line and arena ends just end the run (D-027). Pressing Strike while running ends the run and throws Strike 1; Lock Up isn't allowed while running. A runner below 30 health after obstacle damage is knocked down; a runner passes over a downed opponent (D-030). Running into the opponent knocks both wrestlers down (run-collision damage, tunable, starts at 0) (D-029). A whipped wrestler has no control at all until 3 s into the whip, then may cancel with Run (after that a whip run follows the normal run rules). The whipper regains normal control when the Irish Whip animation finishes. A strike on a whipped wrestler deals normal strike damage (D-028). A whip run that hits the truck or pool deals Irish Whip impact damage instead of obstacle collision damage; arena ends just end it (D-027).
 - **Striking** - Wrestler is striking or attempting to strike an opponent.
 - **Struck** - Wrestler is being struck by an Opponent. Lasts 0.4 s (tunable); each new hit restarts it (D-024).
 - **Lock Up** - Wrestler is triggering or attempting to trigger the Lock Up animation.
@@ -45,14 +45,17 @@
         - Wrestler B enters a Knocked Down state
         - Damage is applied to Wrestler B
     - Wrestler A presses Irish Whip button
-        - If Wrestler A is pressing a Left or Right Movement
+        - If Wrestler A is pressing a Left or Right Movement (the left/right part of the stick or D-pad; up/down alone counts as no direction, D-039)
             - Irish Whip animation is triggered in the direction Wrestler A is pressing.
         - Else if Wrestler A is pressing no direction
-            - Irish Whip animation is triggered in the direction Wrestler B is facing.
-        - Running animation is triggered for Wrestler B
-            - If Wrestler B runs into an object or Wrestler A strikes them, they enter a Struck state/animation
+            - Irish Whip animation is triggered in the direction Wrestler B is facing. Wrestler B faces Wrestler A in the lock-up, so Wrestler B runs past Wrestler A (D-039).
+        - Wrestler A plays the four-frame Irish Whip, rooted, facing locked, and has no control; when it ends Wrestler A faces the whip direction and returns to Standing or Recovering (D-028, D-039)
+        - Running animation is triggered for Wrestler B (a whipped run: no control for the whip no-control time, then the normal run rules, D-028)
+            - Wrestler B faces the whip direction from the start. During Wrestler A's whip, Combat moves Wrestler B along the keyed whip path (Irish Whip choreography below), drawn in front of Wrestler A and passing through Wrestler A with no blocking or run-collision knockdown (D-039)
+            - If Wrestler B runs into an object (truck or pool: Irish Whip impact damage) or Wrestler A strikes them (that strike's damage, D-028), they enter a Struck state/animation
                 - Damage is applied to Wrestler B
                 - Wrestler B may enter Knocked Down state/animation if their health is below the Recovering threshold
+            - The arena ends and the back wall just end the run, also when the whip path itself reaches an arena end (a whip started near an end) (D-027)
     - Wrestler does not press the Grapple or Irish Whip button within the timed interval
         - Break Grapple animation is triggered
         - Both wrestlers return to a Standing or Recovering state based on level of health.
@@ -148,6 +151,8 @@ Values marked *Set* were decided by the designer. Values marked *Starting point*
 | Strike 1/2 wind-up, hit window, recovery | 0.21 / 0.1 / 0.15 s | Starting point | D-024; wind-up matches the art's contact frame |
 | Strike 3 wind-up, hit window, recovery | 0.125 / 0.1 / 0.25 s | Starting point | D-024 |
 | Whip no-control time | 3.0 s | Set | D-028; after this the whipped wrestler may cancel with Run |
+| Irish Whip frame times f1 / f2 / f3 / f4 | 0.12 / 0.10 / 0.12 / 0.33 s (Barry whipping), 0.12 / 0.10 / 0.12 / 0.25 s (Peaux whipping) | Starting point | D-039; per whipper (`CombatTuning.irishWhipByWhipper`). The whipper is rooted for all four; the runner is released at the end of f3 and the whipper is free when f4 ends |
+| Irish Whip runner offsets (px along the whip direction from the whipper, f1 / f2 / f3 / f4) | Barry whipping: through −80 / 55 / 98 / 222, away 58 / 64 / 98 / 222; Peaux whipping: through −55 / 50 / 80 / 167, away 70 / 74 / 82 / 167 | Starting point | D-039; the approved art's staging. Each key is held for its whole frame; from the f4 key the runner runs at run speed. "Through" = the runner keeps the direction it faced in the lock-up and passes the whipper; "away" = the way the whipper faced |
 
 ### Health and Damage
 
@@ -159,7 +164,7 @@ Values marked *Set* were decided by the designer. Values marked *Starting point*
 | Strike 2 damage | 4 | Starting point | Second hit of the combo |
 | Strike 3 damage | 6 | Starting point | Combo finisher; 13 total for a full combo |
 | Bodyslam damage | 12 | Starting point | Grapples hit harder than strikes but need close range |
-| Irish Whip impact damage | 8 | Starting point | Whipped Wrestler runs into an arena object |
+| Irish Whip impact damage | 8 | Starting point | Whipped Wrestler runs into an arena object (truck or pool; used for the whole whip run instead of obstacle collision damage) |
 | Obstacle collision damage | 8 | Starting point | A running Wrestler runs into the truck or pool (D-027) |
 | Stomp damage | 3 | Starting point | D-025 |
 | Run-collision damage | 0 | Starting point | D-029; running into the opponent knocks both down |

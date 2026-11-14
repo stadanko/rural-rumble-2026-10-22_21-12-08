@@ -463,20 +463,20 @@ namespace RuralRumble.Tests.EditMode
         }
 
         [Test]
-        public void DuringLockUp_InitiatorWhipPresses_DoNothingYet()
+        public void DuringLockUp_InitiatorWhipPress_StartsTheIrishWhip_NoBreak()
         {
-            // Irish Whip (B) is a hook only until step 3; the lock-up breaks on the timer as usual. (Step 2: the
-            // Grapple press now starts the bodyslam, see BodyslamTests, so it was taken out of this test.)
+            // Step 3: Irish Whip (B) in the lock-up window starts the whip (details in IrishWhipTests); the lock-up
+            // ends without a break. (Step 1 had this press do nothing; step 2 moved Grapple to BodyslamTests.)
             using var h = new MatchHarness(P, C);
             h.PlayerInput.PressGrappleOnce();
             h.Tick(1, Dt);
             h.PlayerInput.PressRunOnce();
-            h.PlayerInput.Enqueue(new WrestlerIntent(new Vector2(1f, 0f), ButtonState.None, new ButtonState(true, true), ButtonState.None));
-            float t = h.TickUntil(() => h.PairedMoves.Count == 2, 4f, Dt);
-            Assert.AreEqual(MoveId.BreakLockUp, h.PairedMoves[1].Move);
-            Assert.AreEqual(h.Tuning.lockUpTimer, t, 2 * Dt);
-            Assert.AreEqual(CombatState.LockUp, h.Player.State, "no run, no whip");
-            Assert.AreEqual(CombatState.LockedUp, h.Cpu.State);
+            h.Tick(1, Dt);
+            Assert.AreEqual(MoveId.IrishWhip, h.PairedMoves[1].Move);
+            Assert.AreEqual(CombatState.Grappling, h.Player.State);
+            Assert.AreEqual(CombatState.Running, h.Cpu.State);
+            h.TickSeconds(h.Tuning.lockUpTimer + 0.5f, Dt);
+            Assert.IsFalse(h.PairedMoves.Any(m => m.Move == MoveId.BreakLockUp));
         }
 
         // ================================================================ Timer -> break

@@ -21,10 +21,10 @@ Xbox Style Controller Layout
         - Run left or right in the direction held on the Left Stick/D-Pad; with no left/right held, run toward the opponent (D-037)
         - If already running from your own Run press, pressing B again cancels the run (D-027)
     - If in Player Triggered Lock Up animation
-        - If Left Stick/D-Pad is pressed
+        - If left or right is pressed on the Left Stick/D-Pad (up/down alone counts as no direction, D-039)
             - Whip opponent in direction Left Stick/D-Pad is pressed
         - Else
-            - Whip opponent in direction opponent is currently facing
+            - Whip opponent in direction opponent is currently facing (toward you, so they run past you, D-039)
 - X Button = Strike
     - If standing over a Knocked Down opponent
         - X = Stomp (D-025)

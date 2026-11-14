@@ -22,9 +22,11 @@ namespace RuralRumble.AI
     /// in lock-up reach, otherwise it steps in closer (Approach with a lock-up goal, kept until it presses
     /// or the player can no longer be locked up). Holding a lock-up it started, it presses Grapple (bodyslam)
     /// at <see cref="CombatTuning.cpuBodyslamChance"/> on each decision tick (the first one interval in);
-    /// otherwise the lock-up breaks on the timer. A whiff and its own bodyslam (Grappling) take no input.
-    /// No Irish Whip yet (lock-up slice step 3).</item>
-    /// <item><b>Stunned</b> (Stunned / Knocked Down): while Struck, Locked Up or Grappled, no input; while Knocked
+    /// and if that roll fails, Irish Whip (no direction: the runner passes the CPU, D-039) at
+    /// <see cref="CombatTuning.cpuWhipChance"/>; otherwise the lock-up breaks on the timer. A whiff and its own
+    /// bodyslam or whip (Grappling) take no input.</item>
+    /// <item><b>Stunned</b> (Stunned / Knocked Down): while Struck, Locked Up, Grappled or whipped (Running: the CPU
+    /// never runs on its own), no input; while Knocked
     /// Down, mashes Strike at the CPU mash rate (D-025).</item>
     /// <item><b>Recover</b>: while Recovering, stands still to regenerate, with a chance to strike back
     /// at a player in range.</item>
@@ -116,9 +118,12 @@ namespace RuralRumble.AI
             if (self.State == CombatState.KnockedDown)
                 return Mash(now);
 
-            if (self.State == CombatState.Struck || self.State == CombatState.LockedUp || self.State == CombatState.Grappled)
+            if (self.State == CombatState.Struck || self.State == CombatState.LockedUp || self.State == CombatState.Grappled
+                || self.State == CombatState.Running)
             {
-                // Locked Up / Grappled: Wrestler B has no control (D-031).
+                // Locked Up / Grappled: Wrestler B has no control (D-031). Running: the CPU never starts a run of its
+                // own, so this is a whip run; it has no control for the no-control time (D-028) and the CPU simply
+                // rides the run out to the arena end, an obstacle or a hit (it never cancels or strikes out of it).
                 EnterStunned(now);
                 return WrestlerIntent.None;
             }
@@ -217,7 +222,11 @@ namespace RuralRumble.AI
             if (now - lastDecision < tuning.cpuDecisionInterval)
                 return WrestlerIntent.None;
             lastDecision = now;
-            return Roll(tuning.cpuBodyslamChance) ? GrapplePress() : WrestlerIntent.None;
+            if (Roll(tuning.cpuBodyslamChance))
+                return GrapplePress();
+            // COMBAT_SPEC CPU AI: "performs a grapple or Irish Whip". No direction held: the runner goes past the
+            // CPU (D-039).
+            return Roll(tuning.cpuWhipChance) ? WhipPress() : WrestlerIntent.None;
         }
 
         // ================================================================ Decide
@@ -457,6 +466,10 @@ namespace RuralRumble.AI
 
         /// <summary>Grapple is the Lock Up button (A) pressed during a lock-up.</summary>
         private static WrestlerIntent GrapplePress() => LockUpPress();
+
+        /// <summary>Irish Whip is the Run/Whip button (B) pressed during a lock-up, here with no direction held.</summary>
+        private static WrestlerIntent WhipPress() =>
+            new WrestlerIntent(Vector2.zero, ButtonState.None, new ButtonState(true, true), ButtonState.None);
 
         private static WrestlerIntent StrikePress() =>
             new WrestlerIntent(Vector2.zero, ButtonState.None, ButtonState.None, new ButtonState(true, true));

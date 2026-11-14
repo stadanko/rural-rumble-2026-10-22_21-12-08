@@ -7,7 +7,7 @@ namespace RuralRumble.Combat
     /// One wrestler's combat state. Plain C#; ticked only by <see cref="CombatMatch"/>, which runs the
     /// same rules for both wrestlers. States: Standing, Walking, Running, Striking, Struck, Lock Up,
     /// Locked Up, Grappling, Grappled, Knocked Down, Recovering, Knocked Out (COMBAT_SPEC State Definitions;
-    /// Grappling / Grappled are the bodyslam, driven entirely by LockUpController). A Lock Up press is only recorded here
+    /// Grappling / Grappled are the bodyslam, and Grappling the whipper of an Irish Whip, driven entirely by LockUpController). A Lock Up press is only recorded here
     /// (<see cref="LockUpRequested"/>); <see cref="LockUpController"/> resolves it after both wrestlers
     /// think and drives the paired lock-up for both.
     ///
@@ -41,6 +41,11 @@ namespace RuralRumble.Combat
         private int comboStep;
         private float sinceComboStrike = float.MaxValue;
         private bool bufferedStrike;
+
+        // Run origin (ARCHITECTURE 4.1, D-027, D-028): a run caused by an Irish Whip, and seconds since the whip
+        // started. Cleared whenever the wrestler leaves Running.
+        private bool whipRun;
+        private float whipRunTime;
 
         private float stompCooldownLeft;
         private float struckLeft;
@@ -87,6 +92,10 @@ namespace RuralRumble.Combat
         public float StompCooldownRemaining => stompCooldownLeft;
         /// <summary>Number of the last combo strike thrown (0 none, 1-3).</summary>
         public int ComboStep => comboStep;
+        /// <summary>Running because of an Irish Whip (run origin, ARCHITECTURE 4.1). False when not Running.</summary>
+        public bool IsWhipRun => state == CombatState.Running && whipRun;
+        /// <summary>A whip run still inside the whip no-control time (D-028): every button is ignored.</summary>
+        public bool IsWhipNoControl => IsWhipRun && whipRunTime < tuning.whipNoControlTime;
 
         // ---------------------------------------------------------------- Per-tick data read by CombatMatch
         /// <summary>Movement this wrestler wants this tick (set by Think).</summary>
@@ -172,7 +181,7 @@ namespace RuralRumble.Combat
                     return;
 
                 // LockedUp: Wrestler B has no control (D-031); LockUpController drives the pair.
-                // Grappling / Grappled (bodyslam): neither has control; LockUpController drives the pair.
+                // Grappling / Grappled (bodyslam), Grappling (whipper): no control; LockUpController drives the pair.
                 // KnockedOut: nothing.
             }
         }
@@ -233,9 +242,22 @@ namespace RuralRumble.Combat
 
         private void ThinkRunning(float dt, in WrestlerIntent intent)
         {
+            if (whipRun)
+            {
+                // D-028: a whipped wrestler has no control at all for the whip no-control time (read now). After
+                // that the whip run is a normal run: Run cancels it, Strike ends it with Strike 1 (D-029).
+                whipRunTime += dt;
+                if (whipRunTime < tuning.whipNoControlTime)
+                {
+                    PendingDelta = RunDelta(dt);
+                    return;
+                }
+            }
+            if ((intent.RunWhip.Pressed || intent.Strike.Pressed) && move == MoveId.IrishWhip)
+                LeaveWhipPath(); // only if the no-control time is tuned shorter than the whip itself
             if (intent.RunWhip.Pressed)
             {
-                // D-027: Run again cancels your own run (whip runs come with the lock-up slice).
+                // D-027: Run again cancels your own run; D-028: a whip run only after the no-control time.
                 SetState(BaseState);
                 return;
             }
@@ -521,6 +543,50 @@ namespace RuralRumble.Combat
         /// <summary>Leaves the pair without changing state (the wrestler already left Lock Up / Locked Up).</summary>
         internal void LeavePair() => InPairedMove = false;
 
+        /// <summary>
+        /// Irish Whip, the whipped wrestler (D-028, D-039): leaves Locked Up for a whip-origin run in
+        /// <paramref name="direction"/>, facing it from this tick. CurrentMove = IrishWhip (Startup) while the runner
+        /// is on the whip path; LockUpController places the root each tick until <see cref="LeaveWhipPath"/>.
+        /// </summary>
+        internal void BeginWhipRun(int direction)
+        {
+            MoveId ended = move;
+            move = MoveId.IrishWhip;
+            phase = MovePhase.Startup;
+            phaseTime = 0f;
+            if (ended != MoveId.None && ended != MoveId.IrishWhip)
+                events.RaiseMovePhaseChanged(Id, ended, MovePhase.None);
+            runDirection = direction >= 0 ? 1 : -1;
+            SetFacing(new Vector2Int(runDirection, 0));
+            SetState(CombatState.Running);
+            whipRun = true;
+            whipRunTime = 0f;
+        }
+
+        /// <summary>
+        /// The whip path is over for the runner (whip ended, or the run is about to end at an arena end or
+        /// obstacle): the IrishWhip move ends (MovePhaseChanged None) and the pair is left. The state is unchanged,
+        /// so a whip run keeps running under the normal run rules, still a whip run.
+        /// </summary>
+        internal void LeaveWhipPath()
+        {
+            InPairedMove = false;
+            if (move != MoveId.IrishWhip)
+                return;
+            move = MoveId.None;
+            phase = MovePhase.None;
+            phaseTime = 0f;
+            events.RaiseMovePhaseChanged(Id, MoveId.IrishWhip, MovePhase.None);
+        }
+
+        /// <summary>The whip is over for the whipper: faces <paramref name="faceX"/> (the whip direction, D-039), then
+        /// Standing or Recovering by health.</summary>
+        internal void EndWhip(int faceX)
+        {
+            SetFacing(new Vector2Int(faceX >= 0 ? 1 : -1, 0));
+            EndPaired();
+        }
+
         internal void ClearLockUpRequest() => LockUpRequested = false;
 
         // ================================================================ Movement
@@ -610,12 +676,16 @@ namespace RuralRumble.Combat
             return damage;
         }
 
-        /// <summary>A run into the truck or pool (D-027): obstacle collision damage, then Struck, or Knocked Down below the threshold (D-030).</summary>
+        /// <summary>
+        /// A run into the truck or pool (D-027): obstacle collision damage, or Irish Whip impact damage for a whip run
+        /// (COMBAT_SPEC Tuning Values), then Struck, or Knocked Down below the threshold (D-030).
+        /// </summary>
         internal void HitObstacle(Vector2 contactPoint)
         {
+            float damage = IsWhipRun ? tuning.irishWhipImpactDamage : tuning.obstacleCollisionDamage;
             InterruptMove();
             events.RaiseObstacleHit(Id, contactPoint);
-            TakeDamage(tuning.obstacleCollisionDamage, raise: true);
+            TakeDamage(damage, raise: true);
             if (health <= 0f)
             {
                 SetState(CombatState.KnockedOut);
@@ -685,6 +755,8 @@ namespace RuralRumble.Combat
                 return;
             CombatState prev = state;
             state = next;
+            if (next != CombatState.Running)
+                whipRun = false; // the run origin lives only as long as the run
             events.RaiseStateChanged(Id, prev, next);
         }
 

@@ -31,6 +31,14 @@ namespace RuralRumble.Presentation
     /// plays "Bodyslammed" (B). Both clips are in the MoveAnimationTable with their impact frame as contact time,
     /// so each lands its impact frame at the Bodyslam MoveTiming's Startup. A stays in front of B while paired.
     ///
+    /// Irish Whip (ARCHITECTURE 6, D-039): Grappling + Move IrishWhip plays "IrishWhip" (the whipper), contact-scaled
+    /// so its release sprite (f4) lands at the whip's Startup; the runner is State Running and plays its normal Run
+    /// clip. The whipper's f1 is drawn facing the lock-up facing (Combat keeps HorizontalFacing there for the whole
+    /// whip) and f2-f4 facing PairedMoveInfo.WhipDirection: <see cref="LateUpdate"/> compares the whip clip's current
+    /// time (native) with the clip's MoveAnimationTable TurnTime (start of f2), so the flip changes on the same frame
+    /// as the sprite. The runner draws one sorting order in front of the whipper until the whipper's
+    /// MovePhaseChanged(IrishWhip, None); the whipper does not take the usual initiator-in-front order.
+    ///
     /// Clip offsets and rotations are authored for left-facing art. When the sprite is flipped,
     /// <see cref="LateUpdate"/> mirrors the child sprite's animated x offset and z rotation so a knock-back
     /// or a fall still goes away from the way the wrestler faces.
@@ -77,6 +85,9 @@ namespace RuralRumble.Presentation
         /// <summary>Bodyslam states (D-033). Each plays the slot clip "Slot_" + state name.</summary>
         public const string BodyslamStateName = "Bodyslam";                // A, Grappling
         public const string BodyslammedStateName = "Bodyslammed";          // B, Grappled
+        /// <summary>Irish Whip, the whipper's side (D-039). Plays the slot clip "Slot_IrishWhip".</summary>
+        public const string IrishWhipStateName = "IrishWhip";              // A, Grappling
+        private static readonly int IrishWhipStateHash = Animator.StringToHash(IrishWhipStateName);
 
         /// <summary>Shared-controller slot clip for a move: "Slot_" + MoveId (e.g. Slot_Strike1, Slot_Stomp).</summary>
         public static string SlotNameFor(MoveId move) => "Slot_" + move;
@@ -87,7 +98,8 @@ namespace RuralRumble.Presentation
         /// <summary>
         /// The Animator state that plays a timed move, or null if the state shows no move clip. Striking:
         /// the move's own state (Strike1-3, Stomp). Lock Up: hold when paired, whiff otherwise; Break for
-        /// BreakLockUp. Locked Up: held, or the receiver's break. Grappling / Grappled: the bodyslam sides.
+        /// BreakLockUp. Locked Up: held, or the receiver's break. Grappling / Grappled: the bodyslam sides; Grappling
+        /// + IrishWhip: the whipper's Irish Whip (the runner is Running and plays Run).
         /// </summary>
         public static string MoveStateName(CombatState state, MoveId move, bool paired)
         {
@@ -104,7 +116,9 @@ namespace RuralRumble.Presentation
                     if (move == MoveId.LockUp) return LockedUpStateName;
                     return null;
                 case CombatState.Grappling:
-                    return move == MoveId.Bodyslam ? BodyslamStateName : null;
+                    if (move == MoveId.Bodyslam) return BodyslamStateName;
+                    if (move == MoveId.IrishWhip) return IrishWhipStateName;
+                    return null;
                 case CombatState.Grappled:
                     return move == MoveId.Bodyslam ? BodyslammedStateName : null;
                 default:
@@ -121,9 +135,33 @@ namespace RuralRumble.Presentation
             state == CombatState.LockUp || state == CombatState.LockedUp ||
             state == CombatState.Grappling || state == CombatState.Grappled;
 
-        /// <summary>The initiator's side of a paired move (drawn in front while paired).</summary>
+        /// <summary>The initiator's side of a paired move (drawn in front while paired, except the Irish Whip).</summary>
         public static bool IsInitiatorState(CombatState state) =>
             state == CombatState.LockUp || state == CombatState.Grappling;
+
+        /// <summary>
+        /// Sorting-order offset over the wrestler's base order (ARCHITECTURE 6). Paired initiator: +1 (its reaching arm
+        /// over B), except the Irish Whip whipper (Grappling + IrishWhip): 0, because the runner is drawn in front
+        /// (D-039: the runner hides the whipper's pushing arm). The runner: +1 while <paramref name="inFrontOfWhipper"/>
+        /// (from PairedMoveStarted(IrishWhip) until the whipper's MovePhaseChanged(IrishWhip, None)).
+        /// </summary>
+        public static int SortingOffset(CombatState state, MoveId move, bool paired, bool inFrontOfWhipper)
+        {
+            if (inFrontOfWhipper) return 1;
+            if (state == CombatState.Grappling && move == MoveId.IrishWhip) return 0;
+            return IsInitiatorState(state) && paired ? 1 : 0;
+        }
+
+        /// <summary>
+        /// Left/right the whipper is drawn facing at a time in the whip clip (D-039): before <paramref name="turnTime"/>
+        /// (f1) the lock-up facing Combat still reports, from it (f2-f4) the whip direction. Times are clip time at
+        /// native speed. A whip direction of 0 (unknown) keeps the combat facing.
+        /// </summary>
+        public static int WhipperFacing(float clipTime, float turnTime, int combatFacing, int whipDirection) =>
+            whipDirection != 0 && clipTime >= turnTime - TurnTimeEpsilon ? whipDirection : combatFacing;
+
+        /// <summary>Tolerance for the clip time reaching the turn key (float rounding of normalized time).</summary>
+        public const float TurnTimeEpsilon = 1e-4f;
 
         /// <summary>Playback speed limits for move clips. Extreme values are reported by the Editor validator, not fixed here.</summary>
         public const float MinMoveSpeed = 0.1f;
@@ -162,6 +200,12 @@ namespace RuralRumble.Presentation
         private bool paired;
         private bool baseSortingOrderKnown;
         private int baseSortingOrder;
+
+        // Irish Whip (D-039). Whipper: the whip direction from PairedMoveStarted (0 = not whipping). Runner: drawn in
+        // front of the whipper until the whipper's MovePhaseChanged(IrishWhip, None).
+        private int whipDirection;
+        private bool inFrontOfWhipper;
+        private WrestlerId whipperId;
 
         private float moveSpeed = 1f;
         private CombatState? lastState;
@@ -240,6 +284,8 @@ namespace RuralRumble.Presentation
             pendingMoveRestart = false;
             pendingStruckRestart = false;
             paired = false;
+            whipDirection = 0;
+            inFrontOfWhipper = false;
         }
 
         private void OnDestroy() => UnbindEvents();
@@ -263,10 +309,18 @@ namespace RuralRumble.Presentation
             pendingMoveRestart = true;
             pendingMove = info.Move;
             pendingTiming = info.Timing;
+            bool whip = info.Move == MoveId.IrishWhip;
+            // D-039: the whipper turns to the whip direction at f2 (LateUpdate); the runner draws in front of it.
+            whipDirection = whip && info.Initiator == eventsId ? info.WhipDirection : 0;
+            inFrontOfWhipper = whip && info.Receiver == eventsId;
+            whipperId = info.Initiator;
         }
 
         private void OnMovePhaseChanged(WrestlerId id, MoveId move, MovePhase phase)
         {
+            // The runner stays in front until the whipper's whip ends (ARCHITECTURE 6), even if it was released early.
+            if (inFrontOfWhipper && id == whipperId && move == MoveId.IrishWhip && phase == MovePhase.None)
+                inFrontOfWhipper = false;
             if (id != eventsId || phase != MovePhase.None) return;
             // The move ended or was cut. A MoveStarted later in the same tick re-queues a restart.
             pendingMoveRestart = false;
@@ -316,6 +370,8 @@ namespace RuralRumble.Presentation
             // Paired only while in a paired-move state; the receiver is always paired.
             if (!IsPairedState(state))
                 paired = false;
+            if (state != CombatState.Grappling || view.CurrentMove != MoveId.IrishWhip)
+                whipDirection = 0; // the whip ended (or was never this wrestler's): plain combat facing again
             bool showPaired = paired || state == CombatState.LockedUp || state == CombatState.Grappled;
 
             bool animatorReady = animator != null && animator.runtimeAnimatorController != null && animator.isActiveAndEnabled;
@@ -373,7 +429,7 @@ namespace RuralRumble.Presentation
                     baseSortingOrder = spriteRenderer.sortingOrder;
                     baseSortingOrderKnown = true;
                 }
-                spriteRenderer.sortingOrder = baseSortingOrder + (IsInitiatorState(state) && paired ? 1 : 0);
+                spriteRenderer.sortingOrder = baseSortingOrder + SortingOffset(state, view.CurrentMove, paired, inFrontOfWhipper);
             }
         }
 
@@ -384,6 +440,7 @@ namespace RuralRumble.Presentation
         {
             if (view == null || spriteRenderer == null)
                 return;
+            ApplyWhipperFacing();
             Transform t = spriteRenderer.transform;
             if (t == transform)
                 return; // never touch the root
@@ -422,6 +479,31 @@ namespace RuralRumble.Presentation
             lastWrittenX = x;
             lastWrittenRotZ = r;
         }
+
+        // D-039: after the Animator has evaluated this frame, draw the whipper's f1 facing the lock-up facing and f2-f4
+        // facing the whip direction, read from the whip clip's current time against its TurnTime (start of f2), so the
+        // flip changes with the sprite at any playback speed. Combat facing is never touched.
+        private void ApplyWhipperFacing()
+        {
+            if (whipDirection == 0 || animator == null || !animator.isActiveAndEnabled || view.State != CombatState.Grappling)
+                return;
+            AnimatorStateInfo info = animator.GetCurrentAnimatorStateInfo(0);
+            if (info.shortNameHash != IrishWhipStateHash)
+                return;
+            AnimationClip clip = ClipForSlot(SlotNameForState(IrishWhipStateName));
+            if (clip == null || moveTable == null || !moveTable.TryGetTurnTime(clip, out float turnTime))
+                return;
+            float clipTime = Mathf.Clamp01(info.normalizedTime) * clip.length;
+            int facing = WhipperFacing(clipTime, turnTime, view.HorizontalFacing, whipDirection);
+            facingFlip = ShouldFlip(facing, artFacesLeft);
+            spriteRenderer.flipX = facingFlip;
+        }
+
+        /// <summary>The whipper's whip direction while its Irish Whip plays (D-039), else 0.</summary>
+        public int WhipDirection => whipDirection;
+
+        /// <summary>True while this runner is drawn in front of its whipper (D-039).</summary>
+        public bool InFrontOfWhipper => inFrontOfWhipper;
 
         /// <summary>Knocked Down or Knocked Out: the states that show the downed sprite.</summary>
         public static bool IsDownedState(CombatState state) =>

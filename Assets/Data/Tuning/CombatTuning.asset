@@ -47,6 +47,54 @@ MonoBehaviour:
     startup: 0.525
   - wrestler: {fileID: 11400000, guid: 88fa395ed34cfaa4cb5494a98b84eec2, type: 2}
     startup: 0.475
+  whipNoControlTime: 3
+  irishWhip:
+    whipper: {fileID: 0}
+    frame1: 0.12
+    frame2: 0.1
+    frame3: 0.12
+    followThrough: 0.33
+    throughPx:
+      f1: -80
+      f2: 55
+      f3: 98
+      f4: 222
+    awayPx:
+      f1: 58
+      f2: 64
+      f3: 98
+      f4: 222
+  irishWhipByWhipper:
+  - whipper: {fileID: 11400000, guid: a759afccac418004080629b857d011a6, type: 2}
+    frame1: 0.12
+    frame2: 0.1
+    frame3: 0.12
+    followThrough: 0.33
+    throughPx:
+      f1: -80
+      f2: 55
+      f3: 98
+      f4: 222
+    awayPx:
+      f1: 58
+      f2: 64
+      f3: 98
+      f4: 222
+  - whipper: {fileID: 11400000, guid: 88fa395ed34cfaa4cb5494a98b84eec2, type: 2}
+    frame1: 0.12
+    frame2: 0.1
+    frame3: 0.12
+    followThrough: 0.25
+    throughPx:
+      f1: -55
+      f2: 50
+      f3: 80
+      f4: 167
+    awayPx:
+      f1: 70
+      f2: 74
+      f3: 82
+      f4: 167
   maxHealth: 100
   recoveringThreshold: 30
   strike1Damage: 3
@@ -57,6 +105,7 @@ MonoBehaviour:
   stompCooldown: 1
   obstacleCollisionDamage: 8
   runCollisionDamage: 0
+  irishWhipImpactDamage: 8
   recoveryRate: 1
   recoveryCap: 30
   minKnockdownTime: 1
@@ -89,6 +138,7 @@ MonoBehaviour:
   cpuRecoverCounterChance: 0.3
   cpuLockUpChance: 0.25
   cpuBodyslamChance: 0.5
+  cpuWhipChance: 0.5
   cpuStrikeDistance: 1.6
   cpuArriveTolerance: 0.2
   maxTickStep: 0.05

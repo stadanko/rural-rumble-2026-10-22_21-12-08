@@ -23,13 +23,20 @@ namespace RuralRumble.Tests.PlayMode
 
         // COMBAT_SPEC CPU AI example: "Peaux begins outside striking range and enters the Approach state ... When
         // Peaux reaches striking distance, the FSM selects Attack and executes a jab." The player does nothing.
+        // Since the lock-up slice the CPU may lock up instead of striking (cpuLockUpChance) and then bodyslam, stomp
+        // or whip (with the default seed its first hit is a bodyslam, then a stomp), so only combo strikes count here:
+        // the first one must be Strike 1.
         [UnityTest]
         public IEnumerator CpuBrain_ApproachesIdlePlayer_AndLandsAStrike()
         {
             yield return loader.Load(silenceCpu: false);
             CombatMatch match = MatchBootstrap.Current.Match;
             var hits = new List<HitInfo>();
-            match.Events.HitLanded += hits.Add;
+            match.Events.HitLanded += hit =>
+            {
+                if (hit.Move == MoveId.Strike1 || hit.Move == MoveId.Strike2 || hit.Move == MoveId.Strike3)
+                    hits.Add(hit);
+            };
 
             const float timeout = 15f;
             float waited = 0f;

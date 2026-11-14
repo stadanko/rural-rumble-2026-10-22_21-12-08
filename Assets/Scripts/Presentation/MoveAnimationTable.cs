@@ -20,6 +20,9 @@ namespace RuralRumble.Presentation
     /// built from the approved stand and strike sprites (WrestlerAnimationBuilder.WriteLockUpStandIns).
     /// Both bodyslam sides (Move Bodyslam, D-033) are recorded with their impact frame as ContactTime, so the pair
     /// lands the impact at the Bodyslam Startup.
+    /// The whipper's Irish Whip clips (Move IrishWhip, D-039) record the release (start of f4) as ContactTime and the
+    /// start of f2 as TurnTime: WrestlerView draws the whipper facing the lock-up facing before TurnTime and the whip
+    /// direction from TurnTime on (clip time at native speed, so it follows the sprite change at any playback speed).
     /// </summary>
     [CreateAssetMenu(menuName = "Rural Rumble/Move Animation Table", fileName = "MoveAnimationTable")]
     public sealed class MoveAnimationTable : ScriptableObject
@@ -34,6 +37,9 @@ namespace RuralRumble.Presentation
             [Tooltip("Seconds from clip start to the first frame of the contact pose, at native (1x) speed. " +
                      "0 = no contact frame: the whole clip is fitted to the move's total time (lock-up whiff, break).")]
             public float ContactTime;
+            [Tooltip("Seconds from clip start (native speed) at which the art turns to face a second direction; 0 = none. " +
+                     "Irish Whip only (D-039): the start of f2, where the whipper turns to the whip direction.")]
+            public float TurnTime;
         }
 
         [SerializeField] private List<Entry> entries = new List<Entry>();
@@ -55,11 +61,26 @@ namespace RuralRumble.Presentation
             return false;
         }
 
+        /// <summary>Turn time (native speed, seconds) recorded for this clip; false if none (no entry or 0).</summary>
+        public bool TryGetTurnTime(AnimationClip clip, out float turnTime)
+        {
+            for (int i = 0; i < entries.Count; i++)
+            {
+                if (entries[i].Clip == clip && clip != null && entries[i].TurnTime > 0f)
+                {
+                    turnTime = entries[i].TurnTime;
+                    return true;
+                }
+            }
+            turnTime = 0f;
+            return false;
+        }
+
         /// <summary>Adds or replaces the entry for this clip. Editor tooling only.</summary>
-        public void SetEntry(MoveId move, AnimationClip clip, float contactTime)
+        public void SetEntry(MoveId move, AnimationClip clip, float contactTime, float turnTime = 0f)
         {
             if (clip == null) throw new ArgumentNullException(nameof(clip));
-            var entry = new Entry { Move = move, Clip = clip, ContactTime = contactTime };
+            var entry = new Entry { Move = move, Clip = clip, ContactTime = contactTime, TurnTime = turnTime };
             for (int i = 0; i < entries.Count; i++)
             {
                 if (entries[i].Clip == clip)

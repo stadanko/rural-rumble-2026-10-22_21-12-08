@@ -19,8 +19,10 @@ namespace RuralRumble.Combat
     /// position taken before either thinks.</item>
     /// <item>Lock-ups (<see cref="LockUpController"/>): this tick's Lock Up presses are resolved against the
     /// opponent's state after thinking (lock up, simultaneous 50/50, or whiff), or the active pair advances
-    /// (lock-up, bodyslam, break; a bodyslam's impact damage and knockdown happen here).</item>
-    /// <item>Movement (skipped while a paired move plays: Combat holds both at the pair anchor): each wrestler moves through the arena on its own, then <see cref="WrestlerBlocking"/>
+    /// (lock-up, bodyslam, Irish Whip, break; a bodyslam's impact damage and knockdown, and the whip runner's keyed
+    /// path, happen here).</item>
+    /// <item>Movement (skipped while a paired move plays: Combat holds both at the pair anchor; during an Irish Whip
+    /// only a runner released from the whip path moves, without blocking): each wrestler moves through the arena on its own, then <see cref="WrestlerBlocking"/>
     /// resolves the two feet boxes symmetrically. Obstacle hits, run ends and run collisions follow.</item>
     /// <item>Focus again, from the new positions, for every wrestler free to act now (including one that became
     /// free this tick, e.g. a run, strike, Struck or lock-up that just ended), so facing read after the tick is
@@ -108,9 +110,13 @@ namespace RuralRumble.Combat
             lockUps.Tick(dt, player, cpu, playerIntent, cpuIntent);
 
             // 3. Movement. A paired move holds both wrestlers at the pair anchor (ARCHITECTURE 6), exempt from
-            // blocking; neither has any movement of its own while it plays.
+            // blocking; neither has any movement of its own while it plays. During an Irish Whip the controller
+            // places the whipper and the runner on its path; a runner released early moves on its own, with no
+            // wrestler blocking or run collision until the whip ends (D-039: the runner passes the whipper).
             if (!lockUps.IsActive)
                 ResolveMovement();
+            else if (lockUps.CurrentMove == MoveId.IrishWhip)
+                ResolveWhipMovement();
 
             // 3b. Focus (D-037) from the new positions, for whoever is free to act now.
             ApplyFocus();
@@ -170,6 +176,26 @@ namespace RuralRumble.Combat
             HandleRunArenaStop(cpu, bArena, blocked.B);
         }
 
+        /// <summary>
+        /// While an Irish Whip plays: a wrestler the lock-up controller does not hold (a runner already released from
+        /// the whip path by an arena end or obstacle) moves through the arena only, with no wrestler blocking and no
+        /// run collision, so the two can't snag on each other while the runner passes the whipper.
+        /// </summary>
+        private void ResolveWhipMovement()
+        {
+            MoveFree(player);
+            MoveFree(cpu);
+        }
+
+        private void MoveFree(CombatWrestler w)
+        {
+            if (lockUps.HoldsPosition(w))
+                return;
+            ArenaMoveResult r = Arena.Move(w.Position, w.PendingDelta, w.FeetHalfExtents);
+            w.SetPosition(r.Position);
+            HandleRunArenaStop(w, r, r.Position);
+        }
+
         private static bool RunsToward(CombatWrestler runner, CombatWrestler other) =>
             runner.RunDirection > 0 ? other.Position.x > runner.Position.x : other.Position.x < runner.Position.x;
 
@@ -183,7 +209,7 @@ namespace RuralRumble.Combat
 
             if (arenaResult.HitObstacleX)
             {
-                // D-027: truck or pool -> Struck + obstacle collision damage.
+                // D-027: truck or pool -> Struck + obstacle collision damage (Irish Whip impact damage for a whip run).
                 Vector2 contact = new Vector2(w.Position.x + w.RunDirection * Tuning.feetHalfWidth, w.Position.y);
                 w.HitObstacle(contact);
             }

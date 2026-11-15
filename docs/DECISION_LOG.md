@@ -406,6 +406,23 @@ Agents: read this before starting work. If a task conflicts with a decision here
 
 ---
 
+## D-041: Falling Down animation and knockback slide
+
+- **Date:** 2026-11-15
+- **Decided by:** Designer
+- **Decision:**
+  - **Animation** (designer's spec `Staging/Art/wrestler/Falling Down Mechanics .pdf`; the WWF WrestleFest images in it are a motion reference only, never generator input): struck_a → Fall 2 (airborne) → Fall 3 (level, about to land) → the downed sprite, held. Defaults 100 / 120 / 130 ms, tunable per frame in each wrestler's FrameTiming. The head always falls away from whatever hit the wrestler and the feet point toward it; they never swap sides during the fall.
+  - **When it plays:** every non-bodyslam knockdown (Strike 3, a strike below the Recovering threshold, a truck/pool crash below the threshold, a run collision for both wrestlers) and a knockout from standing. A bodyslam keeps its own animation; a stomp KO while already down doesn't fall again.
+  - **Slide:** during the fall the wrestler slides 0.5 units (`knockdownSlideDistance`) over 0.35 s (`knockdownSlideDuration`) on x, away from the attacker, the other runner, or the obstacle, with normal movement clamping. Knockdown length and damage are unchanged.
+  - **Knockout slide:** after a knockout, only the knocked-out wrestler finishes the slide; the winner, timers, states and events stay frozen (exception to ARCHITECTURE §4.2's freeze).
+  - **Stomp range stays 2.0:** the slide can carry the victim out of stomp range; stepping in to stomp is intended.
+  - **Art:** Barry Fall 2 = `gen-barry-fall2-D-1`, Fall 3 = `gen-barry-fall3-B-1` (approved AI placeholders, flagged for review). Peaux Fall 2 = `gen-peaux-fall2-D-1`, Fall 3 = `gen-peaux-fall3-C-1` (designer-picked 2026-11-15; approved AI placeholders, flagged for review), same holds and landing as Barry.
+- **Why:** Knockdowns snapped straight to the downed sprite with no motion (D-038 said "no fall animation yet").
+- **Supersedes:** D-038's "mirrored in place, no fall animation" for non-bodyslam knockdowns.
+- **Affects:** docs/COMBAT_SPEC.md, docs/ARCHITECTURE.md §4.2 and §6, docs/ACCEPTANCE_TESTS.md, docs/ASSET_REGISTRY.csv, Core (`IWrestlerView.FallSide`), Combat (CombatWrestler, CombatMatch, CombatTuning), presentation (WrestlerView, WrestlerAnimationBuilder, Fall clips, FrameTiming).
+
+---
+
 ## Open Questions
 
 Not yet decided. Agents must not resolve these on their own.

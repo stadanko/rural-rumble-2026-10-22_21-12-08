@@ -20,6 +20,7 @@ namespace RuralRumble.Tests.EditMode
             {
                 t.maxHealth = 32f; t.minKnockdownTime = 0.5f; t.maxKnockdownTime = 0.5f; t.cpuMashRate = 0f;
                 t.cpuAttackChance = 0f; t.cpuRecoverCounterChance = 1f;
+                t.knockdownSlideDistance = 0f; // D-041 slide off: keeps the player in the CPU's strike range after the knockdown
             });
             h.CpuSource = new OpponentBrain(h.Cpu, h.Player, h.Tuning, () => h.Match.ElapsedSeconds, 5);
             h.PlayerInput.PressStrikeOnce();

@@ -23,6 +23,8 @@ namespace RuralRumble.Presentation
     /// The whipper's Irish Whip clips (Move IrishWhip, D-039) record the release (start of f4) as ContactTime and the
     /// start of f2 as TurnTime: WrestlerView draws the whipper facing the lock-up facing before TurnTime and the whip
     /// direction from TurnTime on (clip time at native speed, so it follows the sprite change at any playback speed).
+    /// The Falling Down clips (D-041) have an entry with Move None, no contact time and the landing (start of the downed
+    /// sprite) as TurnTime: WrestlerView switches from the fall frames' orientation to the mirrored downed sprite there.
     /// </summary>
     [CreateAssetMenu(menuName = "Rural Rumble/Move Animation Table", fileName = "MoveAnimationTable")]
     public sealed class MoveAnimationTable : ScriptableObject

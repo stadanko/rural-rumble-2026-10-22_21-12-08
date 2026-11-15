@@ -16,7 +16,8 @@ namespace RuralRumble.EditorTooling
     /// sheets; a PLACEHOLDER stand-in only for a wrestler with none), Struck A / B (approved single sprites that
     /// WrestlerView alternates on consecutive hits; run ImportStruckSheets first), and PLACEHOLDER stand-ins for
     /// Recovering (stand + walk) built from the stand/walk sprites. Knocked Down / Knocked Out
-    /// hold the wrestler's downed sprite (last Bodyslammed sprite); no fall animation yet.
+    /// hold the wrestler's downed sprite (last Bodyslammed sprite) after a bodyslam; every other knockdown / knockout
+    /// from standing plays the Fall clip (D-041: struck_a, fall2, fall3, downed; see WriteFallClip).
     ///
     /// Menu: Rural Rumble/Tooling/Build Barry Animations + Prefab, Rural Rumble/Tooling/Build Peaux Animations + Prefab.
     /// A wrestler with no run or strike art gets PLACEHOLDER stand-ins for those too (WriteMissingArtStandIns).
@@ -83,6 +84,11 @@ namespace RuralRumble.EditorTooling
         public const string SlotBodyslammed = "Slot_" + WrestlerView.BodyslammedStateName;
         /// <summary>Irish Whip, the whipper's side (D-039). The runner plays its normal Run clip.</summary>
         public const string SlotIrishWhip = "Slot_" + WrestlerView.IrishWhipStateName;
+        /// <summary>Falling Down (D-041): struck_a, fall2, fall3, then the downed sprite held. Played by the "Fall"
+        /// state for a Knocked Down / Knocked Out with a fall side (WrestlerView sets the Fall parameter).</summary>
+        public const string SlotFall = "Slot_" + WrestlerView.FallStateName;
+        /// <summary>Animator bool parameter: this knockdown / knockout plays the fall (D-041). Set by WrestlerView.</summary>
+        public const string FallParam = "Fall";
 
         /// <summary>Animator bool parameter: in a paired move (set by WrestlerView from PairedMoveStarted). Tells the
         /// Lock Up hold from a whiff, which share State = LockUp and Move = LockUp.</summary>
@@ -139,6 +145,7 @@ namespace RuralRumble.EditorTooling
             public MoveClipSpec Bodyslam;            // Bodyslam (A, Grappling); contact = impact frame; null -> LockUp hold stand-in
             public MoveClipSpec Bodyslammed;         // Bodyslammed (B, Grappled); contact = impact frame; null -> LockedUp hold stand-in
             public MoveClipSpec IrishWhip;           // Irish Whip whipper (A, Grappling, D-039); contact = release (f4); turn = f2; null -> LockUp hold stand-in
+            public MoveClipSpec Fall;                // Falling Down (D-041): struck_a, fall2, fall3, downed; turn = downed (landing); null -> downed-only PLACEHOLDER
         }
 
         public const string RebuildMenuPath = "Rural Rumble/Rebuild Wrestler Animations";
@@ -238,6 +245,8 @@ namespace RuralRumble.EditorTooling
                 // D-039: gen-barry-irishwhip-4 (Barry whips, 4 frames), imported by ImportIrishWhipSheets.
                 IrishWhip = IrishWhipSpec(LoadSprites(art + "barry_irishwhip.png"), RuralRumble.Combat.IrishWhipChoreography.BarryStaged),
             };
+            // D-041: gen-barry-fall2-D-1 / gen-barry-fall3-B-1 (barry_fall2.png, barry_fall3.png).
+            spec.Fall = FallSpec(art, "barry", spec);
             return Build(spec, writePrefab);
         }
 
@@ -320,7 +329,82 @@ namespace RuralRumble.EditorTooling
                 // D-039: gen-peaux-irishwhip-4 (Peaux whips, 4 frames), imported by ImportIrishWhipSheets.
                 IrishWhip = IrishWhipSpec(LoadSprites(art + "peaux_irishwhip.png"), RuralRumble.Combat.IrishWhipChoreography.PeauxStaged),
             };
+            // D-041: gen-peaux-fall2-D-1 / gen-peaux-fall3-C-1 (peaux_fall2.png, peaux_fall3.png).
+            spec.Fall = FallSpec(art, "peaux", spec);
             return Build(spec, writePrefab);
+        }
+
+        /// <summary>Falling Down default holds (D-041, designer): struck_a 100, fall2 120, fall3 130 ms (0.35 s, the
+        /// knockdown slide's default length), then the downed sprite. The downed hold only sets the clip length (the
+        /// last sprite is held for the rest of the knockdown either way); 500 ms like the Knocked Down clip.</summary>
+        public static readonly float[] FallDefaultHoldsMs = { 100f, 120f, 130f, 500f };
+        /// <summary>Sprite index of the landing (downed sprite) in the fall clip: recorded as its MoveAnimationTable
+        /// TurnTime, where WrestlerView switches from the fall frames' orientation to the downed sprite's.</summary>
+        public const int FallLandIndex = 3;
+
+        /// <summary>
+        /// The Falling Down clip (D-041) for a wrestler whose fall art exists: {prefix}_struck_a, {prefix}_fall2,
+        /// {prefix}_fall3 (single sprites, stored head on the RIGHT, attacker on the left), then the downed sprite (last
+        /// Bodyslammed sprite, stored head on the LEFT). Returns null (downed-only PLACEHOLDER) while either fall PNG is
+        /// missing, so a wrestler's art is picked up as soon as both files are in their art folder. A fall PNG that is
+        /// not yet imported with the wrestler settings is imported here (whole image = one cell, pivot Bottom Center).
+        /// </summary>
+        private static MoveClipSpec FallSpec(string artFolder, string prefix, WrestlerArtSpec spec)
+        {
+            string fall2 = artFolder + prefix + "_fall2.png", fall3 = artFolder + prefix + "_fall3.png";
+            if (AssetImporter.GetAtPath(fall2) == null || AssetImporter.GetAtPath(fall3) == null)
+                return null;
+            if (spec.StruckA == null || spec.Bodyslammed == null)
+                return null;
+            EnsureSingleSpriteImport(fall2);
+            EnsureSingleSpriteImport(fall3);
+            return new MoveClipSpec
+            {
+                Sprites = new[]
+                {
+                    spec.StruckA, LoadSprites(fall2).Single(), LoadSprites(fall3).Single(),
+                    spec.Bodyslammed.Sprites[spec.Bodyslammed.Sprites.Length - 1],
+                },
+                KeyFrames = new[] { 0, 1, 2, 3 }, LengthFrames = 4, ContactIndex = 0, TurnIndex = FallLandIndex,
+                DefaultHoldsMs = (float[])FallDefaultHoldsMs.Clone(),
+            };
+        }
+
+        /// <summary>
+        /// Imports a one-frame wrestler sprite PNG (whole image = one cell, ImportSheet settings: PPU 60, Point,
+        /// uncompressed, pivot Bottom Center) unless it already has exactly those settings. Used for the fall frames.
+        /// </summary>
+        public static string EnsureSingleSpriteImport(string texturePath)
+        {
+            var importer = AssetImporter.GetAtPath(texturePath) as TextureImporter;
+            if (importer == null)
+                throw new InvalidOperationException($"No TextureImporter at {texturePath}.");
+            importer.GetSourceTextureWidthAndHeight(out int width, out int height);
+            Sprite[] sprites = AssetDatabase.LoadAllAssetsAtPath(texturePath).OfType<Sprite>().ToArray();
+            bool ok = importer.textureType == TextureImporterType.Sprite &&
+                      importer.spriteImportMode == SpriteImportMode.Multiple &&
+                      Mathf.Approximately(importer.spritePixelsPerUnit, WrestlerPpu) &&
+                      importer.filterMode == FilterMode.Point &&
+                      importer.textureCompression == TextureImporterCompression.Uncompressed &&
+                      !importer.mipmapEnabled &&
+                      sprites.Length == 1 &&
+                      Mathf.Approximately(sprites[0].rect.width, width) && Mathf.Approximately(sprites[0].rect.height, height) &&
+                      Mathf.Approximately(sprites[0].pivot.x, width / 2f) && Mathf.Approximately(sprites[0].pivot.y, 0f);
+            return ok ? $"{texturePath}: already imported." : ImportSheet(texturePath, width, height);
+        }
+
+        /// <summary>Imports every wrestler's fall frames that exist (D-041; Barry 242x172 / 332x164, one sprite each,
+        /// pivot Bottom Center = the root on the ground). The builders also do this on their own.</summary>
+        public static string ImportFallSheets()
+        {
+            var lines = new List<string>();
+            foreach (string path in new[]
+                     {
+                         "Assets/Art/Wrestlers/Barry/barry_fall2.png", "Assets/Art/Wrestlers/Barry/barry_fall3.png",
+                         "Assets/Art/Wrestlers/Peaux/peaux_fall2.png", "Assets/Art/Wrestlers/Peaux/peaux_fall3.png",
+                     })
+                lines.Add(AssetImporter.GetAtPath(path) == null ? $"{path}: not present." : EnsureSingleSpriteImport(path));
+            return string.Join("\n", lines);
         }
 
         /// <summary>
@@ -635,6 +719,8 @@ namespace RuralRumble.EditorTooling
                 bySlot[SlotIrishWhip] = bySlot[SlotLockUp];
                 standIns += " IrishWhip(=LockUp)";
             }
+            if (!WriteFallClip(spec, folder, bySlot, table))
+                standIns += " Fall(=downed)";
             EditorUtility.SetDirty(table);
 
             AnimatorOverrideController overrides = WriteOverride($"{folder}/{spec.Name}.overrideController", controller, bySlot);
@@ -647,6 +733,33 @@ namespace RuralRumble.EditorTooling
 
             return $"Built {spec.Name}: controller {ControllerPath}, override {AssetDatabase.GetAssetPath(overrides)}, prefab {prefabPath}. " +
                    $"Placeholders: {(standBackPlaceholder ? "StandBack " : "")}{(walkBackPlaceholder ? "WalkBack " : "")}{standIns}".TrimEnd();
+        }
+
+        /// <summary>
+        /// Falling Down (D-041). With fall art: {Name}_Fall.anim = struck_a, fall2, fall3, downed (held), played once at
+        /// native speed with the designer's FrameTiming holds (defaults <see cref="FallDefaultHoldsMs"/>). Its
+        /// MoveAnimationTable entry (Move None, no contact) records the start of the downed sprite as TurnTime: WrestlerView
+        /// draws the fall frames head toward FallSide (stored head-right) before it and the downed sprite (stored head-left)
+        /// mirrored with downedMirrorShift from it, so head and feet never swap sides. Without fall art:
+        /// {Name}_Fall_PLACEHOLDER.anim holds only the downed sprite (no table entry = landed from the start), which is the
+        /// D-038 picture oriented by FallSide. Returns false for the placeholder.
+        /// </summary>
+        private static bool WriteFallClip(WrestlerArtSpec spec, string folder, Dictionary<string, AnimationClip> bySlot,
+            MoveAnimationTable table)
+        {
+            if (spec.Fall != null)
+            {
+                MoveClipSpec f = spec.Fall;
+                TimedClip timed = WriteTimedClip($"{folder}/{spec.Name}_{WrestlerView.FallStateName}.anim", f.Sprites, f.KeyFrames,
+                    f.LengthFrames, false, null, ClipPlayback.Native, -1, f.DefaultHoldsMs, f.KeyFrames[f.TurnIndex]);
+                bySlot[SlotFall] = timed.Clip;
+                table.SetEntry(MoveId.None, timed.Clip, 0f, timed.TurnTime);
+                return true;
+            }
+            Sprite downed = spec.Bodyslammed.Sprites[spec.Bodyslammed.Sprites.Length - 1];
+            bySlot[SlotFall] = WriteSpriteClip($"{folder}/{spec.Name}_{WrestlerView.FallStateName}_PLACEHOLDER.anim",
+                new[] { downed }, new[] { 0 }, 12, loop: false);
+            return false;
         }
 
         // ---------- combat-core stand-ins (PLACEHOLDER) ----------
@@ -716,11 +829,10 @@ namespace RuralRumble.EditorTooling
             // Knocked Down (designer, 2026-11-12): every knockdown shows the wrestler's downed sprite = the last sprite
             // of their own Bodyslammed clip (the same Sprite asset, so the same pivot), held with the rest pose (no
             // offset, rotation or tint). A bodyslam therefore ends in Knocked Down with no visible change (head toward
-            // the slammer). Every other knockdown (strike, run collision, obstacle) is a backward fall: WrestlerView
-            // mirrors this same sprite in place (flip + downedMirrorShift), so the body covers the same ground behind
-            // the root but lies feet toward the opponent (designer, 2026-11-12). No fall animation yet: the sprite appears at
-            // once. 12 frames (0.5 s) long, not looped; the length only matters for WrestlerView's KO-while-down
-            // jump to the end (D-023). Still named _PLACEHOLDER (no fall art), so references stay stable.
+            // the slammer). Every other knockdown (strike, run collision, obstacle, KO from standing) plays the Fall
+            // state instead (D-041, WriteFallClip), which ends on this same sprite oriented by FallSide; this clip is
+            // only shown when there is no fall side. 12 frames (0.5 s) long, not looped; the length only matters for
+            // WrestlerView's KO-while-down jump to the end (D-023). Still named _PLACEHOLDER so references stay stable.
             if (spec.Bodyslammed == null || spec.Bodyslammed.Sprites == null || spec.Bodyslammed.Sprites.Length == 0)
                 throw new ArgumentException($"{spec.Name}: Knocked Down uses the last Bodyslammed sprite; no Bodyslammed art.");
             Sprite[] downed = { spec.Bodyslammed.Sprites[spec.Bodyslammed.Sprites.Length - 1] };
@@ -1056,6 +1168,7 @@ namespace RuralRumble.EditorTooling
             changed |= EnsureMoveState(sm, MoveId.Strike3, SlotStrike3, new Vector3(560, 160));
             changed |= EnsureCombatCoreStates(controller);
             changed |= EnsureLockUpStates(controller);
+            changed |= EnsureFallState(controller);
 
             if (changed)
             {
@@ -1174,6 +1287,47 @@ namespace RuralRumble.EditorTooling
             // held), at MoveSpeed. The runner (B) is State Running and plays the Run state (Move is ignored there).
             changed |= EnsureTimedState(sm, WrestlerView.IrishWhipStateName, SlotIrishWhip, false, CombatState.Grappling,
                 MoveId.IrishWhip, null, new Vector3(820, 560));
+            return changed;
+        }
+
+        /// <summary>
+        /// Falling Down (D-041): parameter Fall (bool, set by WrestlerView); state "Fall" playing Slot_Fall once at 1x;
+        /// Any State -> Fall when (State == KnockedDown or KnockedOut) and Fall. The existing Any State -> KnockedDown /
+        /// KnockedOut transitions get "Fall false" (bodyslam knockdowns keep the downed-sprite clip). Instant, no exit
+        /// time, no self-transition, so a knockout while already falling / lying keeps the Fall state where it is.
+        /// Adds only what is missing.
+        /// </summary>
+        public static bool EnsureFallState(AnimatorController controller)
+        {
+            bool changed = false;
+            if (controller.parameters.All(p => p.name != FallParam))
+            {
+                controller.AddParameter(FallParam, AnimatorControllerParameterType.Bool);
+                changed = true;
+            }
+            AnimatorStateMachine sm = controller.layers[0].stateMachine;
+            foreach (AnimatorStateTransition t in sm.anyStateTransitions)
+            {
+                string dest = t.destinationState != null ? t.destinationState.name : null;
+                if (dest != CombatState.KnockedDown.ToString() && dest != CombatState.KnockedOut.ToString())
+                    continue;
+                if (t.conditions.Any(c => c.parameter == FallParam))
+                    continue;
+                t.AddCondition(AnimatorConditionMode.IfNot, 0f, FallParam);
+                changed = true;
+            }
+            if (sm.states.All(s => s.state.name != WrestlerView.FallStateName))
+            {
+                AnimatorState state = sm.AddState(WrestlerView.FallStateName, new Vector3(40, 360));
+                state.motion = WriteSlotClip(SlotFall, loop: false);
+                state.writeDefaultValues = false;
+                foreach (CombatState downed in new[] { CombatState.KnockedDown, CombatState.KnockedOut })
+                {
+                    AnimatorStateTransition t = AddAnyStateTransition(sm, state, downed);
+                    t.AddCondition(AnimatorConditionMode.If, 0f, FallParam);
+                }
+                changed = true;
+            }
             return changed;
         }
 
@@ -1801,6 +1955,9 @@ namespace RuralRumble.EditorTooling
             CheckMove("IrishWhip", spec.IrishWhip);
             if (spec.IrishWhip != null && (spec.IrishWhip.TurnIndex < 1 || spec.IrishWhip.TurnIndex >= spec.IrishWhip.Sprites.Length))
                 throw new ArgumentException("IrishWhip: turn index out of range.");
+            CheckMove("Fall", spec.Fall);
+            if (spec.Fall != null && (spec.Fall.TurnIndex < 1 || spec.Fall.TurnIndex >= spec.Fall.Sprites.Length))
+                throw new ArgumentException("Fall: landing index out of range.");
         }
 
         private static void CheckMove(string label, MoveClipSpec move)

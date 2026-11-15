@@ -52,6 +52,10 @@ namespace RuralRumble.Combat
         private float knockdownElapsed;
         private float knockdownLeft;
 
+        // Knockdown fall (D-041): which way the fall goes on x (0 = none) and seconds of the slide done so far.
+        private int fallSide;
+        private float slideElapsed;
+
         /// <param name="definition">Which wrestler this is (Barry, Peaux), or null. Combat uses it only to pick
         /// per-wrestler tuning entries (bodyslam Startup, D-033); the rules are the same for both.</param>
         public CombatWrestler(WrestlerId id, CombatTuning tuning, CombatEvents events, Vector2 startFeet, int startHorizontalFacing,
@@ -77,6 +81,9 @@ namespace RuralRumble.Combat
         public Vector2 Position => position;
         public Vector2 Facing => facing;
         public int HorizontalFacing => horizontalFacing;
+        /// <summary>D-041: +1 / -1 = the knockdown (or knockout from standing) falls toward +x / -x and slides that way;
+        /// 0 = no fall (not down, bodyslam knockdown, knocked out while already down).</summary>
+        public int FallSide => fallSide;
 
         /// <summary>The selected wrestler this combat object plays, or null (tests, match built without one).</summary>
         public WrestlerDefinition Definition { get; }
@@ -289,7 +296,42 @@ namespace RuralRumble.Combat
             {
                 knockdownLeft = 0f;
                 SetState(BaseState);
+                return;
             }
+
+            PendingDelta = SlideDelta(dt);
+        }
+
+        /// <summary>
+        /// D-041 knockout slide, after the match is over (CombatMatch.Tick while IsOver): sets PendingDelta to this tick's
+        /// share of a Knocked Out wrestler's unfinished slide, else zero. Nothing else changes: no timers, states or events.
+        /// A knockout with FallSide 0 (bodyslam, stomp while down) does not slide.
+        /// </summary>
+        internal void ThinkKnockoutSlide(float dt)
+        {
+            PendingDelta = state == CombatState.KnockedOut ? SlideDelta(dt) : Vector2.zero;
+        }
+
+        /// <summary>
+        /// D-041 knockdown slide: this tick's share of knockdownSlideDistance along <see cref="fallSide"/>, linear over
+        /// knockdownSlideDuration (both read now). Moved by CombatMatch like any other movement (arena ends, obstacles,
+        /// wrestler blocking). Has no effect on the knockdown timer.
+        /// </summary>
+        private Vector2 SlideDelta(float dt)
+        {
+            if (fallSide == 0)
+                return Vector2.zero;
+            float before = SlideProgress(slideElapsed);
+            slideElapsed += dt;
+            float after = SlideProgress(slideElapsed);
+            return new Vector2(fallSide * Mathf.Max(0f, tuning.knockdownSlideDistance) * (after - before), 0f);
+        }
+
+        private float SlideProgress(float t)
+        {
+            if (t <= 0f) return 0f;
+            float duration = tuning.knockdownSlideDuration;
+            return duration <= 0f ? 1f : Mathf.Clamp01(t / duration);
         }
 
         private void Regenerate(float dt)
@@ -502,6 +544,7 @@ namespace RuralRumble.Combat
             phaseTime = 0f;
             if (ended != MoveId.None)
                 events.RaiseMovePhaseChanged(Id, ended, MovePhase.None);
+            BeginFall(0); // D-041: the bodyslam keeps its own animation
             SetState(CombatState.KnockedOut);
             return true;
         }
@@ -516,7 +559,7 @@ namespace RuralRumble.Combat
             phaseTime = 0f;
             if (ended != MoveId.None)
                 events.RaiseMovePhaseChanged(Id, ended, MovePhase.None);
-            KnockDown();
+            KnockDown(0); // D-041: no fall or slide; the bodyslam keeps its own animation
         }
 
         internal void SetPairedPhase(MovePhase next)
@@ -646,9 +689,11 @@ namespace RuralRumble.Combat
 
         // ================================================================ Being hit
 
-        /// <summary>A strike or stomp connected. Returns the damage actually removed.</summary>
-        internal float ReceiveHit(WrestlerId attacker, MoveId hitMove, Vector2 contactPoint)
+        /// <summary>A strike or stomp connected. Returns the damage actually removed. <paramref name="attackerX"/> is the
+        /// attacker's feet x, for the fall direction (D-041).</summary>
+        internal float ReceiveHit(WrestlerId attacker, MoveId hitMove, Vector2 contactPoint, float attackerX)
         {
+            bool wasDown = IsDown;
             InterruptMove();
             float damage = TakeDamage(tuning.DamageFor(hitMove), raise: false);
             events.RaiseHitLanded(new HitInfo(attacker, Id, hitMove, damage, contactPoint));
@@ -656,6 +701,8 @@ namespace RuralRumble.Combat
 
             if (health <= 0f)
             {
+                // D-041: a knockout from standing falls away from the attacker; a stomp KO while down does not fall again.
+                BeginFall(wasDown ? 0 : AwayFrom(attackerX));
                 SetState(CombatState.KnockedOut);
             }
             else if (hitMove == MoveId.Stomp)
@@ -664,8 +711,8 @@ namespace RuralRumble.Combat
             }
             else if (hitMove == MoveId.Strike3 || health < tuning.recoveringThreshold)
             {
-                // COMBAT_SPEC Knocked Down; the threshold check is after the damage (D-029).
-                KnockDown();
+                // COMBAT_SPEC Knocked Down; the threshold check is after the damage (D-029). Falls away from the attacker (D-041).
+                KnockDown(AwayFrom(attackerX));
             }
             else
             {
@@ -686,32 +733,57 @@ namespace RuralRumble.Combat
             InterruptMove();
             events.RaiseObstacleHit(Id, contactPoint);
             TakeDamage(damage, raise: true);
+            // D-041: away from the obstacle = opposite the run direction.
+            int away = runDirection >= 0 ? -1 : 1;
             if (health <= 0f)
             {
+                BeginFall(away);
                 SetState(CombatState.KnockedOut);
                 return;
             }
             if (health < tuning.recoveringThreshold)
             {
                 // D-030: below the Recovering threshold after the damage, a crash knocks down like a strike.
-                KnockDown();
+                KnockDown(away);
                 return;
             }
             struckLeft = tuning.struckDuration;
             SetState(CombatState.Struck);
         }
 
-        /// <summary>A runner met this wrestler, or this wrestler ran into the opponent (D-029): both go down.</summary>
-        internal void RunCollision()
+        /// <summary>A runner met this wrestler, or this wrestler ran into the opponent (D-029): both go down, each
+        /// falling away from the other (D-041). <paramref name="otherX"/> is the other wrestler's feet x.</summary>
+        internal void RunCollision(float otherX)
         {
+            int away = AwayFrom(otherX);
             InterruptMove();
             TakeDamage(tuning.runCollisionDamage, raise: true);
             if (health <= 0f)
             {
+                BeginFall(away);
                 SetState(CombatState.KnockedOut);
                 return;
             }
-            KnockDown();
+            KnockDown(away);
+        }
+
+        /// <summary>
+        /// D-041 fall direction: away from <paramref name="sourceX"/> on x. On an exact tie (e.g. stacked vertically) the
+        /// opposite of <see cref="HorizontalFacing"/> (with Focus the wrestler faces the opponent, so falls the other way).
+        /// </summary>
+        private int AwayFrom(float sourceX)
+        {
+            float d = position.x - sourceX;
+            if (d > 1e-5f) return 1;
+            if (d < -1e-5f) return -1;
+            return -horizontalFacing;
+        }
+
+        /// <summary>Sets the fall side for a knockdown or knockout starting now and restarts the slide (D-041).</summary>
+        private void BeginFall(int side)
+        {
+            fallSide = side;
+            slideElapsed = 0f;
         }
 
         private float TakeDamage(float amount, bool raise)
@@ -726,8 +798,10 @@ namespace RuralRumble.Combat
             return damage;
         }
 
-        private void KnockDown()
+        /// <param name="side">D-041 fall side: +1 / -1 falls and slides that way, 0 = no fall (bodyslam).</param>
+        private void KnockDown(int side)
         {
+            BeginFall(side);
             // D-025: linear in health lost, from min (full health) to max (near 0).
             float lost = Mathf.Clamp01((tuning.maxHealth - health) / Mathf.Max(1e-4f, tuning.maxHealth));
             float duration = Mathf.Lerp(tuning.minKnockdownTime, tuning.maxKnockdownTime, lost);
@@ -757,6 +831,8 @@ namespace RuralRumble.Combat
             state = next;
             if (next != CombatState.Running)
                 whipRun = false; // the run origin lives only as long as the run
+            if (next != CombatState.KnockedDown && next != CombatState.KnockedOut)
+                fallSide = 0; // D-041: the fall side lives only as long as the knockdown / knockout
             events.RaiseStateChanged(Id, prev, next);
         }
 

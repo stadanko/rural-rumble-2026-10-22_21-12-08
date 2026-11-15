@@ -332,6 +332,13 @@ namespace RuralRumble.EditorTooling
                 case "IrishWhip":
                     DrawIrishWhipCombatTiming(clip);
                     return;
+                case "Fall":
+                    // D-041: the fall plays at the times above; Combat slides the wrestler over knockdownSlideDuration.
+                    single = tuningSo?.FindProperty(nameof(CombatTuning.knockdownSlideDuration));
+                    singleLabel = "Knockback slide lasts (s)";
+                    note = "Combat slides the falling wrestler over this time. The fall frames before the downed sprite " +
+                           "(struck_a + fall2 + fall3, default 350 ms) are meant to match it; the downed sprite is then held.";
+                    break;
                 case "LockUp": case "LockedUp":
                     single = tuningSo?.FindProperty(nameof(CombatTuning.lockUpTimer));
                     singleLabel = "Lock-up lasts up to (s)";

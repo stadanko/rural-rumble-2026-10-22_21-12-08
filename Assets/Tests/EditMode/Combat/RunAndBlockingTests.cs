@@ -149,7 +149,8 @@ namespace RuralRumble.Tests.EditMode
             Assert.AreEqual(CombatState.Running, h.Player.State, "the run continues past the downed opponent");
             Assert.AreEqual(1, h.KnockDowns.Count, "no run collision with a downed opponent");
             Assert.AreEqual(CombatState.KnockedDown, h.Cpu.State);
-            V2Assert.AreEqual(new Vector2(12f, -12f), h.Cpu.Position, 1e-6f, "the downed wrestler is not moved");
+            // D-041: the CPU's own knockdown slide (away from the player's strike) finished long before the run.
+            V2Assert.AreEqual(new Vector2(12f + h.Tuning.knockdownSlideDistance, -12f), h.Cpu.Position, 1e-4f, "the downed wrestler is not moved by the runner");
         }
 
         // Walking (not running) into a downed wrestler still blocks (Combat's choice; D-030 covers runs only).

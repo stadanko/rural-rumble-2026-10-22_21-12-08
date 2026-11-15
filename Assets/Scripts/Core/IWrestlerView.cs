@@ -23,5 +23,9 @@ namespace RuralRumble.Core
         /// presentation can flip the sprite and a run started while facing up/down goes this way (D-020).
         /// </summary>
         int HorizontalFacing { get; }
+        /// <summary>Which way the current knockdown's fall goes on x: +1 head falls toward +x, -1 toward -x,
+        /// 0 = no fall (not knocked down / out, bodyslam knockdown, or knocked out while already down). Set when the
+        /// knockdown starts; kept for the whole knockdown or KO.</summary>
+        int FallSide { get; }
     }
 }

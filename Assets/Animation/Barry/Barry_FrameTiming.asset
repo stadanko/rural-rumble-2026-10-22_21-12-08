@@ -745,3 +745,29 @@ MonoBehaviour:
       HoldMs: 330
       DefaultHoldMs: 330
       BuiltInHoldMs: 330
+  - ClipName: Barry_Fall
+    Loops: 0
+    Playback: 0
+    ContactStep: -1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: 4339097396219477855, guid: 2cadb093ce329324aa1a6a189603abfa, type: 3}
+      PoseOnly: 0
+      HoldMs: 100
+      DefaultHoldMs: 100
+      BuiltInHoldMs: 100
+    - Sprite: {fileID: -612858410896172142, guid: e70a7b4ba0616ea4d910311534a131c5, type: 3}
+      PoseOnly: 0
+      HoldMs: 120
+      DefaultHoldMs: 120
+      BuiltInHoldMs: 120
+    - Sprite: {fileID: 1126651052226612292, guid: 6d31539d6120486498a1ee3492c66659, type: 3}
+      PoseOnly: 0
+      HoldMs: 130
+      DefaultHoldMs: 130
+      BuiltInHoldMs: 130
+    - Sprite: {fileID: 6759615120426611279, guid: 8a5e886631e4e244d86a273f9df66709, type: 3}
+      PoseOnly: 0
+      HoldMs: 500
+      DefaultHoldMs: 500
+      BuiltInHoldMs: 500

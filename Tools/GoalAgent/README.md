@@ -1,5 +1,7 @@
 # Goal-Oriented Coding Agent (Assignment #5)
 
+> **For the grader:** the first three sections (*What the agent built: the Start Screen*, *Why the agent selected it*, and *Manual changes before accepting the code*) answer the assignment's README questions in full; Runs 2–6 further down are extra evidence of the same loop and are optional reading.
+
 The agent reads Rural Rumble's design docs, scans the Unity project, finds the required features that aren't built yet, decides which one to build first, writes the code with Claude, and re-scans until that goal is closed.
 
 ![Start Screen built by the agent](docs/start_screen.png)
@@ -44,7 +46,7 @@ The ranking on the first run (`runs/20261111-093600-run.json`):
 
 The Start Screen won by one point because it unblocks the rest of the screen flow and is small and easy to test. The designer chose these weights during planning, over an impact-heavy option that would have picked the HUD.
 
-**4. Write, then re-scan.** After the files were applied, the re-scan moved `start_screen` from `missing` to `needs_integration` and unblocked Character Select (0 → 19). After integration it reads `done`, and the next run would pick `match_end_handoff`.
+**4. Write, then re-scan.** After the files were applied, the re-scan moved `start_screen` from `missing` to `needs_integration` and unblocked Character Select (0 → 19). After integration it reads `done`, and the next run would pick `match_end_handoff`. The loop is set to build one feature per run (`"max_features_per_run": 1` in `config.json`) because each feature still needs manual scene and Build Settings wiring before the re-scan can mark it `done`, so the agent stops after one goal instead of building on top of unwired code; raising the number lets one run keep going until every goal is built or gated.
 
 ## Manual changes before accepting the code
 

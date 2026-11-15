@@ -154,10 +154,9 @@ namespace RuralRumble.Tests.PlayMode
         }
 
         // D-024: each hit restarts Struck without a StateChanged; presentation restarts the Struck clip on HitLanded.
-        // The two approved hit reactions alternate per hit (presentation only): first hit "Struck" (StruckA sprite),
-        // second hit "StruckB" (StruckB sprite), each played from the start.
+        // D-040: every non-knockdown hit shows the "StruckB" reaction (StruckB sprite), played from the start each hit.
         [UnityTest]
-        public IEnumerator Struck_ClipRestartsOnEveryHit_AlternatingReactions()
+        public IEnumerator Struck_ClipRestartsOnEveryHit_AlwaysStruckB()
         {
             Build(new Vector2(10f, -12f), new Vector2(12f, -12f), t => t.struckDuration = 2f);
             yield return null;
@@ -166,9 +165,9 @@ namespace RuralRumble.Tests.PlayMode
             yield return Settle();
             yield return new WaitForSeconds(0.3f);
             AnimatorStateInfo before = StateOf(cpuView);
-            Assert.IsTrue(before.IsName("Struck"), "Animator should be in Struck (first reaction) on the first hit");
+            Assert.IsTrue(before.IsName("StruckB"), "Animator should be in StruckB on the first hit");
             Assert.Greater(before.normalizedTime, 0.4f, "setup: the Struck clip has advanced");
-            Assert.AreEqual("barry_struck_a_0", cpuView.SpriteRenderer.sprite.name, "first hit shows the StruckA sprite");
+            Assert.AreEqual("barry_struck_b_0", cpuView.SpriteRenderer.sprite.name, "first hit shows the StruckB sprite");
 
             int struckEntries = 0;
             match.Events.StateChanged += (id, from, to) => { if (id == WrestlerId.Cpu && to == CombatState.Struck) struckEntries++; };
@@ -181,7 +180,7 @@ namespace RuralRumble.Tests.PlayMode
 
             yield return Settle();
             AnimatorStateInfo after = StateOf(cpuView);
-            Assert.IsTrue(after.IsName("StruckB"), "the second consecutive hit shows the other reaction");
+            Assert.IsTrue(after.IsName("StruckB"), "the second consecutive hit shows StruckB again");
             Assert.Less(after.normalizedTime, before.normalizedTime - 0.25f, "the reaction should play from the start on the second hit");
             Assert.AreEqual("barry_struck_b_0", cpuView.SpriteRenderer.sprite.name, "second hit shows the StruckB sprite");
         }

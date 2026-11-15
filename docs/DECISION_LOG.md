@@ -396,6 +396,16 @@ Agents: read this before starting work. If a task conflicts with a decision here
 
 ---
 
+## D-040: Struck B for every non-knockdown hit
+
+- **Date:** 2026-11-15
+- **Decided by:** Designer
+- **Decision:** Barry and Peaux show their Struck B sprite (upright head snap) for every hit that doesn't knock them down. The two reactions no longer alternate. The Struck A sprites (lean back) and clips stay in the project, unused.
+- **Why:** Both Struck A sprites lean back too far.
+- **Affects:** WrestlerView (presentation only), CombatPresentationTests, docs/ARCHITECTURE.md, docs/ACCEPTANCE_TESTS.md. No combat rule or timing change.
+
+---
+
 ## Open Questions
 
 Not yet decided. Agents must not resolve these on their own.

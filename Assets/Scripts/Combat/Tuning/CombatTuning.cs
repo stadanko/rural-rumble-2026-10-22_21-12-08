@@ -104,6 +104,8 @@ namespace RuralRumble.Combat
         [Min(0f)] public float knockdownSlideDistance = 0.5f;
         [Tooltip("Set (D-041). Seconds the knockdown slide takes (linear), from the first tick after the knockdown starts. Matches the fall animation's default length. 0 = the whole slide in one tick.")]
         [Min(0f)] public float knockdownSlideDuration = 0.35f;
+        [Tooltip("COMBAT_SPEC Starting point (D-043). Get-up phase at the end of every knockdown, seconds: once the (mashable) knockdown timer runs out the wrestler is still Knocked Down for this long (crouch), with no control; mashing does not shorten it and only a Stomp can hit. 0 = gets up at once (pre-D-043).")]
+        [Min(0f)] public float getUpTime = 0.25f;
 
         // ------------------------------------------------------------------ Movement
         [Header("Movement")]

@@ -339,7 +339,7 @@ namespace RuralRumble.Tests.EditMode
                 (h.Tuning.maxHealth - h.Cpu.Health) / h.Tuning.maxHealth);
             Assert.AreEqual(expected, h.KnockDowns[0].duration, 1e-4f);
             float t = h.TickUntil(() => h.Cpu.State != CombatState.KnockedDown, 5f, Dt);
-            Assert.AreEqual(h.KnockDowns[0].duration, t, 2 * Dt);
+            Assert.AreEqual(h.KnockDowns[0].duration + h.Tuning.getUpTime, t, 2 * Dt, "timer plus the D-043 get-up");
             Assert.AreEqual(h.Tuning.maxHealth - h.Tuning.strike1Damage, h.Cpu.Health, 1e-4f, "no extra damage");
         }
     }

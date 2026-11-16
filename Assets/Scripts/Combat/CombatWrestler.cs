@@ -52,6 +52,10 @@ namespace RuralRumble.Combat
         private float knockdownElapsed;
         private float knockdownLeft;
 
+        // Get-up phase (D-043): the last part of Knocked Down, after the mashable timer has run out.
+        private bool gettingUp;
+        private float getUpLeft;
+
         // Knockdown fall (D-041): which way the fall goes on x (0 = none) and seconds of the slide done so far.
         private int fallSide;
         private float slideElapsed;
@@ -84,6 +88,13 @@ namespace RuralRumble.Combat
         /// <summary>D-041: +1 / -1 = the knockdown (or knockout from standing) falls toward +x / -x and slides that way;
         /// 0 = no fall (not down, bodyslam knockdown, knocked out while already down).</summary>
         public int FallSide => fallSide;
+        /// <summary>D-043: Knocked Down and in the get-up phase (the mashable knockdown timer has run out). Still down:
+        /// no control, no mashing, only a Stomp can hit. False in every other state.</summary>
+        public bool IsGettingUp => state == CombatState.KnockedDown && gettingUp;
+        /// <summary>D-043: seconds left in the get-up phase; 0 when not getting up.</summary>
+        public float GetUpTimeRemaining => IsGettingUp ? getUpLeft : 0f;
+        /// <summary>D-043: the tuned get-up length (<c>CombatTuning.getUpTime</c>, read now), in any state.</summary>
+        public float GetUpDuration => tuning.getUpTime;
 
         /// <summary>The selected wrestler this combat object plays, or null (tests, match built without one).</summary>
         public WrestlerDefinition Definition { get; }
@@ -91,7 +102,8 @@ namespace RuralRumble.Combat
         // ---------------------------------------------------------------- Extra read-only state (tests, debugging)
         /// <summary>True when facing up, up-left or up-right (STYLE_GUIDE "Walking Back Facing").</summary>
         public bool IsBackFacing => facing.y > 0.01f;
-        /// <summary>Seconds left in the current knockdown (after mashing); 0 when not Knocked Down.</summary>
+        /// <summary>Seconds left on the current knockdown's mashable timer (after mashing); 0 when not Knocked Down and
+        /// during the get-up phase (D-043, see <see cref="GetUpTimeRemaining"/>).</summary>
         public float KnockdownTimeRemaining => state == CombatState.KnockedDown ? knockdownLeft : 0f;
         /// <summary>Seconds left in Struck; 0 when not Struck.</summary>
         public float StruckTimeRemaining => state == CombatState.Struck ? struckLeft : 0f;
@@ -280,6 +292,15 @@ namespace RuralRumble.Combat
 
         private void ThinkKnockedDown(float dt, in WrestlerIntent intent)
         {
+            if (gettingUp)
+            {
+                // D-043: get-up phase. Every button is ignored (mashing affects only the knockdown timer); no slide.
+                getUpLeft -= dt;
+                if (getUpLeft <= 0f)
+                    GetUp();
+                return;
+            }
+
             knockdownElapsed += dt;
             knockdownLeft -= dt;
 
@@ -294,12 +315,26 @@ namespace RuralRumble.Combat
 
             if (knockdownLeft <= 0f)
             {
+                // D-043: the knockdown timer ran out; the get-up phase (still Knocked Down) starts. The tick's overshoot
+                // past the timer counts toward it, so the whole knockdown lasts exactly timer + get-up time.
+                float overshoot = -knockdownLeft;
                 knockdownLeft = 0f;
-                SetState(BaseState);
+                gettingUp = true;
+                getUpLeft = tuning.getUpTime - overshoot;
+                if (getUpLeft <= 0f)
+                    GetUp();
                 return;
             }
 
             PendingDelta = SlideDelta(dt);
+        }
+
+        /// <summary>End of the knockdown (after the get-up phase): Standing or Recovering by health (COMBAT_SPEC).</summary>
+        private void GetUp()
+        {
+            gettingUp = false;
+            getUpLeft = 0f;
+            SetState(BaseState);
         }
 
         /// <summary>
@@ -807,6 +842,8 @@ namespace RuralRumble.Combat
             float duration = Mathf.Lerp(tuning.minKnockdownTime, tuning.maxKnockdownTime, lost);
             knockdownElapsed = 0f;
             knockdownLeft = duration;
+            gettingUp = false;
+            getUpLeft = 0f;
             SetState(CombatState.KnockedDown);
             events.RaiseKnockedDown(Id, duration);
         }
@@ -833,6 +870,8 @@ namespace RuralRumble.Combat
                 whipRun = false; // the run origin lives only as long as the run
             if (next != CombatState.KnockedDown && next != CombatState.KnockedOut)
                 fallSide = 0; // D-041: the fall side lives only as long as the knockdown / knockout
+            if (next != CombatState.KnockedDown)
+                gettingUp = false; // D-043: the get-up phase is part of Knocked Down only (a Stomp KO ends it)
             events.RaiseStateChanged(Id, prev, next);
         }
 

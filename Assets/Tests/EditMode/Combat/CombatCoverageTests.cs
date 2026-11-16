@@ -189,7 +189,7 @@ namespace RuralRumble.Tests.EditMode
             h.TickUntil(() => h.KnockDowns.Count > 0, 2f, Dt);
             for (int i = 0; i < 400; i++) h.CpuInput.PressStrikeOnce();
             float t = h.TickUntil(() => h.Cpu.State != CombatState.KnockedDown, 5f, Dt);
-            Assert.AreEqual(h.Tuning.shortestKnockdown, t, 2 * Dt);
+            Assert.AreEqual(h.Tuning.shortestKnockdown + h.Tuning.getUpTime, t, 2 * Dt, "plus the D-043 get-up");
         }
 
         // COMBAT_SPEC: each press removes the tuned share of the *remaining* time (compounding), so two presses
@@ -435,6 +435,7 @@ namespace RuralRumble.Tests.EditMode
                 Assert.AreEqual(3.0f, t.maxKnockdownTime, e, "Maximum knockdown time");
                 Assert.AreEqual(0.08f, t.mashReductionPerPress, e, "Mash reduction per press");
                 Assert.AreEqual(0.5f, t.shortestKnockdown, e, "Shortest possible knockdown");
+                Assert.AreEqual(0.25f, t.getUpTime, e, "Get-up time (D-043)");
                 Assert.AreEqual(3f, t.cpuMashRate, e, "CPU mash rate");
                 // D-030: CPU strike-back chance while Recovering starts at 30%.
                 Assert.AreEqual(0.3f, t.cpuRecoverCounterChance, e, "CPU Recovering strike-back chance");

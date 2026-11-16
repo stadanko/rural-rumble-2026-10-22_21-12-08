@@ -18,7 +18,8 @@ namespace RuralRumble.EditorTooling
     /// ImportStruckSheets first), and PLACEHOLDER stand-ins for
     /// Recovering (stand + walk) built from the stand/walk sprites. Knocked Down / Knocked Out
     /// hold the wrestler's downed sprite (last Bodyslammed sprite) after a bodyslam; every other knockdown / knockout
-    /// from standing plays the Fall clip (D-041: struck_a, fall2, fall3, downed; see WriteFallClip).
+    /// from standing plays the Fall clip (D-041: struck_a, fall2, fall3, downed; see WriteFallClip). The get-up at the end
+    /// of every knockdown plays the reusable Crouch state (D-043: {Name}_Crouch.anim, one approved sprite held).
     ///
     /// Menu: Rural Rumble/Tooling/Build Barry Animations + Prefab, Rural Rumble/Tooling/Build Peaux Animations + Prefab.
     /// A wrestler with no run or strike art gets PLACEHOLDER stand-ins for those too (WriteMissingArtStandIns).
@@ -94,6 +95,12 @@ namespace RuralRumble.EditorTooling
         public const string SlotFall = "Slot_" + WrestlerView.FallStateName;
         /// <summary>Animator bool parameter: this knockdown / knockout plays the fall (D-041). Set by WrestlerView.</summary>
         public const string FallParam = "Fall";
+        /// <summary>Crouch (D-043): one approved sprite held. Played by the "Crouch" state; today only for the get-up at
+        /// the end of a knockdown (State == KnockedDown and Crouch). A reusable state: later uses (getting back in the
+        /// ring, picking up an opponent) add their own transition into it.</summary>
+        public const string SlotCrouch = "Slot_" + WrestlerView.CrouchStateName;
+        /// <summary>Animator bool parameter: show the crouch (D-043). Set by WrestlerView while the wrestler gets up.</summary>
+        public const string CrouchParam = "Crouch";
 
         /// <summary>Animator bool parameter: in a paired move (set by WrestlerView from PairedMoveStarted). Tells the
         /// Lock Up hold from a whiff, which share State = LockUp and Move = LockUp.</summary>
@@ -152,6 +159,7 @@ namespace RuralRumble.EditorTooling
             public MoveClipSpec Bodyslammed;         // Bodyslammed (B, Grappled); contact = impact frame; null -> LockedUp hold stand-in
             public MoveClipSpec IrishWhip;           // Irish Whip whipper (A, Grappling, D-039); contact = release (f4); turn = f2; null -> LockUp hold stand-in
             public MoveClipSpec Fall;                // Falling Down (D-041): struck_a, fall2, fall3, downed; turn = downed (landing); null -> downed-only PLACEHOLDER
+            public Sprite Crouch;                    // Crouch (D-043), the get-up; null -> PLACEHOLDER (StandFront pose)
         }
 
         public const string RebuildMenuPath = "Rural Rumble/Rebuild Wrestler Animations";
@@ -255,6 +263,8 @@ namespace RuralRumble.EditorTooling
             };
             // D-041: gen-barry-fall2-D-1 / gen-barry-fall3-B-1 (barry_fall2.png, barry_fall3.png).
             spec.Fall = FallSpec(art, "barry", spec);
+            // D-043: barry_crouch.png (186x175, root at (93,175) = Bottom Center), drawn at the root.
+            spec.Crouch = CrouchSprite(art + "barry_crouch.png");
             return Build(spec, writePrefab);
         }
 
@@ -341,6 +351,8 @@ namespace RuralRumble.EditorTooling
             };
             // D-041: gen-peaux-fall2-D-1 / gen-peaux-fall3-C-1 (peaux_fall2.png, peaux_fall3.png).
             spec.Fall = FallSpec(art, "peaux", spec);
+            // D-043: peaux_crouch.png (192x145, root at (96,145) = Bottom Center), drawn at the root.
+            spec.Crouch = CrouchSprite(art + "peaux_crouch.png");
             return Build(spec, writePrefab);
         }
 
@@ -413,6 +425,29 @@ namespace RuralRumble.EditorTooling
                          "Assets/Art/Wrestlers/Barry/barry_fall2.png", "Assets/Art/Wrestlers/Barry/barry_fall3.png",
                          "Assets/Art/Wrestlers/Peaux/peaux_fall2.png", "Assets/Art/Wrestlers/Peaux/peaux_fall3.png",
                      })
+                lines.Add(AssetImporter.GetAtPath(path) == null ? $"{path}: not present." : EnsureSingleSpriteImport(path));
+            return string.Join("\n", lines);
+        }
+
+        /// <summary>
+        /// The Crouch sprite (D-043) for a wrestler, imported with the wrestler settings first if needed (whole image =
+        /// one cell, PPU 60, Point, uncompressed, pivot Bottom Center = the root). Null (PLACEHOLDER clip) while the PNG
+        /// is missing.
+        /// </summary>
+        private static Sprite CrouchSprite(string texturePath)
+        {
+            if (AssetImporter.GetAtPath(texturePath) == null)
+                return null;
+            EnsureSingleSpriteImport(texturePath);
+            return LoadSprites(texturePath).Single();
+        }
+
+        /// <summary>Imports both wrestlers' crouch sprites (D-043; Barry 186x175, Peaux 192x145, one sprite each, pivot
+        /// Bottom Center = the root on the ground). The builders also do this on their own.</summary>
+        public static string ImportCrouchSheets()
+        {
+            var lines = new List<string>();
+            foreach (string path in new[] { "Assets/Art/Wrestlers/Barry/barry_crouch.png", "Assets/Art/Wrestlers/Peaux/peaux_crouch.png" })
                 lines.Add(AssetImporter.GetAtPath(path) == null ? $"{path}: not present." : EnsureSingleSpriteImport(path));
             return string.Join("\n", lines);
         }
@@ -734,6 +769,13 @@ namespace RuralRumble.EditorTooling
             }
             if (!WriteFallClip(spec, folder, bySlot, table))
                 standIns += " Fall(=downed)";
+            // D-043: the crouch, one sprite held (not looped). WrestlerView shows it for the whole get-up at the root (no
+            // offset; the front boot lines up with the stand). No art: the stand sprite stands in.
+            bySlot[SlotCrouch] = spec.Crouch != null
+                ? WriteSpriteClip($"{folder}/{spec.Name}_{WrestlerView.CrouchStateName}.anim", new[] { spec.Crouch }, new[] { 0 }, 6, loop: false)
+                : WriteSpriteClip($"{folder}/{spec.Name}_{WrestlerView.CrouchStateName}_PLACEHOLDER.anim", new[] { spec.StandFront }, new[] { 0 }, 6, loop: false);
+            if (spec.Crouch == null)
+                standIns += " Crouch";
             EditorUtility.SetDirty(table);
 
             AnimatorOverrideController overrides = WriteOverride($"{folder}/{spec.Name}.overrideController", controller, bySlot);
@@ -1187,6 +1229,7 @@ namespace RuralRumble.EditorTooling
             changed |= EnsureCombatCoreStates(controller);
             changed |= EnsureLockUpStates(controller);
             changed |= EnsureFallState(controller);
+            changed |= EnsureCrouchState(controller);
 
             if (changed)
             {
@@ -1345,6 +1388,45 @@ namespace RuralRumble.EditorTooling
                     AnimatorStateTransition t = AddAnyStateTransition(sm, state, downed);
                     t.AddCondition(AnimatorConditionMode.If, 0f, FallParam);
                 }
+                changed = true;
+            }
+            return changed;
+        }
+
+        /// <summary>
+        /// Crouch (D-043): parameter Crouch (bool, set by WrestlerView); state "Crouch" playing Slot_Crouch once at 1x;
+        /// Any State -> Crouch when State == KnockedDown and Crouch (the get-up at the end of a knockdown). The existing
+        /// Any State -> KnockedDown / KnockedOut / Fall transitions get "Crouch false", so the crouch wins over the lying
+        /// pose while it is set. Instant, no exit time, no self-transition. The state is reusable: a later use (getting
+        /// back in the ring, picking up an opponent) adds its own Any State transition into it. Adds only what is missing.
+        /// </summary>
+        public static bool EnsureCrouchState(AnimatorController controller)
+        {
+            bool changed = false;
+            if (controller.parameters.All(p => p.name != CrouchParam))
+            {
+                controller.AddParameter(CrouchParam, AnimatorControllerParameterType.Bool);
+                changed = true;
+            }
+            AnimatorStateMachine sm = controller.layers[0].stateMachine;
+            foreach (AnimatorStateTransition t in sm.anyStateTransitions)
+            {
+                string dest = t.destinationState != null ? t.destinationState.name : null;
+                if (dest != CombatState.KnockedDown.ToString() && dest != CombatState.KnockedOut.ToString() &&
+                    dest != WrestlerView.FallStateName)
+                    continue;
+                if (t.conditions.Any(c => c.parameter == CrouchParam))
+                    continue;
+                t.AddCondition(AnimatorConditionMode.IfNot, 0f, CrouchParam);
+                changed = true;
+            }
+            if (sm.states.All(s => s.state.name != WrestlerView.CrouchStateName))
+            {
+                AnimatorState state = sm.AddState(WrestlerView.CrouchStateName, new Vector3(40, 440));
+                state.motion = WriteSlotClip(SlotCrouch, loop: false);
+                state.writeDefaultValues = false;
+                AnimatorStateTransition t = AddAnyStateTransition(sm, state, CombatState.KnockedDown);
+                t.AddCondition(AnimatorConditionMode.If, 0f, CrouchParam);
                 changed = true;
             }
             return changed;

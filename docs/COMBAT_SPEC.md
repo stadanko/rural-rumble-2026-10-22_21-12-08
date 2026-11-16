@@ -134,6 +134,13 @@ When in a Knocked Down state
 - The wrestler can push the strike or grapple buttons repeatedly to help speed up the Knocked Down state timer by a percentage. The CPU mashes too, at a tunable rate (D-025).
 - A Knocked Down wrestler can be hit only by a Stomp (D-025). There is no invulnerability after getting up.
 
+Get-up phase (D-043)
+
+- When the knockdown timer runs out, the wrestler does not stand at once: he gets up over the **Get-up time** (0.25 s, tunable), shown as a crouch. Every knockdown, including the bodyslam receiver's, is that much longer. After it he returns to Standing or Recovering as above.
+- The get-up is still part of the Knocked Down state, and every Knocked Down rule still applies: no control, only a Stomp can hit him (same stomp rules), a Stomp can knock him out, facing stays locked, and the CPU treats him the same as any Knocked Down wrestler.
+- Mashing affects only the knockdown timer; presses during the get-up do nothing, so mashing never shortens the get-up.
+- The knockback slide (D-041) belongs to the knockdown timer: the get-up does not extend it.
+
 Falling down and knockback slide (D-041)
 
 - **Which knockdowns fall:** a strike knockdown (Strike 3, or health below 30 after the damage), an obstacle crash below 30, both wrestlers in a run collision, and a **knockout from standing** (health reaches 0 from a strike, an obstacle crash or a run collision while the wrestler is not already down). The bodyslam receiver does not fall (the bodyslam keeps its own animation), and a Stomp knockout on a wrestler who is already down does not fall again.
@@ -201,6 +208,7 @@ Values marked *Set* were decided by the designer. Values marked *Starting point*
 | Shortest possible knockdown | 0.5 s | Starting point | Mashing cannot shorten a knockdown below this |
 | Knockdown slide distance | 0.5 units | Set | D-041; `knockdownSlideDistance`; how far a falling wrestler slides on x, away from what hit them |
 | Knockdown slide duration | 0.35 s | Set | D-041; `knockdownSlideDuration`; linear; matches the fall animation's default length |
+| Get-up time | 0.25 s | Starting point | D-043; `getUpTime`; crouch at the end of every knockdown, after the knockdown timer runs out; still Knocked Down, not shortened by mashing |
 | CPU mash rate | 3 presses/s | Starting point | D-025 |
 
 ## CPU AI

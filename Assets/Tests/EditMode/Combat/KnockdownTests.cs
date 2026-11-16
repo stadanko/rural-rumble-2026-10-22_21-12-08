@@ -65,7 +65,7 @@ namespace RuralRumble.Tests.EditMode
             h.PlayerInput.StrikeOnTicks(200, 0, 15, 60);
             h.TickUntil(() => h.KnockDowns.Count > 0, 2f, Dt);
             float t = h.TickUntil(() => h.Cpu.State != CombatState.KnockedDown, 5f, Dt);
-            Assert.AreEqual(h.KnockDowns[0].duration, t, 2 * Dt);
+            Assert.AreEqual(h.KnockDowns[0].duration + h.Tuning.getUpTime, t, 2 * Dt, "knockdown timer, then the D-043 get-up");
             Assert.AreEqual(CombatState.Standing, h.Cpu.State);
         }
 
@@ -130,7 +130,7 @@ namespace RuralRumble.Tests.EditMode
             h.TickUntil(() => h.KnockDowns.Count > 0, 1f, Dt);
             for (int i = 0; i < 300; i++) h.CpuInput.PressStrikeOnce();
             float t = h.TickUntil(() => h.Cpu.State != CombatState.KnockedDown, 5f, Dt);
-            Assert.AreEqual(h.Tuning.shortestKnockdown, t, 2 * Dt);
+            Assert.AreEqual(h.Tuning.shortestKnockdown + h.Tuning.getUpTime, t, 2 * Dt, "mashing never shortens the D-043 get-up");
         }
 
         // D-025: knocked down wrestlers can't be hit by combo strikes; no invulnerability after getting up.

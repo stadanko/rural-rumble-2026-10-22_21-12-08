@@ -114,6 +114,7 @@ MonoBehaviour:
   shortestKnockdown: 0.5
   knockdownSlideDistance: 0.5
   knockdownSlideDuration: 0.35
+  getUpTime: 0.25
   walkSpeedHorizontal: 3
   walkSpeedDepth: 2
   walkSpeedDiagonal: 3.6

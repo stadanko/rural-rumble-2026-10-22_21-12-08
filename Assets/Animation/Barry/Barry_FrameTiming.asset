@@ -797,3 +797,14 @@ MonoBehaviour:
       HoldMs: 166.66667
       DefaultHoldMs: 166.66667
       BuiltInHoldMs: 166.66667
+  - ClipName: Barry_Crouch
+    Loops: 0
+    Playback: 0
+    ContactStep: -1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: 9033622231541601775, guid: a180c3c1c1c0c714d8ffce7786a0bb27, type: 3}
+      PoseOnly: 0
+      HoldMs: 250
+      DefaultHoldMs: 250
+      BuiltInHoldMs: 250

@@ -143,7 +143,7 @@ namespace RuralRumble.Tests.EditMode
             int startRead = rec.Reads.Count;
             float t = h.TickUntil(() => h.Cpu.State != CombatState.KnockedDown, 3f, Dt);
             Assert.IsFalse(rec.Reads.Skip(startRead).Any(r => r.Strike.Pressed));
-            Assert.AreEqual(1f, t, 0.05f);
+            Assert.AreEqual(1f + h.Tuning.getUpTime, t, 0.05f, "timer plus the D-043 get-up");
         }
 
         // Decisions only on the interval: chosen (non-forced) states change at most once per interval.

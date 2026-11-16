@@ -27,5 +27,12 @@ namespace RuralRumble.Core
         /// 0 = no fall (not knocked down / out, bodyslam knockdown, or knocked out while already down). Set when the
         /// knockdown starts; kept for the whole knockdown or KO.</summary>
         int FallSide { get; }
+        /// <summary>D-043: Knocked Down and in the get-up phase at its end (the mashable knockdown timer has run out; the
+        /// crouch). State stays KnockedDown. False in every other state.</summary>
+        bool IsGettingUp { get; }
+        /// <summary>D-043: seconds left in the get-up phase; 0 when not getting up.</summary>
+        float GetUpTimeRemaining { get; }
+        /// <summary>D-043: the tuned get-up length in seconds (read live from tuning), in any state.</summary>
+        float GetUpDuration { get; }
     }
 }

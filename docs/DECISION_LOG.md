@@ -439,6 +439,19 @@ Agents: read this before starting work. If a task conflicts with a decision here
 
 ---
 
+## D-043: Crouch get-up phase
+
+- **Date:** 2026-11-15
+- **Decided by:** Designer
+- **Decision:**
+  - Every knockdown ends with a short get-up phase: when the knockdown timer runs out, the wrestler shows the crouch for the **Get-up time** (`getUpTime`, 0.25 s, Starting point) and can't act yet, then returns to Standing or Recovering as before. Every knockdown, including the bodyslam receiver's, is 0.25 s longer.
+  - The get-up is part of the Knocked Down state: no control, mashing affects only the knockdown timer (not the get-up), only a Stomp can hit (stomp rules unchanged, a Stomp can still knock out), facing stays locked, and the CPU treats him as down. No new events. `IWrestlerView` adds `IsGettingUp`, `GetUpTimeRemaining` and `GetUpDuration` for presentation; `KnockdownTimeRemaining` still means the mashable timer only.
+  - **Presentation:** the get-up shows the crouch (`barry_crouch.png`, `peaux_crouch.png`; a reusable Animator state `Crouch`, slot `Slot_Crouch`, clip `<Wrestler>_Crouch.anim`) for the whole get-up, drawn by the combat facing at the wrestler's root (child sprite offset 0, the same anchor as the stand), then the stand as before; crouch → stand lines up on the front boot. **No slide.** The first version slid the crouch from over the lying body to his feet (the designer's earlier choice: "Slide the crouch. The crouch starts drawn over where the lying body was and slides to his feet during the get-up. No new art is needed."); after playtesting it (2026-11-15) the designer removed the slide: "After testing, I don't want any slide on the crouch. I just want them to get up in the place that they are." A knockout has no get-up; a Stomp KO during the get-up returns to the lying pose.
+- **Why:** Designer request (2026-11-15): "Short get-up phase in combat. Add about 0.25 s after the knockdown where he shows the crouch and can't act yet. The crouch always shows in full, but every knockdown gets 0.25 s longer."
+- **Affects:** docs/COMBAT_SPEC.md (Knocked Down, Tuning Values), docs/ARCHITECTURE.md §4.2, Core (`IWrestlerView`), Combat (CombatWrestler, CombatTuning, CombatTuning.asset), EditMode tests (KnockdownTests and timing that assumed an instant get-up), PlayMode `PresentationTests` fake view.
+
+---
+
 ## Open Questions
 
 Not yet decided. Agents must not resolve these on their own.

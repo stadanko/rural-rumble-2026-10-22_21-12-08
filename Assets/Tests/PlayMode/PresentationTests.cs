@@ -166,6 +166,9 @@ namespace RuralRumble.Tests.PlayMode
             public Vector2 Facing { get; set; }
             public int HorizontalFacing { get; set; }
             public int FallSide { get; set; }
+            public bool IsGettingUp { get; set; }
+            public float GetUpTimeRemaining { get; set; }
+            public float GetUpDuration { get; set; } = 0.25f;
         }
     }
 }

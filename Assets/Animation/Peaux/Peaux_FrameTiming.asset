@@ -808,3 +808,14 @@ MonoBehaviour:
       HoldMs: 166.66667
       DefaultHoldMs: 166.66667
       BuiltInHoldMs: 166.66667
+  - ClipName: Peaux_Crouch
+    Loops: 0
+    Playback: 0
+    ContactStep: -1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: 4805300757610408202, guid: 4755bc76f7bd22b408aae6317e2197a3, type: 3}
+      PoseOnly: 0
+      HoldMs: 250
+      DefaultHoldMs: 250
+      BuiltInHoldMs: 250

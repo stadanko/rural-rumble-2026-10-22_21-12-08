@@ -106,7 +106,8 @@ namespace RuralRumble.Tests.EditMode
             h.PlayerInput.PressStrikeOnce();
             h.TickUntil(() => h.Cpu.State == CombatState.KnockedDown, 1f, Dt);
             h.TickUntil(() => h.Player.State == CombatState.Standing, 1f, Dt);
-            h.TickUntil(() => h.CpuW.KnockdownTimeRemaining < 0.1f, 1f, Dt);
+            // D-043: the opponent is still down during the get-up, so wait until it is nearly over.
+            h.TickUntil(() => h.Cpu.IsGettingUp && h.Cpu.GetUpTimeRemaining < 0.1f, 2f, Dt);
             h.PlayerInput.PressStrikeOnce();
             h.TickSeconds(0.6f, Dt);
             Assert.AreEqual(1, h.Hits.Count, "a stomp only lands on a Knocked Down opponent");

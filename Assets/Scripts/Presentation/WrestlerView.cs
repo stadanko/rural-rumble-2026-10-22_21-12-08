@@ -47,6 +47,11 @@ namespace RuralRumble.Presentation
     /// sprite mirrored with downedMirrorShift, so head and feet never swap sides and the roots line up. A bodyslam
     /// knockdown (FallSide 0) keeps the plain downed sprite; a stomp KO while down (FallSide 0) keeps the latched side.
     ///
+    /// Get-up (D-043): while <see cref="IWrestlerView.IsGettingUp"/> (still Knocked Down) the reusable "Crouch" state shows
+    /// (Animator "Crouch" bool), drawn by the combat facing at the root (no child offset, the same anchor as the stand; the
+    /// designer removed the slide after playtesting). A Stomp knockout during the get-up goes back to the lying pose (end of
+    /// the Fall clip, or the KnockedOut clip's end).
+    ///
     /// Clip offsets and rotations are authored for left-facing art. When the sprite is flipped,
     /// <see cref="LateUpdate"/> mirrors the child sprite's animated x offset and z rotation so a knock-back
     /// or a fall still goes away from the way the wrestler faces.
@@ -108,6 +113,11 @@ namespace RuralRumble.Presentation
         private static readonly int FallStateHash = Animator.StringToHash(FallStateName);
         /// <summary>Animator bool parameter: this Knocked Down / Knocked Out plays the fall (D-041; nonzero fall side).</summary>
         public static readonly int FallParam = Animator.StringToHash("Fall");
+        /// <summary>Crouch (D-043): one sprite held. Today shown for the get-up at the end of a knockdown (Animator
+        /// "Crouch" bool, while <see cref="IWrestlerView.IsGettingUp"/>). Plays the slot clip "Slot_Crouch".</summary>
+        public const string CrouchStateName = "Crouch";
+        /// <summary>Animator bool parameter: show the crouch (D-043). True while the wrestler gets up.</summary>
+        public static readonly int CrouchParam = Animator.StringToHash("Crouch");
 
         /// <summary>Shared-controller slot clip for a move: "Slot_" + MoveId (e.g. Slot_Strike1, Slot_Stomp).</summary>
         public static string SlotNameFor(MoveId move) => "Slot_" + move;
@@ -241,6 +251,8 @@ namespace RuralRumble.Presentation
         private int downedFallSide;
         private bool fallLanded;
         private bool facingFlip;
+        // Get-up (D-043): showing the crouch (drawn at the root, no offset).
+        private bool gettingUp;
         private Vector2 lastPosition;
         private bool hasLastPosition;
         private float movingHold;
@@ -272,6 +284,7 @@ namespace RuralRumble.Presentation
             view = wrestlerView;
             hasLastPosition = false;
             lastState = null;
+            gettingUp = false;
             Apply(0f);
         }
 
@@ -379,7 +392,8 @@ namespace RuralRumble.Presentation
                 return;
 
             CombatState state = view.State;
-            facingFlip = ShouldFlip(view.HorizontalFacing, artFacesLeft);
+            bool combatFlip = ShouldFlip(view.HorizontalFacing, artFacesLeft);
+            facingFlip = combatFlip;
             bool downed = IsDownedState(state);
             bool fallStarted = false;
             if (downed && !(lastState.HasValue && IsDownedState(lastState.Value)))
@@ -405,6 +419,16 @@ namespace RuralRumble.Presentation
             }
             else
                 downedMirrored = downed && !downedFromSlam;
+
+            // D-043 get-up: the crouch, drawn by the combat facing (locked while down; the stand that follows uses it),
+            // never mirrored, at the root with no offset (designer, after playtesting: no slide).
+            bool wasGettingUp = gettingUp;
+            gettingUp = state == CombatState.KnockedDown && view.IsGettingUp;
+            if (gettingUp)
+            {
+                facingFlip = combatFlip;
+                downedMirrored = false;
+            }
             bool flip = facingFlip ^ downedMirrored;
 
             // Recovering stand vs walk: did the combat position change since the last frame (ARCHITECTURE 4.2)?
@@ -435,6 +459,7 @@ namespace RuralRumble.Presentation
                 animator.SetBool(MovingParam, moving);
                 animator.SetBool(PairedParam, showPaired);
                 animator.SetBool(FallParam, falling);
+                animator.SetBool(CrouchParam, gettingUp);
 
                 // The reaction comes from the hit that landed, set before the Animator evaluates: Strike 2 (combo hit 2)
                 // shows StruckC, any other hit StruckB (D-042). A Struck entered with no hit this frame (an obstacle
@@ -461,13 +486,18 @@ namespace RuralRumble.Presentation
                     PlayFromStart(showStruckC ? StruckCStateName : StruckBStateName, 0f);
 
                 // D-041: a knockdown or knockout from standing with a fall side plays the fall from its start.
-                if (fallStarted)
+                // (Not when the first downed frame this view sees is already the get-up: the crouch shows instead.)
+                if (fallStarted && !gettingUp)
                     PlayFromStart(FallStateName, 0f);
                 // D-023: Knocked Out reuses the Knocked Down clip (the held downed sprite). Knocked out while
                 // already down (a stomp) jumps to the clip's end instead of replaying it from the start. After a fall
                 // the Fall state just carries on (no self-transition): lying pose and orientation are kept.
                 else if (state == CombatState.KnockedOut && lastState == CombatState.KnockedDown && !falling)
                     PlayFromStart(KnockedOutStateName, 1f);
+                // D-043: a Stomp knockout during the get-up (the crouch was showing) goes straight back to the lying
+                // pose it got up from: the end of the Fall clip (downed sprite, latched orientation), not a new fall.
+                else if (state == CombatState.KnockedOut && wasGettingUp && falling)
+                    PlayFromStart(FallStateName, 1f);
             }
             pendingMoveRestart = false;
             pendingStruckRestart = false;
@@ -562,8 +592,9 @@ namespace RuralRumble.Presentation
         // TurnTime (the downed-only PLACEHOLDER) counts as landed from the start.
         private void ApplyFallOrientation()
         {
-            if (downedFallSide == 0 || animator == null || !animator.isActiveAndEnabled || animator.runtimeAnimatorController == null)
-                return;
+            if (downedFallSide == 0 || gettingUp || animator == null || !animator.isActiveAndEnabled ||
+                animator.runtimeAnimatorController == null)
+                return; // D-043: the get-up crouch is drawn by the combat facing (Apply), not the fall side
             AnimatorStateInfo info = animator.GetCurrentAnimatorStateInfo(0);
             bool landed = true;
             if (info.shortNameHash == FallStateHash)
@@ -615,6 +646,9 @@ namespace RuralRumble.Presentation
 
         /// <summary>True while the downed sprite is shown mirrored (a knockdown that did not follow a bodyslam).</summary>
         public bool DownedMirrored => downedMirrored;
+
+        /// <summary>True while the get-up crouch is shown (D-043).</summary>
+        public bool ShowingGetUp => gettingUp;
 
         private void SetMoveSpeed(float speed)
         {

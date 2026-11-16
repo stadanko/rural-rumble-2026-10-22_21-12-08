@@ -156,6 +156,9 @@ public interface IWrestlerView {
     Vector2 Facing;           // last 8-way direction; presentation derives left/right and front/back
     int HorizontalFacing;     // last left/right facing, +1 right / -1 left; kept while Facing is straight up/down (sprite flip, D-020 run direction)
     int FallSide;             // D-041: knockdown / KO fall on x, +1 head toward +x, -1 toward -x (away from what hit them; Combat slides the root that way); 0 = no fall (not down, bodyslam, KO while already down). Set when the knockdown starts, kept until it ends
+    bool IsGettingUp;         // D-043: State is KnockedDown and the get-up phase (crouch) is running: the mashable timer has run out
+    float GetUpTimeRemaining; // D-043: seconds left in the get-up phase; 0 when not getting up
+    float GetUpDuration;      // D-043: CombatTuning.getUpTime (read live), in any state
 }
 
 // Combat, plain C#. One instance per match; all events fire inside CombatMatch.Tick.
@@ -337,6 +340,9 @@ Lock-up, bodyslam, Irish Whip, and break lock-up.
   - **Knocked out while already down** (stomp; Combat reports `FallSide` 0): `WrestlerView` keeps the side it latched, so the `Fall` state carries on (no self-transition) and the lying pose, flip and offset are unchanged. After a bodyslam knockdown it jumps `KnockedOut` to its end as before.
   - **Wrestlers without fall art** (none at present; Barry and Peaux both have it): `Slot_Fall` is `<Wrestler>_Fall_PLACEHOLDER.anim`, the downed sprite only, with no table entry, so it counts as landed from the first frame: the D-038 picture, oriented by `FallSide`. The builder switches to the real clip by itself once `<prefix>_fall2.png` and `<prefix>_fall3.png` exist in the wrestler's art folder (it imports them with the wrestler settings, whole image = one cell, pivot Bottom Center, if they are not already).
   - The lying body reaches up to about 7 units (Barry) or 5.9 units (Peaux) behind the root on non-bodyslam knockdowns, so near the arena ends, the truck or the pool it can overlap them visually.
+- **Get-up crouch (D-043, 2026-11-15).** While `IsGettingUp` (still Knocked Down) the Animator bool `Crouch` (set by `WrestlerView`) sends Any State → `Crouch` when State == KnockedDown and `Crouch`; the KnockedDown / KnockedOut / `Fall` transitions require `Crouch` false. `Crouch` plays the slot `Slot_Crouch` once at 1x: `<Wrestler>_Crouch.anim`, one approved sprite held (`barry_crouch` 186x175, `peaux_crouch` 192x145; wrestler import settings, pivot Bottom Center = the root; 250 ms hold in `<Wrestler>_FrameTiming.asset`, which only sets the clip length). The state is reusable: later uses (getting back in the ring, picking up an opponent) add their own Any State transition into it.
+  - **Orientation and position:** the crouch is drawn by the combat facing (locked while down; the stand that follows uses it), never mirrored, at the root with child offset 0 (the same anchor as the stand), for the whole get-up. Crouch → stand lines up on the front boot. There is no slide from the lying pose (the designer removed it after playtesting, D-043), so the lying sprite (shifted by `downedMirrorShift` after a fall) changes straight to the crouch at the root.
+  - **Knockout:** no get-up, so no crouch. A Stomp KO during the get-up returns to the lying pose it got up from (the `Fall` clip jumped to its end with the latched orientation, or `KnockedOut` at its end after a bodyslam).
 
 ## 7. Integration rules
 

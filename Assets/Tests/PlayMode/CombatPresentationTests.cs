@@ -461,6 +461,186 @@ namespace RuralRumble.Tests.PlayMode
             Assert.AreEqual(new Vector3(5f, -12f, 0f), playerGo.transform.position, "the root never moves");
         }
 
+        // ------------------------------------------------------------------ D-043 get-up (crouch at the root)
+
+        private const string BarryCrouch = "Assets/Art/Wrestlers/Barry/barry_crouch.png";
+        private const string PeauxCrouch = "Assets/Art/Wrestlers/Peaux/peaux_crouch.png";
+        private const string BarryStand = "Assets/Art/Wrestlers/Barry/barry_stand_front.png";
+        private const string PeauxStand = "Assets/Art/Wrestlers/Peaux/peaux_stand_front.png";
+
+        // D-043: every knockdown ends with the get-up. The crouch shows for the whole get-up, drawn by the combat facing at
+        // the root (child offset 0, no slide: designer, after playtesting); then the wrestler stands as before, on the same
+        // anchor. Both wrestlers, both fall sides / facings.
+        [UnityTest]
+        public IEnumerator GetUp_Barry_HitFromLeft_CrouchAtRootThenStands() => GetUpCrouch(BarryPrefab, BarryCrouch, BarryStand, true);
+
+        [UnityTest]
+        public IEnumerator GetUp_Barry_HitFromRight_CrouchAtRootThenStands() => GetUpCrouch(BarryPrefab, BarryCrouch, BarryStand, false);
+
+        [UnityTest]
+        public IEnumerator GetUp_Peaux_HitFromLeft_CrouchAtRootThenStands() => GetUpCrouch(PeauxPrefab, PeauxCrouch, PeauxStand, true);
+
+        [UnityTest]
+        public IEnumerator GetUp_Peaux_HitFromRight_CrouchAtRootThenStands() => GetUpCrouch(PeauxPrefab, PeauxCrouch, PeauxStand, false);
+
+        private IEnumerator GetUpCrouch(string cpuPrefab, string crouchPath, string standPath, bool cpuOnRight)
+        {
+            Vector2 left = new Vector2(10f, -12f), right = new Vector2(12f, -12f);
+            Build(cpuOnRight ? left : right, cpuOnRight ? right : left, t =>
+            {
+                t.maxHealth = 32f; t.minKnockdownTime = 0.5f; t.maxKnockdownTime = 0.5f; t.getUpTime = 0.25f;
+            }, cpuPrefab);
+            yield return null;
+            Sprite crouch = OnlySprite(crouchPath), stand = OnlySprite(standPath);
+            Assert.IsNotNull(crouch, "setup: crouch sprite");
+
+            playerInput.PressStrikeAt(0);
+            TickUntil(() => match.Cpu.State == CombatState.KnockedDown);
+            int side = match.Cpu.FallSide;
+            Assert.AreEqual(cpuOnRight ? 1 : -1, side, "setup: falls away from the attacker");
+            yield return Settle();
+            yield return new WaitForSeconds(0.6f); // the fall lands (0.35 s)
+            Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.FallStateName), "setup: lying after the fall");
+            Assert.IsFalse(cpuView.ShowingGetUp);
+            Assert.AreNotEqual(0f, cpuView.SpriteRenderer.transform.localPosition.x, "setup: the lying sprite is shifted");
+
+            TickUntil(() => match.Cpu.IsGettingUp);
+            bool facingFlip = WrestlerView.ShouldFlip(match.Cpu.HorizontalFacing, true);
+            int frames = 0;
+            for (int i = 0; i < 40 && match.Cpu.IsGettingUp; i++)
+            {
+                yield return Settle();
+                Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.CrouchStateName), $"get-up tick {i}: the Crouch state");
+                Assert.AreEqual(crouch, cpuView.SpriteRenderer.sprite, $"get-up tick {i}: the crouch sprite");
+                Assert.IsTrue(cpuView.ShowingGetUp);
+                Assert.AreEqual(facingFlip, cpuView.SpriteRenderer.flipX, "the crouch is drawn by the combat facing");
+                Assert.AreEqual(0f, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f,
+                    $"get-up tick {i}: the crouch is drawn at the root (no slide)");
+                Assert.AreEqual(0f, SpriteRotZ(cpuView), 0.01f, "no rotation");
+                frames++;
+                Tick(1);
+            }
+            Assert.Greater(frames, 15, "setup: the whole 0.25 s get-up was sampled");
+
+            TickUntil(() => match.Cpu.State != CombatState.KnockedDown, 1f);
+            // A one-strike knockdown needs health below the Recovering threshold, so he gets up into Recovering (its
+            // stand pose is the stand sprite, hunched).
+            Assert.AreEqual(CombatState.Recovering, match.Cpu.State, "setup: gets up into Recovering (health below 30)");
+            yield return Settle();
+            Assert.IsTrue(StateOf(cpuView).IsName("RecoveringStand"), "standing (Recovering) after the get-up");
+            Assert.AreEqual(stand, cpuView.SpriteRenderer.sprite, "the stand sprite");
+            Assert.IsFalse(cpuView.ShowingGetUp);
+            Assert.AreEqual(0f, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f, "the stand is on the same anchor");
+            Assert.AreEqual(facingFlip, cpuView.SpriteRenderer.flipX, "stands facing the same way as the crouch");
+        }
+
+        // D-043: the bodyslam receiver (no fall side; lying as the slam left him) gets up the same way: the crouch at the
+        // root, then Standing (the bodyslam leaves him above 30 health).
+        [UnityTest]
+        public IEnumerator GetUp_AfterBodyslam_CrouchAtRootThenStands()
+        {
+            Build(new Vector2(10f, -12f), new Vector2(11.5f, -12f), t =>
+            {
+                t.minKnockdownTime = 0.5f; t.maxKnockdownTime = 0.5f; t.getUpTime = 0.25f;
+            });
+            yield return null;
+            playerInput.PressGrappleAt(0, 1); // lock up, then grapple: bodyslam
+            TickUntil(() => match.Cpu.State == CombatState.Grappled);
+            for (int f = 0; f < 30 && match.Cpu.State == CombatState.Grappled; f++)
+            {
+                yield return null;
+                Tick(2);
+            }
+            TickUntil(() => match.Cpu.State == CombatState.KnockedDown);
+            yield return Settle();
+            Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, "setup: lying after the slam");
+            Assert.IsFalse(cpuView.DownedMirrored, "setup: as the slam left him");
+
+            TickUntil(() => match.Cpu.IsGettingUp);
+            for (int i = 0; i < 40 && match.Cpu.IsGettingUp; i++)
+            {
+                yield return Settle();
+                Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.CrouchStateName), $"get-up tick {i}: the Crouch state");
+                Assert.AreEqual(OnlySprite(BarryCrouch), cpuView.SpriteRenderer.sprite);
+                Assert.AreEqual(0f, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f, "at the root (no slide)");
+                Tick(1);
+            }
+
+            TickUntil(() => match.Cpu.State != CombatState.KnockedDown, 1f);
+            Assert.AreEqual(CombatState.Standing, match.Cpu.State, "setup: the bodyslam leaves him above 30 health");
+            yield return Settle();
+            Assert.IsTrue(StateOf(cpuView).IsName("Standing"));
+            Assert.AreEqual(OnlySprite(BarryStand), cpuView.SpriteRenderer.sprite, "the stand sprite");
+            Assert.AreEqual(0f, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f, "on the root");
+        }
+
+        /// <summary>The single sprite of a one-sprite texture (any name).</summary>
+        private static Sprite OnlySprite(string texturePath)
+        {
+#if UNITY_EDITOR
+            foreach (Object o in UnityEditor.AssetDatabase.LoadAllAssetsAtPath(texturePath))
+                if (o is Sprite s) return s;
+#endif
+            return null;
+        }
+
+        // D-043: a knockout has no get-up: the knocked-out wrestler never shows the crouch.
+        [UnityTest]
+        public IEnumerator Knockout_ShowsNoCrouch()
+        {
+            Build(new Vector2(10f, -12f), new Vector2(12f, -12f), t => t.maxHealth = 3f);
+            yield return null;
+            playerInput.PressStrikeAt(0);
+            TickUntil(() => match.IsOver);
+            Assert.AreEqual(CombatState.KnockedOut, match.Cpu.State);
+            for (int f = 0; f < 90; f++)
+            {
+                yield return new WaitForEndOfFrame();
+                Assert.IsFalse(StateOf(cpuView).IsName(WrestlerView.CrouchStateName), $"frame {f}: no crouch on a knockout");
+                Assert.IsFalse(cpuView.ShowingGetUp);
+            }
+            Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, "lying");
+        }
+
+        // D-043: a Stomp knockout during the get-up goes straight back to the lying pose the wrestler got up from (same
+        // sprite, flip and offset as before the get-up), with no new fall and no crouch.
+        [UnityTest]
+        public IEnumerator StompKnockoutDuringGetUp_ReturnsToLyingPose()
+        {
+            Build(new Vector2(10f, -12f), new Vector2(12f, -12f), t =>
+            {
+                t.maxHealth = 32f; t.minKnockdownTime = 0.5f; t.maxKnockdownTime = 0.5f; t.getUpTime = 2f;
+                t.stompDamage = 50f;
+                t.knockdownSlideDistance = 0f; // the player stays in stomp range
+            });
+            yield return null;
+            playerInput.PressStrikeAt(0);
+            TickUntil(() => match.Cpu.State == CombatState.KnockedDown);
+            yield return Settle();
+            yield return new WaitForSeconds(0.6f);
+            Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, "setup: lying");
+            bool lyingFlip = cpuView.SpriteRenderer.flipX;
+            float lyingX = cpuView.SpriteRenderer.transform.localPosition.x;
+
+            TickUntil(() => match.Cpu.IsGettingUp && match.Player.State == CombatState.Standing);
+            yield return Settle();
+            Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.CrouchStateName), "setup: getting up");
+
+            playerInput.PressStrikeAt(0); // stomp
+            TickUntil(() => match.IsOver);
+            Assert.AreEqual(CombatState.KnockedOut, match.Cpu.State, "setup: the stomp knocks out during the get-up");
+            for (int f = 0; f < 30; f++)
+            {
+                yield return new WaitForEndOfFrame();
+                if (f < 2) continue; // the view applies the KO on the next Update
+                Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.FallStateName), $"frame {f}: back in the lying pose");
+                Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, $"frame {f}: the downed sprite, no new fall");
+                Assert.AreEqual(lyingFlip, cpuView.SpriteRenderer.flipX, "same flip as before the get-up");
+                Assert.AreEqual(lyingX, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f, "same offset, no slide");
+                Assert.IsFalse(cpuView.ShowingGetUp);
+            }
+        }
+
         /// <summary>Barry's downed sprite: the last sprite of Barry_Bodyslammed.</summary>
         private static Sprite BarryDownedSprite() => LastSprite("Assets/Art/Wrestlers/Barry/barry_bodyslammed.png");
 

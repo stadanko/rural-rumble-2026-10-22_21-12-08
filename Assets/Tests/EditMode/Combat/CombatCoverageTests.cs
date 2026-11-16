@@ -59,7 +59,7 @@ namespace RuralRumble.Tests.EditMode
         [Test]
         public void KnockedDown_StrikeIsMashNotAMove_AndCannotMove()
         {
-            using var h = new MatchHarness(P, C, configure: t => { t.maxHealth = 32f; t.minKnockdownTime = 3f; t.maxKnockdownTime = 3f; });
+            using var h = new MatchHarness(P, C, configure: t => { t.maxHealth = 32f; t.minKnockdownTime = 3f; t.maxKnockdownTime = 3f; t.knockdownSlideDistance = 0f; /* D-041 slide off: this test is about something else (KnockdownFallTests) */ });
             h.CpuIdle = false;
             h.PlayerInput.PressStrikeOnce();
             h.TickUntil(() => h.Cpu.State == CombatState.KnockedDown, 1f, Dt);
@@ -213,7 +213,7 @@ namespace RuralRumble.Tests.EditMode
         [Test]
         public void Stomp_NoLimitPerKnockdown()
         {
-            using var h = new MatchHarness(P, C, configure: t => { t.maxHealth = 32f; t.minKnockdownTime = 20f; t.maxKnockdownTime = 20f; });
+            using var h = new MatchHarness(P, C, configure: t => { t.maxHealth = 32f; t.minKnockdownTime = 20f; t.maxKnockdownTime = 20f; t.knockdownSlideDistance = 0f; /* D-041 slide off: this test is about something else (KnockdownFallTests) */ });
             h.PlayerInput.PressStrikeOnce();
             h.TickUntil(() => h.Cpu.State == CombatState.KnockedDown, 1f, Dt);
             for (int n = 1; n <= 3; n++)
@@ -230,7 +230,7 @@ namespace RuralRumble.Tests.EditMode
         [Test]
         public void StompCooldown_TuningEditMidMatch_AppliesToNextStomp()
         {
-            using var h = new MatchHarness(P, C, configure: t => { t.maxHealth = 32f; t.minKnockdownTime = 20f; t.maxKnockdownTime = 20f; });
+            using var h = new MatchHarness(P, C, configure: t => { t.maxHealth = 32f; t.minKnockdownTime = 20f; t.maxKnockdownTime = 20f; t.knockdownSlideDistance = 0f; /* D-041 slide off: this test is about something else (KnockdownFallTests) */ });
             h.PlayerInput.PressStrikeOnce();
             h.TickUntil(() => h.Cpu.State == CombatState.KnockedDown, 1f, Dt);
             h.TickUntil(() => h.Player.State == CombatState.Standing, 1f, Dt);
@@ -357,7 +357,7 @@ namespace RuralRumble.Tests.EditMode
         [Test]
         public void StompDamage_EditAppliesToNextStomp()
         {
-            using var h = new MatchHarness(P, C, configure: t => { t.maxHealth = 32f; t.minKnockdownTime = 20f; t.maxKnockdownTime = 20f; });
+            using var h = new MatchHarness(P, C, configure: t => { t.maxHealth = 32f; t.minKnockdownTime = 20f; t.maxKnockdownTime = 20f; t.knockdownSlideDistance = 0f; /* D-041 slide off: this test is about something else (KnockdownFallTests) */ });
             h.PlayerInput.PressStrikeOnce();
             h.TickUntil(() => h.Cpu.State == CombatState.KnockedDown, 1f, Dt);
             h.TickUntil(() => h.Player.State == CombatState.Standing, 1f, Dt);

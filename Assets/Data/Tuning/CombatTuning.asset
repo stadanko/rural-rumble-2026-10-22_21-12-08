@@ -112,6 +112,8 @@ MonoBehaviour:
   maxKnockdownTime: 3
   mashReductionPerPress: 0.08
   shortestKnockdown: 0.5
+  knockdownSlideDistance: 0.5
+  knockdownSlideDuration: 0.35
   walkSpeedHorizontal: 3
   walkSpeedDepth: 2
   walkSpeedDiagonal: 3.6

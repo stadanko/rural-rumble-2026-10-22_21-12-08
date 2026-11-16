@@ -19,6 +19,7 @@ namespace RuralRumble.Tests.EditMode
             var h = new MatchHarness(P, C, configure: t =>
             {
                 t.maxHealth = 32f; t.minKnockdownTime = 10f; t.maxKnockdownTime = 10f;
+                t.knockdownSlideDistance = 0f; // D-041 slide off: the stomper stays in stomp range (KnockdownFallTests covers the slide)
                 extra?.Invoke(t);
             });
             h.PlayerInput.PressStrikeOnce();
@@ -101,7 +102,7 @@ namespace RuralRumble.Tests.EditMode
         [Test]
         public void Stomp_OpponentGetsUpDuringWindUp_Misses()
         {
-            using var h = new MatchHarness(P, C, configure: t => { t.maxHealth = 32f; t.minKnockdownTime = 0.6f; t.maxKnockdownTime = 0.6f; });
+            using var h = new MatchHarness(P, C, configure: t => { t.maxHealth = 32f; t.minKnockdownTime = 0.6f; t.maxKnockdownTime = 0.6f; t.knockdownSlideDistance = 0f; /* D-041 slide off: this test is about something else (KnockdownFallTests) */ });
             h.PlayerInput.PressStrikeOnce();
             h.TickUntil(() => h.Cpu.State == CombatState.KnockedDown, 1f, Dt);
             h.TickUntil(() => h.Player.State == CombatState.Standing, 1f, Dt);

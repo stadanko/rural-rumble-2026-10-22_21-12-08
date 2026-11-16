@@ -113,3 +113,11 @@ MonoBehaviour:
     Clip: {fileID: 7400000, guid: 7e46733033502ed44911f0afd6068a23, type: 2}
     ContactTime: 0.34
     TurnTime: 0.12
+  - Move: 0
+    Clip: {fileID: 7400000, guid: 2b8e502d96b3de644a384aee182097c2, type: 2}
+    ContactTime: 0
+    TurnTime: 0.35
+  - Move: 0
+    Clip: {fileID: 7400000, guid: a6fdf89f16953d345a7e636b97ab3ce9, type: 2}
+    ContactTime: 0
+    TurnTime: 0.35

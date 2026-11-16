@@ -32,15 +32,25 @@ namespace RuralRumble.Tests.PlayMode
         private WrestlerView playerView;
         private WrestlerView cpuView;
 
+        [SetUp]
+        public void SetUp()
+        {
+            // A fixed 60 fps step so the Animator's clip time per frame is the same whether or not the Editor throttles
+            // real frames (the fall's 100-130 ms holds are only a few frames each).
+            Time.captureDeltaTime = 1f / 60f;
+        }
+
         [TearDown]
         public void TearDown()
         {
+            Time.captureDeltaTime = 0f;
             if (playerGo != null) Object.Destroy(playerGo);
             if (cpuGo != null) Object.Destroy(cpuGo);
             if (tuning != null) Object.Destroy(tuning);
         }
 
-        private void Build(Vector2 playerStart, Vector2 cpuStart, System.Action<CombatTuning> configure = null)
+        private void Build(Vector2 playerStart, Vector2 cpuStart, System.Action<CombatTuning> configure = null,
+            string cpuPrefabPath = BarryPrefab)
         {
 #if UNITY_EDITOR
             tuning = ScriptableObject.CreateInstance<CombatTuning>();
@@ -50,8 +60,10 @@ namespace RuralRumble.Tests.PlayMode
             cpuInput = new QueuedInput();
             var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(BarryPrefab);
             Assert.IsNotNull(prefab, BarryPrefab + " not found");
+            var cpuPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(cpuPrefabPath);
+            Assert.IsNotNull(cpuPrefab, cpuPrefabPath + " not found");
             playerGo = Object.Instantiate(prefab, playerStart, Quaternion.identity);
-            cpuGo = Object.Instantiate(prefab, cpuStart, Quaternion.identity);
+            cpuGo = Object.Instantiate(cpuPrefab, cpuStart, Quaternion.identity);
             playerView = playerGo.GetComponent<WrestlerView>();
             cpuView = cpuGo.GetComponent<WrestlerView>();
             playerView.Bind(match.Player);
@@ -185,41 +197,48 @@ namespace RuralRumble.Tests.PlayMode
             Assert.AreEqual("barry_struck_b_0", cpuView.SpriteRenderer.sprite.name, "second hit shows the StruckB sprite");
         }
 
-        // D-023 / ARCHITECTURE 4.2: Knocked Out reuses the Knocked Down clip, which holds the downed sprite (the last
-        // Bodyslammed sprite, designer 2026-11-12). Knocked out while already lying down (a stomp, D-025) jumps to the
-        // end of the clip and keeps the downed sprite exactly as it lay (same sprite, flip and offset).
+        // D-041: knocked out while already lying down (a stomp, D-025; Combat reports FallSide 0 then) keeps the Fall
+        // state where it is: the downed sprite stays exactly as it lay after the fall (same sprite, flip and offset), with
+        // the fall side the wrestler went down with.
         [UnityTest]
         public IEnumerator KnockoutWhileDown_HoldsLyingPose()
         {
             Build(new Vector2(10f, -12f), new Vector2(12f, -12f), t =>
             {
                 t.maxHealth = 32f; t.minKnockdownTime = 20f; t.maxKnockdownTime = 20f; t.stompDamage = 50f;
+                t.knockdownSlideDistance = 0f; // D-041 slide off: the player stays in stomp range without stepping in
             });
             yield return null;
             playerInput.PressStrikeAt(0);
             TickUntil(() => match.Cpu.State == CombatState.KnockedDown);
+            int side = match.Cpu.FallSide;
+            Assert.AreEqual(1, side, "setup: hit from the left, falls toward +x");
             TickUntil(() => match.Player.State == CombatState.Standing);
             yield return Settle();
-            yield return new WaitForSeconds(0.8f); // knockdown fall finishes
-            Assert.IsTrue(StateOf(cpuView).IsName("KnockedDown"));
-            Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, "setup: Knocked Down shows the downed sprite");
-            Assert.IsTrue(cpuView.DownedMirrored, "setup: a strike knockdown shows the downed sprite mirrored");
+            yield return new WaitForSeconds(0.8f); // the fall lands (0.35 s)
+            Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.FallStateName));
+            Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, "setup: the fall has landed on the downed sprite");
+            Assert.IsTrue(cpuView.DownedMirrored, "setup: the landed fall shows the downed sprite mirrored");
+            Assert.AreEqual(side, HeadSide(cpuView), "setup: head on the fall side");
             bool lyingFlip = cpuView.SpriteRenderer.flipX;
             Vector3 lyingPos = cpuView.SpriteRenderer.transform.localPosition;
 
             playerInput.PressStrikeAt(0); // stomp
             TickUntil(() => match.IsOver);
             Assert.AreEqual(CombatState.KnockedOut, match.Cpu.State);
-            yield return Settle();
-            AnimatorStateInfo ko = StateOf(cpuView);
-            Assert.IsTrue(ko.IsName("KnockedOut"), "Animator should be in KnockedOut");
-            Assert.GreaterOrEqual(ko.normalizedTime, 0.99f, "KO while down should jump to the end of the fall");
-            Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, "the downed sprite is held");
-            Assert.AreEqual(lyingFlip, cpuView.SpriteRenderer.flipX, "the downed sprite keeps its flip");
-            Assert.AreEqual(lyingPos.x, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f, "the downed sprite keeps its offset");
+            Assert.AreEqual(0, match.Cpu.FallSide, "setup: a stomp KO while down reports no fall side");
+            for (int f = 0; f < 30; f++)
+            {
+                yield return new WaitForEndOfFrame();
+                Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.FallStateName), "the lying pose is kept (no new fall, no switch)");
+                Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, "the downed sprite is held");
+                Assert.AreEqual(lyingFlip, cpuView.SpriteRenderer.flipX, "the downed sprite keeps its flip");
+                Assert.AreEqual(lyingPos.x, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f, "the downed sprite keeps its offset");
+                Assert.AreEqual(side, cpuView.DownedFallSide, "the latched fall side is kept");
+            }
         }
 
-        // Contrast: knocked out from standing plays the fall from its start.
+        // D-041: knocked out from standing plays the whole fall from its start (struck_a, fall2, fall3, downed).
         [UnityTest]
         public IEnumerator KnockoutFromStanding_PlaysTheFall()
         {
@@ -228,16 +247,156 @@ namespace RuralRumble.Tests.PlayMode
             playerInput.PressStrikeAt(0);
             TickUntil(() => match.IsOver);
             Assert.AreEqual(CombatState.KnockedOut, match.Cpu.State);
-            yield return Settle();
-            AnimatorStateInfo ko = StateOf(cpuView);
-            Assert.IsTrue(ko.IsName("KnockedOut"), "Animator should be in KnockedOut");
-            Assert.Less(ko.normalizedTime, 0.9f, "a KO from standing plays the fall");
+            Assert.AreEqual(1, match.Cpu.FallSide, "setup: a KO from standing falls away from the attacker");
+            yield return SampleFall(cpuView, 1f);
+            AssertBarryFall(1);
         }
 
-        // Designer 2026-11-12: a knockdown that does not follow a bodyslam (here a run collision, D-029, which knocks
-        // both down on the same tick) shows the downed sprite mirrored in place: the opposite flip to the facing flip,
-        // shifted by downedMirrorShift so the body covers the same ground behind the root with head and feet swapped
-        // (feet toward the opponent). The two wrestlers face opposite ways, so they lie as exact mirror images.
+        // D-041 Falling Down, both sides: a strike knockdown plays struck_a -> fall2 -> fall3 -> downed. On every frame the
+        // head is on the FallSide side (fall frames stored head-right drawn unflipped for +1 / flipped for -1; the downed
+        // sprite, stored head-left, mirrored with downedMirrorShift), so head and feet never swap sides.
+        [UnityTest]
+        public IEnumerator StrikeKnockdown_HitFromLeft_FallsTowardPlusX() => StrikeKnockdownFall(cpuOnRight: true);
+
+        [UnityTest]
+        public IEnumerator StrikeKnockdown_HitFromRight_FallsTowardMinusX() => StrikeKnockdownFall(cpuOnRight: false);
+
+        private IEnumerator StrikeKnockdownFall(bool cpuOnRight)
+        {
+            Vector2 left = new Vector2(10f, -12f), right = new Vector2(12f, -12f);
+            Build(cpuOnRight ? left : right, cpuOnRight ? right : left, t =>
+            {
+                t.maxHealth = 32f; t.minKnockdownTime = 20f; t.maxKnockdownTime = 20f;
+            });
+            yield return null;
+            playerInput.PressStrikeAt(0);
+            TickUntil(() => match.Cpu.State == CombatState.KnockedDown);
+            int side = match.Cpu.FallSide;
+            Assert.AreEqual(cpuOnRight ? 1 : -1, side, "setup: falls away from the attacker");
+            yield return SampleFall(cpuView, 1f);
+            AssertBarryFall(side);
+        }
+
+        // D-041: a bodyslam knockdown (FallSide 0) never plays the fall; it ends on the downed sprite exactly as before.
+        [UnityTest]
+        public IEnumerator BodyslamKnockdown_ShowsNoFall()
+        {
+            Build(new Vector2(10f, -12f), new Vector2(11.5f, -12f), t => { t.minKnockdownTime = 20f; t.maxKnockdownTime = 20f; });
+            yield return null;
+            playerInput.PressGrappleAt(0, 1); // lock up, then grapple: bodyslam
+            TickUntil(() => match.Cpu.State == CombatState.Grappled);
+            // Render the slam (the view sees Grappled), then let combat reach the knockdown.
+            for (int f = 0; f < 30 && match.Cpu.State == CombatState.Grappled; f++)
+            {
+                yield return null;
+                Tick(2);
+            }
+            TickUntil(() => match.Cpu.State == CombatState.KnockedDown);
+            Assert.AreEqual(0, match.Cpu.FallSide, "setup: a bodyslam knockdown has no fall side");
+            for (int f = 0; f < 45; f++)
+            {
+                yield return new WaitForEndOfFrame();
+                Assert.IsFalse(StateOf(cpuView).IsName(WrestlerView.FallStateName), $"frame {f}: no fall after a bodyslam");
+            }
+            Assert.IsTrue(StateOf(cpuView).IsName("KnockedDown"));
+            Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, "the downed sprite");
+            Assert.IsFalse(cpuView.DownedMirrored, "drawn exactly as the bodyslam's last frame");
+            Assert.AreEqual(0, cpuView.DownedFallSide);
+            Assert.AreEqual(0f, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f, "no mirror shift");
+        }
+
+        // D-041 Peaux: his fall art (gen-peaux-fall2-D-1 / gen-peaux-fall3-C-1) plays the same sequence as Barry's:
+        // struck_a -> fall2 -> fall3 -> his downed sprite, head on the fall side every frame, landing about 0.35 s in.
+        [UnityTest]
+        public IEnumerator PeauxStrikeKnockdown_PlaysHisFall()
+        {
+            Build(new Vector2(10f, -12f), new Vector2(12f, -12f), t =>
+            {
+                t.maxHealth = 32f; t.minKnockdownTime = 20f; t.maxKnockdownTime = 20f;
+            }, PeauxPrefab);
+            yield return null;
+            playerInput.PressStrikeAt(0);
+            TickUntil(() => match.Cpu.State == CombatState.KnockedDown);
+            Assert.AreEqual(1, match.Cpu.FallSide, "setup");
+            yield return SampleFall(cpuView, 1f);
+            AssertFall(1, "peaux", LastSprite("Assets/Art/Wrestlers/Peaux/peaux_bodyslammed.png"));
+        }
+
+        private const string PeauxPrefab = "Assets/Prefabs/Wrestlers/Peaux.prefab";
+
+        private struct FallSample
+        {
+            public int Frame;
+            public Sprite Sprite;
+            public bool FlipX;
+            public float OffsetX;
+        }
+
+        private readonly List<FallSample> fallSamples = new List<FallSample>();
+
+        /// <summary>Samples what each frame renders (after LateUpdate) while the Animator is in the Fall state.</summary>
+        private IEnumerator SampleFall(WrestlerView v, float seconds)
+        {
+            fallSamples.Clear();
+            int frames = Mathf.RoundToInt(seconds * 60f);
+            for (int f = 0; f < frames; f++)
+            {
+                yield return new WaitForEndOfFrame();
+                if (!v.Animator.GetCurrentAnimatorStateInfo(0).IsName(WrestlerView.FallStateName))
+                {
+                    Assert.AreEqual(0, fallSamples.Count, $"frame {f}: left the Fall state");
+                    Assert.Less(f, 3, "the Fall state should start within two frames");
+                    continue;
+                }
+                fallSamples.Add(new FallSample
+                {
+                    Frame = f, Sprite = v.SpriteRenderer.sprite, FlipX = v.SpriteRenderer.flipX,
+                    OffsetX = v.SpriteRenderer.transform.localPosition.x,
+                });
+            }
+        }
+
+        /// <summary>
+        /// The sampled Barry fall: sprites in order struck_a, fall2, fall3, downed (each shown, none repeated after the
+        /// next), landing about 0.35 s (21 frames) in; head on <paramref name="side"/> on every frame; fall frames at the
+        /// root (no offset), the downed sprite mirrored and shifted by downedMirrorShift toward the fall side.
+        /// </summary>
+        private void AssertBarryFall(int side) => AssertFall(side, "barry", BarryDownedSprite());
+
+        /// <summary>The sampled fall of the wrestler whose art files start with <paramref name="prefix"/> (see AssertBarryFall).</summary>
+        private void AssertFall(int side, string prefix, Sprite downed)
+        {
+            string trace = string.Join(" ", fallSamples.ConvertAll(s => $"{s.Frame}:{s.Sprite.name}{(s.FlipX ? "F" : "")}"));
+            Assert.Greater(fallSamples.Count, 30, "setup: the Fall state played\n" + trace);
+            var order = new List<string>();
+            int landFrame = -1;
+            float shift = cpuView.DownedMirrorShift;
+            foreach (FallSample s in fallSamples)
+            {
+                if (order.Count == 0 || order[order.Count - 1] != s.Sprite.name)
+                    order.Add(s.Sprite.name);
+                bool isDowned = s.Sprite == downed;
+                if (isDowned && landFrame < 0) landFrame = s.Frame - fallSamples[0].Frame;
+                Assert.AreEqual(side, HeadSide(s.Sprite, s.FlipX, downed), $"frame {s.Frame}: head on the fall side\n{trace}");
+                Assert.AreEqual(isDowned ? side * shift : 0f, s.OffsetX, 1e-3f, $"frame {s.Frame}: sprite x offset\n{trace}");
+            }
+            CollectionAssert.AreEqual(new[] { prefix + "_struck_a_0", prefix + "_fall2_0", prefix + "_fall3_0", downed.name }, order, trace);
+            Assert.That(landFrame, Is.InRange(19, 23), "lands about 0.35 s in (default holds 100 / 120 / 130 ms)\n" + trace);
+        }
+
+        /// <summary>World side (+1 / -1) of the head: fall frames are stored head-right, the downed sprite head-left.</summary>
+        private static int HeadSide(Sprite sprite, bool flipX, Sprite downed)
+        {
+            int storedHeadRight = sprite == downed ? -1 : 1;
+            return flipX ? -storedHeadRight : storedHeadRight;
+        }
+
+        private static int HeadSide(WrestlerView v) => HeadSide(v.SpriteRenderer.sprite, v.SpriteRenderer.flipX, BarryDownedSprite());
+
+        // Designer 2026-11-12 / D-041: a knockdown that does not follow a bodyslam (here a run collision, D-029, which
+        // knocks both down on the same tick, each falling away from the other) ends its fall on the downed sprite
+        // mirrored in place: shifted by downedMirrorShift so the body covers the same ground behind the root with head
+        // and feet swapped (feet toward the opponent). The two fall opposite ways, so they lie as exact mirror images.
         [UnityTest]
         public IEnumerator RunCollisionKnockdown_ShowsDownedSpriteMirroredInPlace()
         {
@@ -245,8 +404,11 @@ namespace RuralRumble.Tests.PlayMode
             yield return null;
             playerInput.PressRunAt(0);
             TickUntil(() => match.Player.State == CombatState.KnockedDown && match.Cpu.State == CombatState.KnockedDown);
+            Assert.AreEqual(-1, match.Player.FallSide, "setup: the runner falls back toward -x");
+            Assert.AreEqual(1, match.Cpu.FallSide, "setup: the CPU falls toward +x");
             yield return Settle();
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.6f); // the falls land (0.35 s)
+            Assert.IsTrue(StateOf(playerView).IsName(WrestlerView.FallStateName) && StateOf(cpuView).IsName(WrestlerView.FallStateName));
 
             Assert.AreEqual(1, match.Player.HorizontalFacing, "setup: player faces right");
             Assert.AreEqual(-1, match.Cpu.HorizontalFacing, "setup: CPU faces left");
@@ -270,12 +432,15 @@ namespace RuralRumble.Tests.PlayMode
         }
 
         /// <summary>Barry's downed sprite: the last sprite of Barry_Bodyslammed.</summary>
-        private static Sprite BarryDownedSprite()
+        private static Sprite BarryDownedSprite() => LastSprite("Assets/Art/Wrestlers/Barry/barry_bodyslammed.png");
+
+        /// <summary>The highest-numbered sprite of a sheet.</summary>
+        private static Sprite LastSprite(string texturePath)
         {
 #if UNITY_EDITOR
             Sprite last = null;
             int lastIndex = -1;
-            foreach (Object o in UnityEditor.AssetDatabase.LoadAllAssetsAtPath("Assets/Art/Wrestlers/Barry/barry_bodyslammed.png"))
+            foreach (Object o in UnityEditor.AssetDatabase.LoadAllAssetsAtPath(texturePath))
                 if (o is Sprite s && int.TryParse(s.name.Substring(s.name.LastIndexOf('_') + 1), out int i) && i > lastIndex)
                 {
                     lastIndex = i;
@@ -292,10 +457,12 @@ namespace RuralRumble.Tests.PlayMode
         {
             private readonly Queue<WrestlerIntent> queue = new Queue<WrestlerIntent>();
 
-            public void PressStrikeAt(params int[] ticks) => Queue(ticks, strike: true);
-            public void PressRunAt(params int[] ticks) => Queue(ticks, strike: false);
+            public void PressStrikeAt(params int[] ticks) => Queue(ticks, 2);
+            public void PressRunAt(params int[] ticks) => Queue(ticks, 1);
+            public void PressGrappleAt(params int[] ticks) => Queue(ticks, 0);
 
-            private void Queue(int[] ticks, bool strike)
+            /// <param name="button">0 = Lock Up / Grapple, 1 = Run / Whip, 2 = Strike.</param>
+            private void Queue(int[] ticks, int button)
             {
                 int last = 0;
                 foreach (int t in ticks) last = Mathf.Max(last, t);
@@ -303,7 +470,8 @@ namespace RuralRumble.Tests.PlayMode
                 for (int i = 0; i <= last; i++)
                 {
                     ButtonState press = set.Contains(i) ? new ButtonState(true, true) : ButtonState.None;
-                    queue.Enqueue(new WrestlerIntent(Vector2.zero, ButtonState.None, strike ? ButtonState.None : press, strike ? press : ButtonState.None));
+                    queue.Enqueue(new WrestlerIntent(Vector2.zero, button == 0 ? press : ButtonState.None,
+                        button == 1 ? press : ButtonState.None, button == 2 ? press : ButtonState.None));
                 }
             }
 

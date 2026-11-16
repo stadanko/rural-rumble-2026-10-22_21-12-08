@@ -672,6 +672,7 @@ namespace RuralRumble.Tests.EditMode
             t.minKnockdownTime = 0.5f;
             t.maxKnockdownTime = 0.5f;
             t.shortestKnockdown = 0.5f;
+            t.knockdownSlideDistance = 0f; // D-041 slide off: keeps the recovering wrestler inside lock-up reach
         }
 
         private static void MakeCpuRecovering(MatchHarness h)

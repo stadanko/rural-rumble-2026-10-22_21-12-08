@@ -134,6 +134,18 @@ When in a Knocked Down state
 - The wrestler can push the strike or grapple buttons repeatedly to help speed up the Knocked Down state timer by a percentage. The CPU mashes too, at a tunable rate (D-025).
 - A Knocked Down wrestler can be hit only by a Stomp (D-025). There is no invulnerability after getting up.
 
+Falling down and knockback slide (D-041)
+
+- **Which knockdowns fall:** a strike knockdown (Strike 3, or health below 30 after the damage), an obstacle crash below 30, both wrestlers in a run collision, and a **knockout from standing** (health reaches 0 from a strike, an obstacle crash or a run collision while the wrestler is not already down). The bodyslam receiver does not fall (the bodyslam keeps its own animation), and a Stomp knockout on a wrestler who is already down does not fall again.
+- **Fall side:** the fall goes away from whoever or whatever hit them, on the left/right axis (x):
+    - Strike: away from the attacker.
+    - Run collision: each wrestler away from the other.
+    - Obstacle (truck or pool): away from the obstacle, the opposite of the run direction.
+    - Exactly level on x (e.g. stacked vertically): the opposite of the way the wrestler faces (with Focus they face the opponent, so they fall away from them).
+- **Slide:** during the fall the wrestler slides the knockdown slide distance (0.5 units) along that side over the knockdown slide duration (0.35 s, the fall's default length), linearly, starting the tick after the knockdown. The slide uses normal combat movement, so it stops at the arena ends, the trailer/fence line and the truck/pool (a slide into an obstacle is not an obstacle hit). It does not change the knockdown length, damage or any other timing; a knockdown shorter than the slide ends the slide with it.
+- **Knockout slide:** a knockout from standing slides the same way. The match is over (frozen) from the knockout tick, but the knocked-out wrestler's slide still finishes with the same clamped movement; nothing else changes (no timer, state changes or events), and the winner stays frozen (ARCHITECTURE 4.2). A Stomp knockout while already down does not slide.
+- **Stomp range:** the slide can carry the victim out of stomp range (2.0 units); stepping in to stomp after a knockdown is intended.
+
 ## Tuning Values
 
 Every value below must be editable in the Unity editor's Inspector without changing code. Keep them together in one shared combat tuning asset (for example, a ScriptableObject) that both wrestlers and the CPU opponent read from, so a change applies to the whole match. Values should be adjustable during Play Mode so they can be tuned while testing.
@@ -187,6 +199,8 @@ Values marked *Set* were decided by the designer. Values marked *Starting point*
 | Maximum knockdown time | 3.0 s | Starting point | Knockdown length near 0 health; length scales between the two by health lost |
 | Mash reduction per press | 8% | Starting point | Each Strike or Grapple press removes this share of the remaining knockdown time |
 | Shortest possible knockdown | 0.5 s | Starting point | Mashing cannot shorten a knockdown below this |
+| Knockdown slide distance | 0.5 units | Set | D-041; `knockdownSlideDistance`; how far a falling wrestler slides on x, away from what hit them |
+| Knockdown slide duration | 0.35 s | Set | D-041; `knockdownSlideDuration`; linear; matches the fall animation's default length |
 | CPU mash rate | 3 presses/s | Starting point | D-025 |
 
 ## CPU AI

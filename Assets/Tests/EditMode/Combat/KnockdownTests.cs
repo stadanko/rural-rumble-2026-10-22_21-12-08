@@ -137,7 +137,7 @@ namespace RuralRumble.Tests.EditMode
         [Test]
         public void KnockedDown_ComboStrikeDoesNotLand_ButLandsRightAfterGettingUp()
         {
-            using var h = new MatchHarness(P, P + new Vector2(2.6f, 0f), configure: t => t.maxHealth = 32f);
+            using var h = new MatchHarness(P, P + new Vector2(2.6f, 0f), configure: t => { t.maxHealth = 32f; t.knockdownSlideDistance = 0f; /* D-041 slide off: this test is about something else (KnockdownFallTests) */ });
             h.PlayerInput.PressStrikeOnce();
             h.TickUntil(() => h.KnockDowns.Count > 0, 1f, Dt);
             h.TickSeconds(0.3f, Dt);
@@ -170,12 +170,20 @@ namespace RuralRumble.Tests.EditMode
 
             float elapsed = h.Match.ElapsedSeconds;
             Vector2 p = h.Player.Position;
+            Vector2 c = h.Cpu.Position;
             CombatState ps = h.Player.State;
             int stateEvents = h.StateChanges.Count, phaseEvents = h.PhaseChanges.Count;
+            int hitEvents = h.Hits.Count, healthEvents = h.HealthChanges.Count, facingEvents = h.FacingChanges.Count;
             h.PlayerInput.HeldMove = Vector2.left;
             h.TickSeconds(1f, Dt);
             Assert.AreEqual(elapsed, h.Match.ElapsedSeconds, "timer stops at knockout");
-            V2Assert.AreEqual(p, h.Player.Position, 1e-6f);
+            V2Assert.AreEqual(p, h.Player.Position, 1e-6f, "the winner is frozen");
+            // D-041: the only thing that still moves is the knocked-out wrestler's knockback slide, away from the attacker.
+            V2Assert.AreEqual(c + new Vector2(h.Tuning.knockdownSlideDistance, 0f), h.Cpu.Position, 1e-4f, "KO slide only");
+            Assert.AreEqual(CombatState.KnockedOut, h.Cpu.State);
+            Assert.AreEqual(hitEvents, h.Hits.Count);
+            Assert.AreEqual(healthEvents, h.HealthChanges.Count);
+            Assert.AreEqual(facingEvents, h.FacingChanges.Count);
             Assert.AreEqual(ps, h.Player.State);
             Assert.AreEqual(stateEvents, h.StateChanges.Count);
             Assert.AreEqual(phaseEvents, h.PhaseChanges.Count);

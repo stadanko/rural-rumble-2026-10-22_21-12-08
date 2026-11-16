@@ -39,6 +39,12 @@ namespace RuralRumble.Presentation
     /// as the sprite. The runner draws one sorting order in front of the whipper until the whipper's
     /// MovePhaseChanged(IrishWhip, None); the whipper does not take the usual initiator-in-front order.
     ///
+    /// Falling Down (D-041): a Knocked Down / Knocked Out that starts with a nonzero <see cref="IWrestlerView.FallSide"/>
+    /// latches that side and plays "Fall" (struck_a, fall2, fall3, downed) from its start (Animator "Fall" bool). The fall
+    /// frames are drawn head toward the fall side; from the clip's TurnTime (the downed sprite) LateUpdate draws the downed
+    /// sprite mirrored with downedMirrorShift, so head and feet never swap sides and the roots line up. A bodyslam
+    /// knockdown (FallSide 0) keeps the plain downed sprite; a stomp KO while down (FallSide 0) keeps the latched side.
+    ///
     /// Clip offsets and rotations are authored for left-facing art. When the sprite is flipped,
     /// <see cref="LateUpdate"/> mirrors the child sprite's animated x offset and z rotation so a knock-back
     /// or a fall still goes away from the way the wrestler faces.
@@ -89,6 +95,11 @@ namespace RuralRumble.Presentation
         /// <summary>Irish Whip, the whipper's side (D-039). Plays the slot clip "Slot_IrishWhip".</summary>
         public const string IrishWhipStateName = "IrishWhip";              // A, Grappling
         private static readonly int IrishWhipStateHash = Animator.StringToHash(IrishWhipStateName);
+        /// <summary>Falling Down (D-041): struck_a, fall2, fall3, downed. Plays the slot clip "Slot_Fall".</summary>
+        public const string FallStateName = "Fall";
+        private static readonly int FallStateHash = Animator.StringToHash(FallStateName);
+        /// <summary>Animator bool parameter: this Knocked Down / Knocked Out plays the fall (D-041; nonzero fall side).</summary>
+        public static readonly int FallParam = Animator.StringToHash("Fall");
 
         /// <summary>Shared-controller slot clip for a move: "Slot_" + MoveId (e.g. Slot_Strike1, Slot_Stomp).</summary>
         public static string SlotNameFor(MoveId move) => "Slot_" + move;
@@ -210,9 +221,14 @@ namespace RuralRumble.Presentation
 
         // Downed orientation (designer, 2026-11-12). The downed sprite is the last Bodyslammed frame, which lies head
         // toward the slammer. A knockdown that follows a bodyslam (entered from Grappled) shows it as is; every other
-        // knockdown is a backward fall and shows it mirrored in place (feet toward the opponent).
+        // knockdown is a backward fall (D-041: the Fall clip, oriented by the latched fall side) that ends on it mirrored
+        // in place (feet toward what hit them). With no fall side it is mirrored by facing, as under D-038.
         private bool downedFromSlam;
         private bool downedMirrored;
+        // Falling Down (D-041): the FallSide latched when this knockdown / knockout started (0 = no fall), kept while
+        // down so a stomp KO (FallSide 0) keeps the orientation; and whether the fall clip has reached the downed sprite.
+        private int downedFallSide;
+        private bool fallLanded;
         private bool facingFlip;
         private Vector2 lastPosition;
         private bool hasLastPosition;
@@ -352,9 +368,30 @@ namespace RuralRumble.Presentation
             CombatState state = view.State;
             facingFlip = ShouldFlip(view.HorizontalFacing, artFacesLeft);
             bool downed = IsDownedState(state);
+            bool fallStarted = false;
             if (downed && !(lastState.HasValue && IsDownedState(lastState.Value)))
-                downedFromSlam = lastState == CombatState.Grappled; // KO while down keeps how they went down
-            downedMirrored = downed && !downedFromSlam;
+            {
+                // KO while down keeps how they went down. D-041: Combat reports no fall side only for a bodyslam
+                // knockdown / KO, so FallSide 0 on a fresh knockdown also means "as the bodyslam left them" (covers a
+                // Grappled state that never reached a rendered frame).
+                downedFallSide = System.Math.Sign(view.FallSide);
+                downedFromSlam = lastState == CombatState.Grappled || downedFallSide == 0;
+                if (downedFromSlam)
+                    downedFallSide = 0;
+                fallLanded = false;
+                fallStarted = downedFallSide != 0;
+            }
+            if (!downed)
+                downedFallSide = 0;
+            bool falling = downedFallSide != 0;
+            if (falling)
+            {
+                // D-041: orientation comes from the fall side, not the facing. LateUpdate refines fallLanded from the clip.
+                facingFlip = FallFacingFlip(downedFallSide);
+                downedMirrored = fallLanded;
+            }
+            else
+                downedMirrored = downed && !downedFromSlam;
             bool flip = facingFlip ^ downedMirrored;
 
             // Recovering stand vs walk: did the combat position change since the last frame (ARCHITECTURE 4.2)?
@@ -384,6 +421,7 @@ namespace RuralRumble.Presentation
                 animator.SetFloat(BackParam, IsBackFacing(view.Facing) ? 1f : 0f);
                 animator.SetBool(MovingParam, moving);
                 animator.SetBool(PairedParam, showPaired);
+                animator.SetBool(FallParam, falling);
 
                 // Every hit shows the StruckB reaction (D-040), set before the Animator evaluates.
                 bool struckRestart = pendingStruckRestart && state == CombatState.Struck;
@@ -402,9 +440,13 @@ namespace RuralRumble.Presentation
                 if (struckRestart)
                     PlayFromStart(StruckBStateName, 0f);
 
+                // D-041: a knockdown or knockout from standing with a fall side plays the fall from its start.
+                if (fallStarted)
+                    PlayFromStart(FallStateName, 0f);
                 // D-023: Knocked Out reuses the Knocked Down clip (the held downed sprite). Knocked out while
-                // already down (a stomp) jumps to the clip's end instead of replaying it from the start.
-                if (state == CombatState.KnockedOut && lastState == CombatState.KnockedDown)
+                // already down (a stomp) jumps to the clip's end instead of replaying it from the start. After a fall
+                // the Fall state just carries on (no self-transition): lying pose and orientation are kept.
+                else if (state == CombatState.KnockedOut && lastState == CombatState.KnockedDown && !falling)
                     PlayFromStart(KnockedOutStateName, 1f);
             }
             pendingMoveRestart = false;
@@ -434,6 +476,7 @@ namespace RuralRumble.Presentation
             if (view == null || spriteRenderer == null)
                 return;
             ApplyWhipperFacing();
+            ApplyFallOrientation();
             Transform t = spriteRenderer.transform;
             if (t == transform)
                 return; // never touch the root
@@ -491,6 +534,43 @@ namespace RuralRumble.Presentation
             facingFlip = ShouldFlip(facing, artFacesLeft);
             spriteRenderer.flipX = facingFlip;
         }
+
+        // D-041: after the Animator has evaluated this frame, pick the fall frames' or the downed sprite's orientation from
+        // the Fall clip's current time against its MoveAnimationTable TurnTime (start of the downed sprite). Fall frames
+        // (stored head-right) are drawn head toward the fall side; the downed sprite (stored head-left) is mirrored with
+        // downedMirrorShift (LateUpdate), so its head stays on the same side and its root lines up. A fall clip with no
+        // TurnTime (the downed-only PLACEHOLDER) counts as landed from the start.
+        private void ApplyFallOrientation()
+        {
+            if (downedFallSide == 0 || animator == null || !animator.isActiveAndEnabled || animator.runtimeAnimatorController == null)
+                return;
+            AnimatorStateInfo info = animator.GetCurrentAnimatorStateInfo(0);
+            bool landed = true;
+            if (info.shortNameHash == FallStateHash)
+            {
+                AnimationClip clip = ClipForSlot(SlotNameForState(FallStateName));
+                if (clip != null && moveTable != null && moveTable.TryGetTurnTime(clip, out float landTime))
+                    landed = FallHasLanded(Mathf.Clamp01(info.normalizedTime) * clip.length, landTime);
+            }
+            fallLanded = landed;
+            facingFlip = FallFacingFlip(downedFallSide);
+            downedMirrored = landed;
+            spriteRenderer.flipX = facingFlip ^ downedMirrored;
+        }
+
+        /// <summary>
+        /// D-041: the "facing flip" a fall is drawn with: flipped for a fall toward -x. The fall frames are stored head on
+        /// the right (+x), so they show head toward the fall side with this flip; the downed sprite is stored head on the
+        /// left, so it is drawn mirrored (this flip inverted, plus <see cref="DownedMirrorOffset"/>) and lies head toward
+        /// the fall side too.
+        /// </summary>
+        public static bool FallFacingFlip(int fallSide) => fallSide < 0;
+
+        /// <summary>D-041: the fall clip shows the downed sprite from its land time (clip time at native speed).</summary>
+        public static bool FallHasLanded(float clipTime, float landTime) => clipTime >= landTime - TurnTimeEpsilon;
+
+        /// <summary>The fall side latched for the current knockdown / knockout (D-041); 0 when not falling.</summary>
+        public int DownedFallSide => downedFallSide;
 
         /// <summary>The whipper's whip direction while its Irish Whip plays (D-039), else 0.</summary>
         public int WhipDirection => whipDirection;

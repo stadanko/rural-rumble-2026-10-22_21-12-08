@@ -165,6 +165,7 @@ namespace RuralRumble.Tests.PlayMode
             public Vector2 Position { get; set; }
             public Vector2 Facing { get; set; }
             public int HorizontalFacing { get; set; }
+            public int FallSide { get; set; }
         }
     }
 }

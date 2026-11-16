@@ -32,6 +32,8 @@ namespace RuralRumble.Combat
     /// (both land).</item>
     /// <item>Knockout: if anyone is Knocked Out the match ends (MatchEnded, IsOver, Result); both on the same tick is a draw (D-030).</item>
     /// </list>
+    /// After the match is over, Tick only finishes a Knocked Out wrestler's D-041 knockback slide (see
+    /// <see cref="SlideAfterKnockout"/>); everything else stays frozen.
     /// </summary>
     public sealed class CombatMatch
     {
@@ -92,7 +94,11 @@ namespace RuralRumble.Combat
         public void Tick(float dt, WrestlerIntent playerIntent, WrestlerIntent cpuIntent)
         {
             if (IsOver)
+            {
+                // D-041: the match is frozen except for a knocked-out wrestler's unfinished knockback slide.
+                SlideAfterKnockout(Mathf.Clamp(dt, 0f, Tuning.maxTickStep));
                 return;
+            }
 
             dt = Mathf.Clamp(dt, 0f, Tuning.maxTickStep);
             ElapsedSeconds += dt;
@@ -126,6 +132,30 @@ namespace RuralRumble.Combat
 
             // 5. Knockout.
             CheckKnockout();
+        }
+
+        // ================================================================ Knockout slide (D-041)
+
+        /// <summary>
+        /// After the knockout: each Knocked Out wrestler with an unfinished knockback slide moves its share of the slide this
+        /// tick, through the arena, wrestler blocking and the obstacle check like any other movement. No timers,
+        /// ElapsedSeconds, states, facing or events change (no ObstacleHit, no run handling); the winner never moves.
+        /// </summary>
+        private void SlideAfterKnockout(float dt)
+        {
+            player.ThinkKnockoutSlide(dt);
+            cpu.ThinkKnockoutSlide(dt);
+            if (player.PendingDelta == Vector2.zero && cpu.PendingDelta == Vector2.zero)
+                return;
+
+            Vector2 halfExtents = player.FeetHalfExtents;
+            Vector2 aStart = player.Position, bStart = cpu.Position;
+            Vector2 aArena = Arena.Move(aStart, player.PendingDelta, halfExtents).Position;
+            Vector2 bArena = Arena.Move(bStart, cpu.PendingDelta, halfExtents).Position;
+            var blockHalf = new Vector2(Tuning.feetHalfWidth, Tuning.wrestlerBlockHalfDepth);
+            WrestlerBlocking.Result blocked = WrestlerBlocking.Resolve(aStart, aArena, bStart, bArena, blockHalf);
+            player.SetPosition(KeepOutOfObstacles(aStart, aArena, blocked.A, halfExtents));
+            cpu.SetPosition(KeepOutOfObstacles(bStart, bArena, blocked.B, halfExtents));
         }
 
         // ================================================================ Focus
@@ -167,8 +197,10 @@ namespace RuralRumble.Combat
             {
                 // Same order for both regardless of who ran in; events name each wrestler. A downed opponent
                 // never gets here (passOver above), so both are on their feet.
-                player.RunCollision();
-                cpu.RunCollision();
+                // D-041: each falls away from the other (positions after this tick's movement).
+                float playerX = player.Position.x, cpuX = cpu.Position.x;
+                player.RunCollision(cpuX);
+                cpu.RunCollision(playerX);
                 return;
             }
 
@@ -258,8 +290,10 @@ namespace RuralRumble.Combat
 
             if (playerHits) player.ConsumeHitCandidate();
             if (cpuHits) cpu.ConsumeHitCandidate();
-            if (playerHits) cpu.ReceiveHit(WrestlerId.Player, playerMove, playerContact);
-            if (cpuHits) player.ReceiveHit(WrestlerId.Cpu, cpuMove, cpuContact);
+            // D-041: each defender falls away from the attacker's feet x (read before either hit is applied).
+            float playerX = player.Position.x, cpuX = cpu.Position.x;
+            if (playerHits) cpu.ReceiveHit(WrestlerId.Player, playerMove, playerContact, playerX);
+            if (cpuHits) player.ReceiveHit(WrestlerId.Cpu, cpuMove, cpuContact, cpuX);
 
             player.ClearHitCandidate();
             cpu.ClearHitCandidate();

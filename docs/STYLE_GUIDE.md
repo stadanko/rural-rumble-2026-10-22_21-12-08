@@ -100,7 +100,7 @@ Sprite Examples are from the Hulk Hogan character in WWF Wrestlefest. These are 
     - ![](images/style-guide-19.png)
     - ![](images/style-guide-20.gif)
 - Struck and Being Knocked Down
-    - Approved Struck art: two single-sprite reactions per wrestler (A lean back, B head snap) that alternate on consecutive hits (gen-barry-struck2-B-1, gen-barry-struck3-B-1, gen-peaux-struck-a-1, gen-peaux-struck-b-1). No knocked-down fall art yet.
+    - Approved Struck art: two single-sprite reactions per wrestler (A lean back, B head snap) that alternate on consecutive hits (gen-barry-struck2-B-1, gen-barry-struck3-B-1, gen-peaux-struck-a-1, gen-peaux-struck-b-1). Fall art (D-041): two single-sprite airborne frames per wrestler, fall2 and fall3 (gen-barry-fall2-D-1, gen-barry-fall3-B-1, gen-peaux-fall2-D-1, gen-peaux-fall3-C-1).
     - ![](images/style-guide-21.png)
     - ![](images/style-guide-22.gif)
         - Not half speed

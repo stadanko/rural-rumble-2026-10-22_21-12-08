@@ -100,6 +100,10 @@ namespace RuralRumble.Combat
         [Range(0f, 1f)] public float mashReductionPerPress = 0.08f;
         [Tooltip("COMBAT_SPEC Starting point. Mashing cannot make a knockdown shorter than this, seconds.")]
         [Min(0f)] public float shortestKnockdown = 0.5f;
+        [Tooltip("Set (D-041). How far a wrestler slides on x during a knockdown fall (every knockdown except the bodyslam's, and a knockout from standing), away from whoever or whatever hit them, world units. Uses normal combat movement, so arena ends and obstacles stop it. Does not change knockdown length.")]
+        [Min(0f)] public float knockdownSlideDistance = 0.5f;
+        [Tooltip("Set (D-041). Seconds the knockdown slide takes (linear), from the first tick after the knockdown starts. Matches the fall animation's default length. 0 = the whole slide in one tick.")]
+        [Min(0f)] public float knockdownSlideDuration = 0.35f;
 
         // ------------------------------------------------------------------ Movement
         [Header("Movement")]

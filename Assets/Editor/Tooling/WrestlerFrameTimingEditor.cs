@@ -324,7 +324,7 @@ namespace RuralRumble.EditorTooling
                 case "BreakLockUp": case "BreakLockUpReceiver":
                     moveTiming = tuningSo?.FindProperty(nameof(CombatTuning.breakLockUpTiming));
                     break;
-                case "Struck": case "StruckA": case "StruckB":
+                case "Struck": case "StruckA": case "StruckB": case "StruckC":
                     single = tuningSo?.FindProperty(nameof(CombatTuning.struckDuration));
                     singleLabel = "Struck lasts (s)";
                     note = "How long the hit reaction lasts in combat; the clip itself plays at the times above.";

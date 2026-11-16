@@ -16,8 +16,10 @@ namespace RuralRumble.Presentation
     /// Steady state comes from polling the view each frame, so a transition that goes out and back inside
     /// one combat tick (e.g. Standing -> Running -> Standing against a wall) never reaches the Animator.
     /// Events are used only for what polling cannot see: a move that restarts on the same tick the previous
-    /// one ends (MoveStarted while staying Striking) and Struck restarting on every hit (HitLanded, D-024),
-    /// always showing the "StruckB" hit reaction (D-040; presentation only).
+    /// one ends (MoveStarted while staying Striking) and Struck restarting on every hit (HitLanded, D-024).
+    /// The hit reaction is picked from the move that landed (presentation only; Combat has one Struck state): a
+    /// Strike 2 (combo hit 2) shows "StruckC"; every other hit, and a Struck entered with no HitLanded (an obstacle
+    /// crash), shows "StruckB" (D-042). A Strike 2 landing during StruckB restarts into StruckC from its start.
     /// Event handlers only queue a restart; it is applied in <see cref="Update"/> after the state is read,
     /// and only if the view still shows that state, so an event from a tick that also changed state
     /// (Strike 3 -> Knocked Down) cannot flash the wrong clip.
@@ -72,16 +74,22 @@ namespace RuralRumble.Presentation
         public static readonly int PairedParam = Animator.StringToHash("Paired");
 
         /// <summary>
-        /// Animator bool parameter: show the second hit reaction (state "StruckB") instead of "Struck". Presentation
-        /// only: Combat has a single Struck state. Always true since D-040 (designer, 2026-11-15): every
-        /// non-knockdown hit shows the upright head-snap reaction; the lean-back "Struck" (StruckA) clip stays built
-        /// but is no longer shown.
+        /// Animator bool parameter: show hit reaction B (state "StruckB") instead of "Struck". Presentation only:
+        /// Combat has a single Struck state. Always true since D-040 (designer, 2026-11-15): the lean-back "Struck"
+        /// (StruckA) clip stays built but is no longer shown. <see cref="StruckCParam"/> wins over it.
         /// </summary>
         public static readonly int StruckBParam = Animator.StringToHash("StruckB");
+
+        /// <summary>
+        /// Animator bool parameter: show hit reaction C (state "StruckC"), the second hit of the combo (D-042). True while
+        /// the Struck reaction in progress came from a Strike 2 hit; false otherwise (StruckB shows). Presentation only.
+        /// </summary>
+        public static readonly int StruckCParam = Animator.StringToHash("StruckC");
 
         /// <summary>Animator state names used for restarts (match WrestlerAnimationBuilder).</summary>
         public const string StruckStateName = "Struck";
         public const string StruckBStateName = "StruckB";
+        public const string StruckCStateName = "StruckC";
         public const string KnockedOutStateName = "KnockedOut";
         /// <summary>Lock-up slice states. Each plays the slot clip "Slot_" + state name.</summary>
         public const string LockUpStateName = "LockUp";                    // A, paired, holding
@@ -204,6 +212,9 @@ namespace RuralRumble.Presentation
         private MoveId pendingMove;
         private MoveTiming pendingTiming;
         private bool pendingStruckRestart;
+        private MoveId pendingStruckMove;
+        // The Struck reaction showing is StruckC (from a Strike 2 hit); false = StruckB.
+        private bool showStruckC;
 
         // Lock-up slice: in a paired move (from PairedMoveStarted), and the sprite's sorting order outside it.
         private bool paired;
@@ -297,6 +308,7 @@ namespace RuralRumble.Presentation
             events = null;
             pendingMoveRestart = false;
             pendingStruckRestart = false;
+            showStruckC = false;
             paired = false;
             whipDirection = 0;
             inFrontOfWhipper = false;
@@ -343,8 +355,9 @@ namespace RuralRumble.Presentation
 
         private void OnHitLanded(HitInfo hit)
         {
-            if (hit.Defender == eventsId)
-                pendingStruckRestart = true;
+            if (hit.Defender != eventsId) return;
+            pendingStruckRestart = true;
+            pendingStruckMove = hit.Move;
         }
 
         private void Reset()
@@ -423,9 +436,16 @@ namespace RuralRumble.Presentation
                 animator.SetBool(PairedParam, showPaired);
                 animator.SetBool(FallParam, falling);
 
-                // Every hit shows the StruckB reaction (D-040), set before the Animator evaluates.
+                // The reaction comes from the hit that landed, set before the Animator evaluates: Strike 2 (combo hit 2)
+                // shows StruckC, any other hit StruckB (D-042). A Struck entered with no hit this frame (an obstacle
+                // crash) shows StruckB; staying Struck with no new hit keeps the reaction already showing.
                 bool struckRestart = pendingStruckRestart && state == CombatState.Struck;
+                if (struckRestart)
+                    showStruckC = pendingStruckMove == MoveId.Strike2;
+                else if (state != CombatState.Struck || lastState != CombatState.Struck)
+                    showStruckC = false;
                 animator.SetBool(StruckBParam, true);
+                animator.SetBool(StruckCParam, showStruckC);
 
                 if (pendingMoveRestart && IsTimedMoveState(state) && currentMove == pendingMove)
                 {
@@ -438,7 +458,7 @@ namespace RuralRumble.Presentation
                 }
 
                 if (struckRestart)
-                    PlayFromStart(StruckBStateName, 0f);
+                    PlayFromStart(showStruckC ? StruckCStateName : StruckBStateName, 0f);
 
                 // D-041: a knockdown or knockout from standing with a fall side plays the fall from its start.
                 if (fallStarted)

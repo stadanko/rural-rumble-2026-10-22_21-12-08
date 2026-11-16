@@ -423,6 +423,22 @@ Agents: read this before starting work. If a task conflicts with a decision here
 
 ---
 
+## D-042: Struck B on combo hit 1, Struck C (head turn) on hit 2
+
+- **Date:** 2026-11-15
+- **Decided by:** Designer
+- **Decision:**
+  - A third hit reaction, Struck C: the wrestler stays upright and his head turns away from the camera (WWF WrestleFest `Staging/Art/wrestler/Struck Head Turn.png` as a motion reference only, never generator input).
+  - A Strike 1 hit that doesn't knock down shows Struck B. A Strike 2 hit shows Struck C. (The designer first placed Struck C on hit 1, then swapped the order the same day.) Strike 3 knocks down and plays the fall (D-041), as before.
+  - Any other non-knockdown Struck (for example a truck or pool crash above the Recovering threshold) shows Struck B.
+  - Every hit restarts the reaction from its first frame (D-024).
+  - **Art:** Barry = `gen-barry-struck-c-E-1` (designer chose E, face in profile looking up toward the attacker). Peaux = `gen-peaux-struck-c-A-2` (accepted with the chin up and slightly left; reads as the head turned away with the face hidden). Both approved AI placeholders, flagged for review.
+- **Why:** Designer request (2026-11-15): a straighter, head-turn reaction that doesn't lean back, within the combo.
+- **Supersedes:** D-040's "Struck B for every non-knockdown hit" for Strike 2 hits.
+- **Affects:** WrestlerView and WrestlerAnimationBuilder (presentation only), Struck C clips and FrameTiming, CombatPresentationTests, docs/ARCHITECTURE.md, docs/ACCEPTANCE_TESTS.md, docs/STYLE_GUIDE.md, docs/ASSET_REGISTRY.csv. No combat rule or timing change.
+
+---
+
 ## Open Questions
 
 Not yet decided. Agents must not resolve these on their own.

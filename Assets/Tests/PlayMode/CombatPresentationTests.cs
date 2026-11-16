@@ -50,12 +50,12 @@ namespace RuralRumble.Tests.PlayMode
         }
 
         private void Build(Vector2 playerStart, Vector2 cpuStart, System.Action<CombatTuning> configure = null,
-            string cpuPrefabPath = BarryPrefab)
+            string cpuPrefabPath = BarryPrefab, ArenaGeometry arena = null)
         {
 #if UNITY_EDITOR
             tuning = ScriptableObject.CreateInstance<CombatTuning>();
             configure?.Invoke(tuning);
-            match = new CombatMatch(tuning, null, playerStart, cpuStart);
+            match = new CombatMatch(tuning, arena, playerStart, cpuStart);
             playerInput = new QueuedInput();
             cpuInput = new QueuedInput();
             var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(BarryPrefab);
@@ -166,35 +166,65 @@ namespace RuralRumble.Tests.PlayMode
         }
 
         // D-024: each hit restarts Struck without a StateChanged; presentation restarts the Struck clip on HitLanded.
-        // D-040: every non-knockdown hit shows the "StruckB" reaction (StruckB sprite), played from the start each hit.
+        // The reaction follows the hit that landed (presentation only): combo hit 1 (Strike 1) shows "StruckB", and a
+        // Strike 2 landing while StruckB shows switches to "StruckC" (the head turn) from its start (D-042).
         [UnityTest]
-        public IEnumerator Struck_ClipRestartsOnEveryHit_AlwaysStruckB()
+        public IEnumerator Struck_ClipRestartsOnEveryHit_StruckBOnStrike1ThenStruckC()
         {
             Build(new Vector2(10f, -12f), new Vector2(12f, -12f), t => t.struckDuration = 2f);
             yield return null;
+            var hits = new List<HitInfo>();
+            match.Events.HitLanded += hits.Add;
             playerInput.PressStrikeAt(0, 5); // Strike 1, buffered Strike 2
             TickUntil(() => match.Cpu.State == CombatState.Struck);
+            Assert.AreEqual(1, hits.Count, "setup: one hit so far");
+            Assert.AreEqual(MoveId.Strike1, hits[0].Move, "setup: the first hit is Strike 1");
             yield return Settle();
             yield return new WaitForSeconds(0.3f);
             AnimatorStateInfo before = StateOf(cpuView);
-            Assert.IsTrue(before.IsName("StruckB"), "Animator should be in StruckB on the first hit");
+            Assert.IsTrue(before.IsName(WrestlerView.StruckBStateName), "a Strike 1 hit shows StruckB");
+            Assert.IsFalse(cpuView.Animator.GetBool(WrestlerView.StruckCParam), "StruckC parameter not set for Strike 1");
             Assert.Greater(before.normalizedTime, 0.4f, "setup: the Struck clip has advanced");
-            Assert.AreEqual("barry_struck_b_0", cpuView.SpriteRenderer.sprite.name, "first hit shows the StruckB sprite");
+            Assert.AreEqual("barry_struck_b_0", cpuView.SpriteRenderer.sprite.name, "a Strike 1 hit shows the struck B sprite");
 
             int struckEntries = 0;
             match.Events.StateChanged += (id, from, to) => { if (id == WrestlerId.Cpu && to == CombatState.Struck) struckEntries++; };
-            var hits = new List<HitInfo>();
-            match.Events.HitLanded += hits.Add;
-            TickUntil(() => hits.Count > 0);
-            Assert.AreEqual(MoveId.Strike2, hits[0].Move);
+            TickUntil(() => hits.Count > 1);
+            Assert.AreEqual(MoveId.Strike2, hits[1].Move);
             Assert.AreEqual(CombatState.Struck, match.Cpu.State);
             Assert.AreEqual(0, struckEntries, "setup: a Struck restart raises no StateChanged");
 
             yield return Settle();
             AnimatorStateInfo after = StateOf(cpuView);
-            Assert.IsTrue(after.IsName("StruckB"), "the second consecutive hit shows StruckB again");
+            Assert.IsTrue(after.IsName(WrestlerView.StruckCStateName), "the Strike 2 hit switches to StruckC");
+            Assert.IsTrue(cpuView.Animator.GetBool(WrestlerView.StruckCParam), "StruckC parameter set for Strike 2");
             Assert.Less(after.normalizedTime, before.normalizedTime - 0.25f, "the reaction should play from the start on the second hit");
-            Assert.AreEqual("barry_struck_b_0", cpuView.SpriteRenderer.sprite.name, "second hit shows the StruckB sprite");
+            Assert.AreEqual("barry_struck_c_0", cpuView.SpriteRenderer.sprite.name, "a Strike 2 hit shows the struck C sprite");
+        }
+
+        // A Struck that is not a combo hit shows "StruckB": a run into the truck above the knockdown threshold puts the
+        // runner in Struck with an ObstacleHit and no HitLanded (D-030).
+        [UnityTest]
+        public IEnumerator ObstacleCrashStruck_ShowsStruckB()
+        {
+            // ARCHITECTURE 3.1 movement-slice band and truck footprint (the same values as the EditMode SliceArena).
+            var truck = new ArenaRect(-0.6667f, -10.8333f, 7.7f, -9.6667f);
+            var arena = new ArenaGeometry(new ArenaRect(0f, -13.6667f, 26.6667f, -9.6667f), new[] { truck });
+            Build(new Vector2(12f, -10.2f), new Vector2(1f, -13f), arena: arena);
+            yield return null;
+            var hits = new List<HitInfo>();
+            match.Events.HitLanded += hits.Add;
+            int obstacleHits = 0;
+            match.Events.ObstacleHit += (id, contact) => { if (id == WrestlerId.Player) obstacleHits++; };
+            playerInput.PressRunAt(0); // runs left, toward the CPU, into the truck
+            TickUntil(() => match.Player.State == CombatState.Struck);
+            Assert.AreEqual(1, obstacleHits, "setup: the player crashed into the truck");
+            Assert.IsEmpty(hits, "setup: an obstacle is not a HitLanded");
+
+            yield return Settle();
+            Assert.IsTrue(StateOf(playerView).IsName(WrestlerView.StruckBStateName), "an obstacle crash shows StruckB");
+            Assert.IsFalse(playerView.Animator.GetBool(WrestlerView.StruckCParam), "StruckC parameter not set");
+            Assert.AreEqual("barry_struck_b_0", playerView.SpriteRenderer.sprite.name, "an obstacle crash shows the struck B sprite");
         }
 
         // D-041: knocked out while already lying down (a stomp, D-025; Combat reports FallSide 0 then) keeps the Fall

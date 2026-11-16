@@ -771,3 +771,29 @@ MonoBehaviour:
       HoldMs: 500
       DefaultHoldMs: 500
       BuiltInHoldMs: 500
+  - ClipName: Barry_StruckC
+    Loops: 0
+    Playback: 0
+    ContactStep: -1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: 7901755161544766973, guid: ab7ad08417137d640a309682463052ba, type: 3}
+      PoseOnly: 0
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: 7901755161544766973, guid: ab7ad08417137d640a309682463052ba, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: 7901755161544766973, guid: ab7ad08417137d640a309682463052ba, type: 3}
+      PoseOnly: 1
+      HoldMs: 83.333336
+      DefaultHoldMs: 83.333336
+      BuiltInHoldMs: 83.333336
+    - Sprite: {fileID: 7901755161544766973, guid: ab7ad08417137d640a309682463052ba, type: 3}
+      PoseOnly: 1
+      HoldMs: 166.66667
+      DefaultHoldMs: 166.66667
+      BuiltInHoldMs: 166.66667

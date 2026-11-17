@@ -48,7 +48,9 @@ Build each wrestler's sprites from the designer's concept art: `docs/images/styl
 
 **Small fixes without generation.** For removing or repainting a small detail (e.g. a logo or tattoo), patching pixels with a script is free and leaves the rest of the sprite unchanged; prefer it over an AI edit, which may alter the face or pose.
 
-**Generation costs Unity AI credits.** Before a batch, say what you'll generate and how many calls. Do the smallest useful set first (for example, base sprite plus one walk cycle) rather than every animation at once. Delete nothing from `_Generated/`; tell the designer which files are rejected so they can delete them.
+**Generation costs Unity AI credits.** If your task brief states a designer-approved generation budget (a call cap, relayed from the designer's own words in the main conversation), that is the designer's consent: run the whole job unattended. Generate, check, regenerate failed frames, clean up and stage without stopping for approval, and stop only if finishing would exceed the cap, then report what's done and what's left. Without a stated budget, say what you'll generate and how many calls before a batch, and do the smallest useful set first. Either way, count every generation call and report the total. Delete nothing from `_Generated/`; tell the designer which files are rejected so they can delete them.
+
+**Background removal must not punch holes.** Remove only background pixels connected to the image edge (flood fill from the border), never interior pixels that happen to match the key colour. Before staging, check every frame for enclosed transparent pixels inside the silhouette (and for parts cut off at the image edge) and fill or regenerate. Review previews on a contrasting background (for example magenta) so holes show.
 
 ## How to work
 

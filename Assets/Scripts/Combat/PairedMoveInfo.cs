@@ -31,9 +31,13 @@ namespace RuralRumble.Combat
         /// whipper ("through", WhipDirection == -Facing); false when it is whipped the way the whipper faced
         /// ("away", WhipDirection == Facing).</summary>
         public readonly bool WhipThrough;
+        /// <summary>Bodyslam throw only (D-044): the direction the receiver is thrown, +1 right / -1 left, = -Facing (the
+        /// way the receiver faced in the lock-up, so it lands past the slammer). 0 for a bodyslam without a throw and
+        /// every other move. With a throw, Timing = (Startup = landing, Active 0, Recovery 0).</summary>
+        public readonly int ThrowDirection;
 
         public PairedMoveInfo(WrestlerId initiator, WrestlerId receiver, MoveId move, Vector2 anchor, int facing, MoveTiming timing,
-            int whipDirection = 0, bool whipThrough = false)
+            int whipDirection = 0, bool whipThrough = false, int throwDirection = 0)
         {
             Initiator = initiator;
             Receiver = receiver;
@@ -43,6 +47,7 @@ namespace RuralRumble.Combat
             Timing = timing;
             WhipDirection = whipDirection;
             WhipThrough = whipThrough;
+            ThrowDirection = throwDirection;
         }
     }
 }

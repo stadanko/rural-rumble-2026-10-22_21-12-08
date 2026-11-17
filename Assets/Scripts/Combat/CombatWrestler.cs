@@ -597,6 +597,36 @@ namespace RuralRumble.Combat
             KnockDown(0); // D-041: no fall or slide; the bodyslam keeps its own animation
         }
 
+        /// <summary>
+        /// D-044: a thrown bodyslam lands on this wrestler (Wrestler B) at <paramref name="contactPoint"/> (its feet).
+        /// <paramref name="damage"/> is bodyslam damage, plus obstacle collision damage if the truck or pool stopped the
+        /// flight. Raises one HitLanded(Bodyslam) and HealthChanged, then leaves the pair (MovePhaseChanged None) and is
+        /// Knocked Out at 0 health, else Knocked Down with the normal health-based length (KnockedDown event). No fall or
+        /// slide (FallSide 0); the D-043 get-up follows as for every knockdown. Returns true on a knockout.
+        /// </summary>
+        internal bool LandBodyslamThrow(WrestlerId attacker, float damage, Vector2 contactPoint)
+        {
+            float dealt = TakeDamage(damage, raise: false);
+            events.RaiseHitLanded(new HitInfo(attacker, Id, MoveId.Bodyslam, dealt, contactPoint));
+            events.RaiseHealthChanged(Id, health);
+
+            InPairedMove = false;
+            MoveId ended = move;
+            move = MoveId.None;
+            phase = MovePhase.None;
+            phaseTime = 0f;
+            if (ended != MoveId.None)
+                events.RaiseMovePhaseChanged(Id, ended, MovePhase.None);
+            if (health <= 0f)
+            {
+                BeginFall(0); // D-041: a bodyslam never falls
+                SetState(CombatState.KnockedOut);
+                return true;
+            }
+            KnockDown(0); // D-044: Knocked Down from the landing; no fall, no slide
+            return false;
+        }
+
         internal void SetPairedPhase(MovePhase next)
         {
             if (phase == next)
@@ -659,7 +689,11 @@ namespace RuralRumble.Combat
 
         /// <summary>The whip is over for the whipper: faces <paramref name="faceX"/> (the whip direction, D-039), then
         /// Standing or Recovering by health.</summary>
-        internal void EndWhip(int faceX)
+        internal void EndWhip(int faceX) => EndPairedFacing(faceX);
+
+        /// <summary>A paired move is over for Wrestler A and it ends facing <paramref name="faceX"/> (+1 / -1): the Irish Whip
+        /// (whip direction, D-039) or a thrown bodyslam (throw direction, D-044). Then Standing or Recovering by health.</summary>
+        internal void EndPairedFacing(int faceX)
         {
             SetFacing(new Vector2Int(faceX >= 0 ? 1 : -1, 0));
             EndPaired();

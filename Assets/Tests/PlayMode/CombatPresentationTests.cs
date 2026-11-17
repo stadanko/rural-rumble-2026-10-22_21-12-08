@@ -349,7 +349,50 @@ namespace RuralRumble.Tests.PlayMode
             TickUntil(() => match.Cpu.State == CombatState.KnockedDown);
             Assert.AreEqual(1, match.Cpu.FallSide, "setup");
             yield return SampleFall(cpuView, 1f);
-            AssertFall(1, "peaux", LastSprite("Assets/Art/Wrestlers/Peaux/peaux_bodyslammed.png"));
+            // D-044: Peaux's downed sprite is now R6 (peaux_bodyslammed5_6, pivot = body centre).
+            Sprite r6 = LastSprite("Assets/Art/Wrestlers/Peaux/peaux_bodyslammed5_6.png");
+            AssertFall(1, "peaux", r6);
+            // D-044 / T2.6: fall3 -> R6 lands without a jump: R6's feet end (the end toward the attacker, -x here) sits
+            // where fall3's did (the builder's fallLandingShift).
+            Assert.Greater(cpuView.FallLandingShift, 0.5f, "setup: Peaux's prefab has a fall landing shift");
+            yield return null;
+            yield return new WaitForEndOfFrame();
+            Assert.AreEqual(r6, cpuView.SpriteRenderer.sprite, "setup: landed");
+            Assert.IsTrue(cpuView.SpriteRenderer.flipX, "setup: R6 (stored head left) flipped, head toward +x");
+            float root = cpuGo.transform.position.x;
+            // Flipped, R6's stored right edge (his feet) is drawn on the left; fall3 (stored head right) is unflipped.
+            float downedFeet = root + cpuView.SpriteRenderer.transform.localPosition.x - OpaqueExtentX(r6).y;
+            float fall3Feet = root + OpaqueExtentX(OnlySprite("Assets/Art/Wrestlers/Peaux/peaux_fall3.png")).x;
+            Assert.AreEqual(fall3Feet, downedFeet, 1.01f / 60f, "fall3 and R6 feet ends line up (within 1 px)");
+        }
+
+        /// <summary>Opaque x-extent of a sprite relative to its pivot, world units, stored orientation (read from the PNG).</summary>
+        private static Vector2 OpaqueExtentX(Sprite sprite)
+        {
+#if UNITY_EDITOR
+            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            try
+            {
+                Assert.IsTrue(tex.LoadImage(System.IO.File.ReadAllBytes(UnityEditor.AssetDatabase.GetAssetPath(sprite))));
+                Rect r = sprite.rect;
+                Color32[] px = tex.GetPixels32();
+                int min = int.MaxValue, max = -1;
+                for (int y = (int)r.y; y < (int)(r.y + r.height); y++)
+                    for (int x = (int)r.x; x < (int)(r.x + r.width); x++)
+                        if (px[y * tex.width + x].a > 0)
+                        {
+                            min = Mathf.Min(min, x - (int)r.x);
+                            max = Mathf.Max(max, x - (int)r.x);
+                        }
+                return new Vector2((min - sprite.pivot.x) / sprite.pixelsPerUnit, (max + 1 - sprite.pivot.x) / sprite.pixelsPerUnit);
+            }
+            finally
+            {
+                Object.Destroy(tex);
+            }
+#else
+            return Vector2.zero;
+#endif
         }
 
         private const string PeauxPrefab = "Assets/Prefabs/Wrestlers/Peaux.prefab";
@@ -408,7 +451,8 @@ namespace RuralRumble.Tests.PlayMode
                 bool isDowned = s.Sprite == downed;
                 if (isDowned && landFrame < 0) landFrame = s.Frame - fallSamples[0].Frame;
                 Assert.AreEqual(side, HeadSide(s.Sprite, s.FlipX, downed), $"frame {s.Frame}: head on the fall side\n{trace}");
-                Assert.AreEqual(isDowned ? side * shift : 0f, s.OffsetX, 1e-3f, $"frame {s.Frame}: sprite x offset\n{trace}");
+                Assert.AreEqual(isDowned ? side * (shift + cpuView.FallLandingShift) : 0f, s.OffsetX, 1e-3f,
+                    $"frame {s.Frame}: sprite x offset (downedMirrorShift + D-044 fallLandingShift)\n{trace}");
             }
             CollectionAssert.AreEqual(new[] { prefix + "_struck_a_0", prefix + "_fall2_0", prefix + "_fall3_0", downed.name }, order, trace);
             Assert.That(landFrame, Is.InRange(19, 23), "lands about 0.35 s in (default holds 100 / 120 / 130 ms)\n" + trace);
@@ -448,8 +492,10 @@ namespace RuralRumble.Tests.PlayMode
             Assert.IsFalse(playerView.SpriteRenderer.flipX, "right-facing, mirrored: not flipped");
             Assert.IsTrue(cpuView.SpriteRenderer.flipX, "left-facing, mirrored: flipped");
 
-            float shift = cpuView.DownedMirrorShift;
-            Assert.Greater(shift, 0.5f, "setup: the prefab has a downed mirror shift");
+            // Barry's R6 is centred on the body: downedMirrorShift ~0, and the D-044 fallLandingShift puts its feet end
+            // where fall3's was (toward the fall side).
+            float shift = cpuView.DownedMirrorShift + cpuView.FallLandingShift;
+            Assert.Greater(shift, 0.5f, "setup: the prefab has a downed mirror / fall landing shift");
             Assert.AreEqual(shift, cpuView.SpriteRenderer.transform.localPosition.x, 1e-3f, "left-facing: shifted +shift");
             Assert.AreEqual(-shift, playerView.SpriteRenderer.transform.localPosition.x, 1e-3f, "right-facing: shifted -shift");
             Assert.AreEqual(0f, SpriteRotZ(cpuView), 0.01f, "no rotation");
@@ -641,8 +687,8 @@ namespace RuralRumble.Tests.PlayMode
             }
         }
 
-        /// <summary>Barry's downed sprite: the last sprite of Barry_Bodyslammed.</summary>
-        private static Sprite BarryDownedSprite() => LastSprite("Assets/Art/Wrestlers/Barry/barry_bodyslammed.png");
+        /// <summary>Barry's downed sprite: the last sprite of Barry_Bodyslammed, his throw R6 (Peaux slams Barry, 2026-11-17).</summary>
+        private static Sprite BarryDownedSprite() => LastSprite("Assets/Art/Wrestlers/Barry/barry_bodyslammed5_6.png");
 
         /// <summary>The highest-numbered sprite of a sheet.</summary>
         private static Sprite LastSprite(string texturePath)

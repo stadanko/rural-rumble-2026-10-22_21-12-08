@@ -254,7 +254,7 @@ MonoBehaviour:
     ContactStep: -1
     CustomDefaults: 0
     Steps:
-    - Sprite: {fileID: -5474145498823552266, guid: fded4a23b092d0642ab548e1c112c2e0, type: 3}
+    - Sprite: {fileID: 2878248842528705120, guid: c2c698fea1b8f164b8c54ecfe3b5a882, type: 3}
       PoseOnly: 0
       HoldMs: 500
       DefaultHoldMs: 500
@@ -577,80 +577,85 @@ MonoBehaviour:
   - ClipName: Peaux_Bodyslam
     Loops: 0
     Playback: 1
-    ContactStep: 4
+    ContactStep: 5
     CustomDefaults: 0
     Steps:
-    - Sprite: {fileID: -5464925528970950558, guid: f020dd91559cf054b8a08b7bdf796254, type: 3}
+    - Sprite: {fileID: 4316175481906520220, guid: 353be7c6d451ab94d8465e70adce3e65, type: 3}
       PoseOnly: 0
-      HoldMs: 150
-      DefaultHoldMs: 291.66666
-      BuiltInHoldMs: 291.66666
-    - Sprite: {fileID: 5315449116065390249, guid: f020dd91559cf054b8a08b7bdf796254, type: 3}
+      HoldMs: 120
+      DefaultHoldMs: 120
+      BuiltInHoldMs: 120
+    - Sprite: {fileID: -1444027180218639320, guid: 2fcaa1e76176abf499959495a65499ad, type: 3}
       PoseOnly: 0
-      HoldMs: 150
-      DefaultHoldMs: 416.66666
-      BuiltInHoldMs: 416.66666
-    - Sprite: {fileID: -6860210446428259179, guid: f020dd91559cf054b8a08b7bdf796254, type: 3}
+      HoldMs: 120
+      DefaultHoldMs: 120
+      BuiltInHoldMs: 120
+    - Sprite: {fileID: -5988880878430230904, guid: 396bb35a3635e574c9c508dd343ad67e, type: 3}
       PoseOnly: 0
-      HoldMs: 100
-      DefaultHoldMs: 125
-      BuiltInHoldMs: 125
-    - Sprite: {fileID: -1596486910591793752, guid: f020dd91559cf054b8a08b7bdf796254, type: 3}
-      PoseOnly: 0
-      HoldMs: 100
-      DefaultHoldMs: 250
-      BuiltInHoldMs: 250
-    - Sprite: {fileID: -6308267341998942964, guid: f020dd91559cf054b8a08b7bdf796254, type: 3}
-      PoseOnly: 0
-      HoldMs: 75
-      DefaultHoldMs: 708.3333
-      BuiltInHoldMs: 708.3333
-    - Sprite: {fileID: -4444169114332683688, guid: f020dd91559cf054b8a08b7bdf796254, type: 3}
+      HoldMs: 180
+      DefaultHoldMs: 180
+      BuiltInHoldMs: 180
+    - Sprite: {fileID: 2622287348292888374, guid: 919f006a93556f740b582f1e8705acc3, type: 3}
       PoseOnly: 0
       HoldMs: 100
-      DefaultHoldMs: 500
-      BuiltInHoldMs: 500
+      DefaultHoldMs: 100
+      BuiltInHoldMs: 100
+    - Sprite: {fileID: 510536153757532064, guid: d2f21e6c82e6d4d4a9ea26c2b7331a61, type: 3}
+      PoseOnly: 0
+      HoldMs: 100
+      DefaultHoldMs: 100
+      BuiltInHoldMs: 100
+    - Sprite: {fileID: 1886176580217378589, guid: 1056c001445f8564fa108e52f7437346, type: 3}
+      PoseOnly: 0
+      HoldMs: 100
+      DefaultHoldMs: 100
+      BuiltInHoldMs: 100
   - ClipName: Peaux_Bodyslammed
     Loops: 0
     Playback: 1
     ContactStep: 5
     CustomDefaults: 0
     Steps:
-    - Sprite: {fileID: 5321736103553624857, guid: fded4a23b092d0642ab548e1c112c2e0, type: 3}
+    - Sprite: {fileID: 4795106355628163094, guid: b729cd7429502b047b10f9e7663fbf54, type: 3}
       PoseOnly: 0
-      HoldMs: 150
-      DefaultHoldMs: 291.66666
-      BuiltInHoldMs: 291.66666
-    - Sprite: {fileID: 7978487040387033362, guid: fded4a23b092d0642ab548e1c112c2e0, type: 3}
+      HoldMs: 120
+      DefaultHoldMs: 120
+      BuiltInHoldMs: 120
+    - Sprite: {fileID: -2757474487553667284, guid: 3eecfe8424a4a424290a5e1e67254b78, type: 3}
       PoseOnly: 0
-      HoldMs: 125
-      DefaultHoldMs: 125
-      BuiltInHoldMs: 125
-    - Sprite: {fileID: 3117445128141496483, guid: fded4a23b092d0642ab548e1c112c2e0, type: 3}
+      HoldMs: 120
+      DefaultHoldMs: 120
+      BuiltInHoldMs: 120
+    - Sprite: {fileID: 7301599818054961191, guid: b28339fb3d259e34fae4545c1bee9135, type: 3}
       PoseOnly: 0
-      HoldMs: 125
-      DefaultHoldMs: 416.66666
-      BuiltInHoldMs: 416.66666
-    - Sprite: {fileID: -8301421503187018446, guid: fded4a23b092d0642ab548e1c112c2e0, type: 3}
-      PoseOnly: 0
-      HoldMs: 75
-      DefaultHoldMs: 125
-      BuiltInHoldMs: 125
-    - Sprite: {fileID: 3596654671112118285, guid: fded4a23b092d0642ab548e1c112c2e0, type: 3}
-      PoseOnly: 0
-      HoldMs: 50
-      DefaultHoldMs: 250
-      BuiltInHoldMs: 250
-    - Sprite: {fileID: 4085245671473119088, guid: fded4a23b092d0642ab548e1c112c2e0, type: 3}
-      PoseOnly: 0
-      HoldMs: 50
-      DefaultHoldMs: 708.3333
-      BuiltInHoldMs: 708.3333
-    - Sprite: {fileID: -5474145498823552266, guid: fded4a23b092d0642ab548e1c112c2e0, type: 3}
+      HoldMs: 180
+      DefaultHoldMs: 180
+      BuiltInHoldMs: 180
+    - Sprite: {fileID: -5280732278719437308, guid: ee155640ebced16439a8f62a592b6fc0, type: 3}
       PoseOnly: 0
       HoldMs: 100
-      DefaultHoldMs: 500
-      BuiltInHoldMs: 500
+      DefaultHoldMs: 100
+      BuiltInHoldMs: 100
+    - Sprite: {fileID: 1807167470477337365, guid: 6e58fc4a8c1965b43ab9c2a68006f5df, type: 3}
+      PoseOnly: 0
+      HoldMs: 100
+      DefaultHoldMs: 100
+      BuiltInHoldMs: 100
+    - Sprite: {fileID: 2878248842528705120, guid: c2c698fea1b8f164b8c54ecfe3b5a882, type: 3}
+      PoseOnly: 0
+      HoldMs: 100
+      DefaultHoldMs: 100
+      BuiltInHoldMs: 100
+    - Sprite: {fileID: -174912956629112325, guid: ced8792bbb575054287e116eba9d577c, type: 3}
+      PoseOnly: 0
+      HoldMs: 150
+      DefaultHoldMs: 150
+      BuiltInHoldMs: 150
+    - Sprite: {fileID: 2878248842528705120, guid: c2c698fea1b8f164b8c54ecfe3b5a882, type: 3}
+      PoseOnly: 0
+      HoldMs: 100
+      DefaultHoldMs: 100
+      BuiltInHoldMs: 100
   - ClipName: Peaux_Stomp
     Loops: 0
     Playback: 1
@@ -777,7 +782,7 @@ MonoBehaviour:
       HoldMs: 130
       DefaultHoldMs: 130
       BuiltInHoldMs: 130
-    - Sprite: {fileID: -5474145498823552266, guid: fded4a23b092d0642ab548e1c112c2e0, type: 3}
+    - Sprite: {fileID: 2878248842528705120, guid: c2c698fea1b8f164b8c54ecfe3b5a882, type: 3}
       PoseOnly: 0
       HoldMs: 500
       DefaultHoldMs: 500

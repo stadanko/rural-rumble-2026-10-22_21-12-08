@@ -83,20 +83,20 @@ MonoBehaviour:
     TurnTime: 0
   - Move: 6
     Clip: {fileID: 7400000, guid: b6b6d982418a7c94aab7e41f6557cc4d, type: 2}
-    ContactTime: 0.525
-    TurnTime: 0
+    ContactTime: 0.62
+    TurnTime: 0.24
   - Move: 6
     Clip: {fileID: 7400000, guid: b0afdbfa4df07c54e803bb296f39d568, type: 2}
-    ContactTime: 0.5
-    TurnTime: 0
+    ContactTime: 0.62
+    TurnTime: 0.42
   - Move: 6
     Clip: {fileID: 7400000, guid: 773c8385054bcd144a3d58d0027f643f, type: 2}
-    ContactTime: 0.5
-    TurnTime: 0
+    ContactTime: 0.62
+    TurnTime: 0.24
   - Move: 6
     Clip: {fileID: 7400000, guid: 2c8e63803410c664cbfbdb2981b9a885, type: 2}
-    ContactTime: 0.525
-    TurnTime: 0
+    ContactTime: 0.62
+    TurnTime: 0.42
   - Move: 4
     Clip: {fileID: 7400000, guid: c532e0767d65dbd43a7437cdd768bc3a, type: 2}
     ContactTime: 0.20833333

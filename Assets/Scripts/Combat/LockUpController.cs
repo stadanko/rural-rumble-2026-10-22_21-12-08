@@ -32,6 +32,16 @@ namespace RuralRumble.Combat
     /// knockout ends the pair at once. End of Recovery: B is Knocked Down (length from health then), A returns
     /// to Standing or Recovering. Neither wrestler has any control during the bodyslam.</para>
     ///
+    /// <para><b>The bodyslam throw (D-044).</b> When the slammer has an enabled
+    /// <see cref="CombatTuning.TryGetBodyslamThrow"/> entry (both wrestlers in the project asset, D-045), the entry and the landing time (the slammer's bodyslam
+    /// Startup) are fixed at the Grapple press and <c>random01</c> is drawn once for the distance. PairedMoveStarted(Bodyslam)
+    /// carries Timing (landing, 0, 0) and ThrowDirection T = -Facing (the way B faced in the lock-up). No root moves before
+    /// the release; from the release to the landing B's root moves on x, linearly, from releaseOffsetPx to the drawn
+    /// distance past A (swept and clamped by the arena like the D-041 slide, no wrestler blocking; a truck/pool contact
+    /// raises ObstacleHit once and adds obstacle collision damage at the landing). Landing: phases Active, Recovery for
+    /// both, one HitLanded(Bodyslam), B Knocked Down (or Out), A free facing T, all on the same tick. A slam with no
+    /// enabled entry is the step 2 bodyslam above, unchanged (no random draw).</para>
+    ///
     /// <para><b>The Irish Whip (step 3, D-028, D-039).</b> Irish Whip (B) during the lock-up window. Direction W: the
     /// sign of the held Move x outside the deadzone, else the way the receiver faces (toward the whipper, so the
     /// runner passes the whipper: "through"). A = Grappling, CurrentMove = IrishWhip, rooted, facing locked; B =
@@ -64,6 +74,18 @@ namespace RuralRumble.Combat
         private float whipTime;
         private bool runnerOnPath;
 
+        // Bodyslam throw (D-044). Fixed at the Grapple press for the slam playing.
+        private const float PixelsPerUnit = 60f;
+        private bool throwing;
+        private int throwDirection;
+        private float throwTime;
+        private float throwRelease;
+        private float throwLanding;
+        private float throwReleaseOffset; // units
+        private float throwDistance;      // units, the drawn root-to-root landing distance
+        private bool throwBlocked;
+        private bool throwHitObstacle;
+
         /// <param name="random01">Returns a value in [0, 1); below 0.5 the player wins a simultaneous lock-up.</param>
         internal LockUpController(CombatTuning tuning, CombatEvents events, ArenaGeometry arena, Func<float> random01)
         {
@@ -87,6 +109,16 @@ namespace RuralRumble.Combat
         public float WhipElapsed => move == MoveId.IrishWhip ? whipTime : 0f;
         /// <summary>During an Irish Whip: the runner is still on the whip path (its root is placed by this controller).</summary>
         public bool RunnerOnWhipPath => move == MoveId.IrishWhip && runnerOnPath;
+
+        /// <summary>D-044: while a throwing bodyslam plays, the throw direction (+1 right / -1 left); 0 otherwise.</summary>
+        public int BodyslamThrowDirection => move == MoveId.Bodyslam && throwing ? throwDirection : 0;
+        /// <summary>D-044: the drawn root-to-root landing distance of the current (or, after it, the most recent) thrown
+        /// slam, world units; 0 before any throw in this match.</summary>
+        public float BodyslamThrowDistance => throwDistance;
+        /// <summary>D-044: the current (or most recent) throw's flight was clamped short (arena end, truck or pool).</summary>
+        public bool BodyslamThrowBlocked => throwBlocked;
+        /// <summary>D-044: the current (or most recent) throw's flight was stopped by the truck or pool (extra damage).</summary>
+        public bool BodyslamThrowHitObstacle => throwHitObstacle;
 
         /// <summary>
         /// True when this controller writes the wrestler's position this tick, so CombatMatch must not move it: both
@@ -249,6 +281,12 @@ namespace RuralRumble.Combat
                 return;
             }
 
+            if (move == MoveId.Bodyslam && throwing)
+            {
+                AdvanceThrow(dt);
+                return;
+            }
+
             // D-031: only Wrestler A's Grapple and Irish Whip act, for the whole lock-up window. The LockUp
             // move's Startup and Recovery are zero-length (LockUpHoldTiming), so a press on the first tick
             // after the lock-up (phase still Startup) counts too.
@@ -364,6 +402,10 @@ namespace RuralRumble.Combat
 
         private void Clear()
         {
+            // The throw's distance / blocked / obstacle flags stay readable after the slam (reset at the next throw).
+            throwing = false;
+            throwDirection = 0;
+            throwTime = 0f;
             whipDirection = 0;
             whipThrough = false;
             whipTime = 0f;
@@ -384,8 +426,104 @@ namespace RuralRumble.Combat
         /// </summary>
         private bool OnGrapplePressed(in WrestlerIntent intent)
         {
-            StartPaired(MoveId.Bodyslam);
+            if (tuning.TryGetBodyslamThrow(initiator.Definition, out BodyslamThrow entry))
+                StartThrowingSlam(entry);
+            else
+                StartPaired(MoveId.Bodyslam); // D-044: no throw (disabled or missing entry, no definitions): step 2 unchanged
             return true;
+        }
+
+        // ================================================================ Bodyslam throw (D-044)
+
+        /// <summary>
+        /// D-044 press tick: as the step 2 bodyslam (A Grappling, B Grappled, CurrentMove Bodyslam, no snap, LockUp None),
+        /// with the throw entry and landing time fixed now and one random draw for the distance. PairedMoveStarted(Bodyslam)
+        /// carries Timing (landing, 0, 0) and ThrowDirection = -Facing.
+        /// </summary>
+        private void StartThrowingSlam(in BodyslamThrow entry)
+        {
+            float landing = Mathf.Max(0f, tuning.BodyslamTimingFor(initiator.Definition).Startup);
+            float variance = Mathf.Clamp01(entry.distanceVariance);
+            float r = Mathf.Clamp01(random01()); // exactly one draw per thrown slam
+            float distancePx = entry.landingDistancePx * (1f + variance * (2f * r - 1f));
+            int facing = initiator.HorizontalFacing;
+
+            throwing = true;
+            throwDirection = facing >= 0 ? -1 : 1; // B's lock-up facing: B is thrown past A
+            throwTime = 0f;
+            throwLanding = landing;
+            throwRelease = Mathf.Clamp(entry.releaseTime, 0f, landing);
+            throwReleaseOffset = entry.releaseOffsetPx / PixelsPerUnit;
+            throwDistance = distancePx / PixelsPerUnit;
+            throwBlocked = false;
+            throwHitObstacle = false;
+
+            move = MoveId.Bodyslam;
+            phase = MovePhase.Startup;
+            phaseTime = 0f;
+            initiator.SwitchPairedMove(MoveId.Bodyslam, CombatState.Grappling);
+            receiver.SwitchPairedMove(MoveId.Bodyslam, CombatState.Grappled);
+            Vector2 anchor = (initiator.Position + receiver.Position) * 0.5f;
+            events.RaisePairedMoveStarted(new PairedMoveInfo(initiator.Id, receiver.Id, MoveId.Bodyslam, anchor, facing,
+                new MoveTiming(landing, 0f, 0f), throwDirection: throwDirection));
+        }
+
+        /// <summary>
+        /// One tick of a thrown slam: before the release nothing moves; from the release B's root follows the linear path
+        /// (stopped for good once clamped short); on the first tick at or after the landing time, the landing.
+        /// </summary>
+        private void AdvanceThrow(float dt)
+        {
+            throwTime += dt;
+            if (!throwBlocked && throwTime >= throwRelease)
+                PlaceThrown();
+            if (throwTime >= throwLanding)
+                LandThrow();
+        }
+
+        /// <summary>
+        /// Moves B's root toward A.x + T x lerp(release offset, drawn distance, fraction) at B's depth, swept and clamped
+        /// through the arena like the D-041 knockback slide (no wrestler blocking, no run collision). Clamped short =
+        /// blocked: B stays there for the rest of the flight; the truck or pool raises ObstacleHit once (an arena end nothing).
+        /// </summary>
+        private void PlaceThrown()
+        {
+            float span = throwLanding - throwRelease;
+            float f = span > 0f ? Mathf.Clamp01((Mathf.Min(throwTime, throwLanding) - throwRelease) / span) : 1f;
+            float offset = Mathf.Lerp(throwReleaseOffset, throwDistance, f);
+            Vector2 from = receiver.Position;
+            float dx = initiator.Position.x + throwDirection * offset - from.x;
+            if (dx == 0f)
+                return;
+            ArenaMoveResult r = arena.Move(from, new Vector2(dx, 0f), receiver.FeetHalfExtents);
+            receiver.SetPosition(r.Position);
+            if (!r.BlockedX)
+                return;
+            throwBlocked = true;
+            if (r.HitObstacleX && dx * throwDirection > 0f)
+            {
+                throwHitObstacle = true;
+                events.RaiseObstacleHit(receiver.Id,
+                    new Vector2(r.Position.x + throwDirection * tuning.feetHalfWidth, r.Position.y));
+            }
+        }
+
+        /// <summary>
+        /// The landing (D-044): Bodyslam Active then Recovery for both (zero length), one HitLanded(Bodyslam) with bodyslam
+        /// damage (+ obstacle collision damage if the truck or pool stopped the flight), HealthChanged; B Knocked Down (or
+        /// Knocked Out); A Standing or Recovering facing the throw direction, free from the next tick. On a knockout A's move
+        /// still ends now, so the frozen A is standing.
+        /// </summary>
+        private void LandThrow()
+        {
+            CombatWrestler a = initiator, b = receiver;
+            int t = throwDirection;
+            float damage = tuning.bodyslamDamage + (throwHitObstacle ? tuning.obstacleCollisionDamage : 0f);
+            SetPhase(MovePhase.Active);
+            SetPhase(MovePhase.Recovery);
+            Clear();
+            b.LandBodyslamThrow(a.Id, damage, b.Position);
+            a.EndPairedFacing(t);
         }
 
         /// <summary>

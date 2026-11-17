@@ -25,6 +25,8 @@ namespace RuralRumble.Presentation
     /// direction from TurnTime on (clip time at native speed, so it follows the sprite change at any playback speed).
     /// The Falling Down clips (D-041) have an entry with Move None, no contact time and the landing (start of the downed
     /// sprite) as TurnTime: WrestlerView switches from the fall frames' orientation to the mirrored downed sprite there.
+    /// The D-044 throw clips (Barry_Bodyslam, Peaux_Bodyslammed) record the landing as ContactTime (Barry's appended stand /
+    /// the first R6, 0.62 s at the defaults) and the turn as TurnTime (S3 / R4).
     /// </summary>
     [CreateAssetMenu(menuName = "Rural Rumble/Move Animation Table", fileName = "MoveAnimationTable")]
     public sealed class MoveAnimationTable : ScriptableObject
@@ -40,7 +42,9 @@ namespace RuralRumble.Presentation
                      "0 = no contact frame: the whole clip is fitted to the move's total time (lock-up whiff, break).")]
             public float ContactTime;
             [Tooltip("Seconds from clip start (native speed) at which the art turns to face a second direction; 0 = none. " +
-                     "Irish Whip only (D-039): the start of f2, where the whipper turns to the whip direction.")]
+                     "Irish Whip (D-039): the start of f2, where the whipper turns to the whip direction. Fall (D-041): the " +
+                     "landing. Bodyslam throw (D-044): Barry_Bodyslam S3 (turns to the throw direction), Peaux_Bodyslammed " +
+                     "R4 (the release; R4-R7 are stored for a throw to screen-right).")]
             public float TurnTime;
         }
 

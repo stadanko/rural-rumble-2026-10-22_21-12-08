@@ -49,8 +49,10 @@ namespace RuralRumble.Combat
         [Header("Bodyslam")]
         [Tooltip("Bodyslam timing (lock-up slice step 2). Startup = Grapple press to impact (Wrestler B hits the ground); damage is applied when Active starts. When Recovery ends, B is Knocked Down and A returns to Standing or Recovering. Startup: Combat starting point, used only for an initiator with no entry below (between the two approved pairs). Active + Recovery: Combat starting point, = the rest of the approved clips after impact (D-033: 1.209 s for both pairs), so the knockdown starts as the clip finishes.")]
         public MoveTiming bodyslamTiming = new MoveTiming(1.15f, 0.1f, 1.11f);
-        [Tooltip("Set (D-036, designer-retimed; was D-033). Bodyslam Startup (impact time) per initiator, matched to each slammer's clip so it plays at about native speed: Barry 0.525 s (slams Peaux), Peaux 0.475 s (slams Barry). Editable from the FrameTiming Inspector too. An initiator not listed uses bodyslamTiming's Startup. Matched against the WrestlerDefinitions the match was built with.")]
+        [Tooltip("Starting point (D-044; D-036, D-033 before). Bodyslam Startup (impact time) per initiator, matched to each slammer's clip so it plays at about native speed: Barry 0.62 s (slams Peaux, v5 clip), Peaux 0.62 s (slams Barry, throw clip; was 0.475); with a throw this is the landing. Editable from the FrameTiming Inspector too. An initiator not listed uses bodyslamTiming's Startup. Matched against the WrestlerDefinitions the match was built with.")]
         public WrestlerStartup[] bodyslamStartupByInitiator = new WrestlerStartup[0];
+        [Tooltip("D-044 bodyslam throw, per slammer, matched against the WrestlerDefinitions the match was built with. An enabled entry throws the receiver past the slammer along x at the lock-up depth: release at releaseTime, linear flight to the landing (= the slammer's bodyslam Startup above), landing at landingDistancePx root to root, +/- distanceVariance (uniform, drawn once per slam). A disabled entry or a slammer with no entry keeps the old bodyslam (no throw). Read once at the Grapple press. Project asset: Barry on, Peaux on (D-045).")]
+        public BodyslamThrow[] bodyslamThrowBySlammer = new BodyslamThrow[0];
 
         // ------------------------------------------------------------------ Irish Whip
         [Header("Irish Whip")]
@@ -224,6 +226,28 @@ namespace RuralRumble.Combat
         }
 
         /// <summary>
+        /// D-044: this slammer's bodyslam throw entry, read now. True only for an entry with
+        /// <see cref="BodyslamThrow.throwEnabled"/>; a null slammer, no entry or a disabled entry gives false (no fallback
+        /// entry: the slam does not throw). The first entry for the slammer counts.
+        /// </summary>
+        public bool TryGetBodyslamThrow(WrestlerDefinition slammer, out BodyslamThrow t)
+        {
+            t = default;
+            if (slammer == null || bodyslamThrowBySlammer == null)
+                return false;
+            foreach (BodyslamThrow entry in bodyslamThrowBySlammer)
+            {
+                if (entry.slammer != slammer)
+                    continue;
+                if (!entry.throwEnabled)
+                    return false;
+                t = entry;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// The Irish Whip choreography for this whipper, read now: the whipper's <see cref="irishWhipByWhipper"/>
         /// entry, or <see cref="irishWhip"/> for a null or unlisted whipper (D-039).
         /// </summary>
@@ -274,6 +298,38 @@ namespace RuralRumble.Combat
                 case MoveId.LockUp: return lockUpReach;
                 default: return 0f;
             }
+        }
+    }
+
+    /// <summary>
+    /// D-044: one slammer's bodyslam throw in <see cref="CombatTuning.bodyslamThrowBySlammer"/> (ARCHITECTURE 6
+    /// "Bodyslam throw (D-044): integration contract"). Pixels are 60 per world unit.
+    /// </summary>
+    [Serializable]
+    public struct BodyslamThrow
+    {
+        [Tooltip("The wrestler doing the bodyslam (Assets/Data/Wrestlers/).")]
+        public WrestlerDefinition slammer;
+        [Tooltip("Set (D-044). Whether this slammer's bodyslam throws the receiver: Barry on, Peaux on (D-044, D-045). Off = the old bodyslam with no throw (no root movement, Knocked Down after Active + Recovery).")]
+        public bool throwEnabled;
+        [Tooltip("Starting point (D-044). Seconds from the Grapple press to the release (start of S4/R4): neither root moves before it. Clamped to [0, the slammer's bodyslam Startup]. Barry 0.42, Peaux 0.42.")]
+        [Min(0f)] public float releaseTime;
+        [Tooltip("Starting point (D-044). Receiver root distance from the slammer root along the throw at the release, pixels (60 px = 1 unit). Barry 178, Peaux 159 (R4's drawn spot past the slammer's feet, which are at his root from S3 on).")]
+        public float releaseOffsetPx;
+        [Tooltip("Set (D-044). Median root-to-root landing distance along the throw, pixels (60 px = 1 unit). Barry 382 (1.59 x 240 px standing height), Peaux 342 (1.59 x 215 px); the slammer's feet are at his root from S3 on.")]
+        public float landingDistancePx;
+        [Tooltip("Set (D-044). Landing distance variation, fraction: uniform within +/- this of the median, drawn once per slam. Clamped to [0, 1]. 0.10 = +/-10%.")]
+        [Range(0f, 1f)] public float distanceVariance;
+
+        public BodyslamThrow(WrestlerDefinition slammer, bool throwEnabled, float releaseTime, float releaseOffsetPx,
+            float landingDistancePx, float distanceVariance)
+        {
+            this.slammer = slammer;
+            this.throwEnabled = throwEnabled;
+            this.releaseTime = releaseTime;
+            this.releaseOffsetPx = releaseOffsetPx;
+            this.landingDistancePx = landingDistancePx;
+            this.distanceVariance = distanceVariance;
         }
     }
 

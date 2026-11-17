@@ -1,0 +1,291 @@
+{
+ "S1": {
+  "file": "peaux_bodyslam5_1.png",
+  "cell": [
+   156,
+   210
+  ],
+  "pivot_px_from_left": 48,
+  "pivot_dx": -30,
+  "ground_px_from_bottom": 0,
+  "flip_when_slammer_faces_left": false,
+  "source": "P1",
+  "small_holes_filled_px": 12,
+  "visible_bbox": [
+   3,
+   2,
+   145,
+   210
+  ],
+  "enclosed_transparent_px": 0,
+  "touches_cell_edge": [],
+  "promoted_path": "Assets/Art/Wrestlers/Peaux/peaux_bodyslam5_1.png",
+  "art_version": "pb5c"
+ },
+ "S2": {
+  "file": "peaux_bodyslam5_2.png",
+  "cell": [
+   206,
+   190
+  ],
+  "pivot_px_from_left": 73,
+  "pivot_dx": -30,
+  "ground_px_from_bottom": 0,
+  "flip_when_slammer_faces_left": false,
+  "source": "P2",
+  "small_holes_filled_px": 1,
+  "visible_bbox": [
+   3,
+   2,
+   172,
+   190
+  ],
+  "enclosed_transparent_px": 0,
+  "touches_cell_edge": [],
+  "promoted_path": "Assets/Art/Wrestlers/Peaux/peaux_bodyslam5_2.png",
+  "art_version": "pb5c"
+ },
+ "S3": {
+  "file": "peaux_bodyslam5_3.png",
+  "cell": [
+   132,
+   243
+  ],
+  "pivot_px_from_left": 66,
+  "pivot_dx": 0,
+  "ground_px_from_bottom": 0,
+  "flip_when_slammer_faces_left": true,
+  "source": "P3",
+  "small_holes_filled_px": 5,
+  "visible_bbox": [
+   4,
+   2,
+   129,
+   243
+  ],
+  "enclosed_transparent_px": 0,
+  "touches_cell_edge": [],
+  "promoted_path": "Assets/Art/Wrestlers/Peaux/peaux_bodyslam5_3.png",
+  "art_version": "pb5"
+ },
+ "S4": {
+  "file": "peaux_bodyslam5_4.png",
+  "cell": [
+   308,
+   204
+  ],
+  "pivot_px_from_left": 154,
+  "pivot_dx": 0,
+  "ground_px_from_bottom": 0,
+  "flip_when_slammer_faces_left": true,
+  "small_holes_filled_px": 3,
+  "visible_bbox": [
+   3,
+   2,
+   172,
+   204
+  ],
+  "enclosed_transparent_px": 0,
+  "touches_cell_edge": [],
+  "promoted_path": "Assets/Art/Wrestlers/Peaux/peaux_bodyslam5_4.png",
+  "art_version": "pb5"
+ },
+ "S5": {
+  "file": "peaux_bodyslam5_5.png",
+  "cell": [
+   182,
+   209
+  ],
+  "pivot_px_from_left": 91,
+  "pivot_dx": 0,
+  "ground_px_from_bottom": 0,
+  "flip_when_slammer_faces_left": true,
+  "small_holes_filled_px": 4,
+  "visible_bbox": [
+   3,
+   2,
+   110,
+   209
+  ],
+  "enclosed_transparent_px": 0,
+  "touches_cell_edge": [],
+  "promoted_path": "Assets/Art/Wrestlers/Peaux/peaux_bodyslam5_5.png",
+  "art_version": "pb5b"
+ },
+ "R1": {
+  "file": "barry_bodyslammed5_1.png",
+  "cell": [
+   190,
+   264
+  ],
+  "pivot_px_from_left": 65,
+  "pivot_dx": -30,
+  "ground_px_from_bottom": 0,
+  "flip_when_receiver_faces_right": true,
+  "source": "P1",
+  "small_holes_filled_px": 0,
+  "visible_bbox": [
+   3,
+   2,
+   102,
+   252
+  ],
+  "enclosed_transparent_px": 64,
+  "touches_cell_edge": [],
+  "promoted_path": "Assets/Art/Wrestlers/Barry/barry_bodyslammed5_1.png",
+  "art_version": "pb5c"
+ },
+ "R2": {
+  "file": "barry_bodyslammed5_2.png",
+  "cell": [
+   362,
+   228
+  ],
+  "pivot_px_from_left": 151,
+  "pivot_dx": -30,
+  "ground_px_from_bottom": 0,
+  "flip_when_receiver_faces_right": true,
+  "source": "P2",
+  "small_holes_filled_px": 0,
+  "visible_bbox": [
+   3,
+   2,
+   212,
+   179
+  ],
+  "enclosed_transparent_px": 0,
+  "touches_cell_edge": [],
+  "promoted_path": "Assets/Art/Wrestlers/Barry/barry_bodyslammed5_2.png",
+  "art_version": "pb5c"
+ },
+ "R3": {
+  "file": "barry_bodyslammed5_3.png",
+  "cell": [
+   500,
+   301
+  ],
+  "pivot_px_from_left": 190,
+  "pivot_dx": -60,
+  "ground_px_from_bottom": 0,
+  "flip_when_receiver_faces_right": true,
+  "source": "P3",
+  "small_holes_filled_px": 0,
+  "visible_bbox": [
+   3,
+   2,
+   240,
+   145
+  ],
+  "enclosed_transparent_px": 0,
+  "touches_cell_edge": [],
+  "promoted_path": "Assets/Art/Wrestlers/Barry/barry_bodyslammed5_3.png",
+  "art_version": "pb5"
+ },
+ "R4": {
+  "file": "barry_bodyslammed5_4.png",
+  "cell": [
+   180,
+   307
+  ],
+  "pivot_px_from_left": 90,
+  "pivot_dx": 0,
+  "lowest_pixel_above_ground": 109,
+  "root_offset_from_slammer_feet_px": 159,
+  "flip_when_receiver_faces_left": true,
+  "small_holes_filled_px": 3,
+  "visible_bbox": [
+   4,
+   2,
+   177,
+   198
+  ],
+  "enclosed_transparent_px": 0,
+  "touches_cell_edge": [],
+  "promoted_path": "Assets/Art/Wrestlers/Barry/barry_bodyslammed5_4.png",
+  "art_version": "pb5b"
+ },
+ "R5": {
+  "file": "barry_bodyslammed5_5.png",
+  "cell": [
+   228,
+   130
+  ],
+  "pivot_px_from_left": 114,
+  "pivot_dx": 0,
+  "lowest_pixel_above_ground": 20,
+  "root_offset_from_slammer_feet_px": 305,
+  "flip_when_receiver_faces_left": true,
+  "small_holes_filled_px": 2,
+  "visible_bbox": [
+   3,
+   2,
+   225,
+   110
+  ],
+  "enclosed_transparent_px": 0,
+  "touches_cell_edge": [],
+  "promoted_path": "Assets/Art/Wrestlers/Barry/barry_bodyslammed5_5.png",
+  "art_version": "pb5"
+ },
+ "R6": {
+  "file": "barry_bodyslammed5_6.png",
+  "cell": [
+   236,
+   75
+  ],
+  "pivot_px_from_left": 118,
+  "pivot_dx": 0,
+  "lowest_pixel_above_ground": 0,
+  "root_offset_from_slammer_feet_px": 342,
+  "flip_when_receiver_faces_left": true,
+  "small_holes_filled_px": 0,
+  "visible_bbox": [
+   3,
+   2,
+   233,
+   75
+  ],
+  "enclosed_transparent_px": 106,
+  "touches_cell_edge": [],
+  "promoted_path": "Assets/Art/Wrestlers/Barry/barry_bodyslammed5_6.png",
+  "art_version": "pb5c"
+ },
+ "R7": {
+  "file": "barry_bodyslammed5_7.png",
+  "cell": [
+   218,
+   117
+  ],
+  "pivot_px_from_left": 109,
+  "pivot_dx": 0,
+  "lowest_pixel_above_ground": 17,
+  "root_offset_from_slammer_feet_px": 342,
+  "flip_when_receiver_faces_left": true,
+  "small_holes_filled_px": 0,
+  "visible_bbox": [
+   3,
+   2,
+   215,
+   100
+  ],
+  "enclosed_transparent_px": 0,
+  "touches_cell_edge": [],
+  "promoted_path": "Assets/Art/Wrestlers/Barry/barry_bodyslammed5_7.png",
+  "art_version": "pb5"
+ },
+ "_notes": {
+  "roles": "Peaux (215 px) slams Barry (240 px). Same frame structure and conventions as the approved Barry-slams-Peaux v5 set with the roles swapped.",
+  "missing": "Nothing missing.",
+  "scale": "Pair frames S1/S3 and R1/R3 share one factor (0.345; P1 is an edit of the lock-up source drawn at 700 px for Barry = 240/700) so contact points line up; singles scaled to the stand sprites (S4 0.2646, S5 0.2452, R4 0.2363, R5 0.2532, R6 0.2604, R7 0.2509). 60 PPU. pb5b: P2 (pb5b_p2_a) factor 0.318 (Peaux boot area matched to the P1/P3 average; Peaux 211 px tall in S2 vs 212 in S1); R4 (pb5b_r4_b) factor 0.232 (body-mass match to the previous R4/R5). S1/R1 (pb5b_p1_n) factor 0.309 (Peaux boot area matched to the approved S2 source). pb5c: S1/R1 factor 0.276, S2/R2 0.236 (the edits zoomed in; matched by Peaux's stance width: 131/115 and 134/117 px vs 132/115 in pb5b S2), R6 0.26 (between the previous R6 and the R7 body mass).",
+  "pair_spacing": "S1/R1 and S3/R3 drawn with Peaux feet and Barry root 132 px apart; S1/R1 pivots moved 30 px toward the opponent (D-032/D-033) so the pair lines up at lockUpPairSpacing 1.2 (72 px).",
+  "pivots": "Follows the PROMOTED v5 meta pivots: S1/S2 and R1/R2 = cell centre - 30; S3-S5 = cell centre (feet at the root, the 30 px shift taken during the S3 turn, D-044 follow-up); R3 = cell centre - 60; R4-R7 = bottom centre. pb5b: S2/R2 follow S1/R1 (cell centre - 30). S5 mirrored by script and recut on its feet centre (cell 182, pivot 91 = centre). R6 recut with its pre-fix bbox so cell 246x63, pivot 123 and root are unchanged (stays in register with R7).",
+  "flip": "Peaux frames stored facing left; S1 unflipped while Peaux faces left (lock-up), S3-S5 drawn flipped (he faces the throw). R1/R3 stored facing left, flipped while Barry faces right. R4-R7 stored for a throw to screen-right (slammer on the left): unflipped while the throw goes right, flipped when it goes left. R5-R7 lie head-left (toward the slammer).",
+  "receiver_roots": "R4-R7 root = slammer feet centre + root_offset_from_slammer_feet_px along the throw: the v5 values (178/340/382/382) scaled by 215/240 = 159/305/342/342 (342 = 1.59 x 215, the D-044 median). Suggested only; Combat/presentation own the real values. lowest_pixel_above_ground baked in as empty rows (R4 109 = 122 x 215/240, R5 20, R6 0, R7 17).",
+  "D-044": "D-044 says Peaux slams Barry keeps its old no-throw behaviour until its own new art exists. This art is drawn as a throw (like Barry slams Peaux); whether the pb slam becomes a throw is a designer/Combat decision.",
+  "pb5b_changes": "Redone: S1/R1 (new source pb5b_p1_n), S2/R2 (new), R4 (new source), S5 (script mirror), R6 (script leg removal). Unchanged and pixel-identical to pb5: S3, R3, S4, R5, R7.",
+  "real_gaps": "Composite enclosed px are real see-through gaps cleared at source as flat-grey background pockets: S1+R1 1104 (between belly and Peaux, Barry's arm and torso), S2+R2 156 (between the slimmer belly and Peaux's scooping forearm), S3+R3 1268 (raised arms), R6 106 (between the legs; stand+R6 172 includes the stand sprite's own 66).",
+  "pb5c_changes": "Redone from the designer corrections PDF (Staging/Art/wrestler/Peaux Slams Barry Corrections.pdf): S1/R1 (pb5c_p1_g + scripted 10% gut trim on the R1 layer), S2/R2 (pb5c_p2_c), R6 (pb5c_r6_a, regenerated). Unchanged and pixel-identical: S3, R3, S4, S5, R4, R5, R7.",
+  "final": "Final, designer-approved 2026-11-17 and promoted: Peaux (slammer) S1-S5 = Assets/Art/Wrestlers/Peaux/peaux_bodyslam5_1..5.png; Barry (slammed) R1-R7 = Assets/Art/Wrestlers/Barry/barry_bodyslammed5_1..7.png. art_version says which pass each frame comes from (pb5 = first pass, pb5b = second, pb5c = third, from the designer corrections PDF). Every cell size above was checked against the promoted file. Not yet done (Unity Animation & Tooling): import settings, pivots, slicing, clips. Old v3 peaux_bodyslam.png / barry_bodyslammed.png untouched.",
+  "fields": "cell = [w,h] px; pivot_px_from_left = sprite pivot x; pivot_dx = pivot offset from the cell centre (-30 lock-up shift toward the opponent for S1/S2/R1/R2, -60 for R3); ground_px_from_bottom = 0 for pair/slammer frames (soles on the bottom row); lowest_pixel_above_ground = baked lift rows for R4-R7 (empty rows at the bottom, pivot = bottom centre); root_offset_from_slammer_feet_px = suggested receiver root along the throw for R4-R7; flip_when_* = flip rules (see flip note)."
+ }
+}

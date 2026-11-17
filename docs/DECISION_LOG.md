@@ -452,6 +452,57 @@ Agents: read this before starting work. If a task conflicts with a decision here
 
 ---
 
+## D-044: Bodyslam throw (Barry slams Peaux, v5 art)
+
+- **Date:** 2026-11-16
+- **Decided by:** Designer (throw, distance, variance, blocking, shared downed pose, rollout, bounce, no foot jump); values marked "Starting point" were set by the Systems Architect for the designer to retune
+- **Decision:**
+  - **Art:** Barry slams Peaux uses the new 12-frame v5 animation, modelled on the designer's `Staging/Art/wrestler/Bodyslam Mechanics.pdf` (WWF Superstars, motion reference only, never generator input): Barry (slammer) S1–S5 `Assets/Art/Wrestlers/Barry/barry_bodyslam5_1..5.png`; Peaux (slammed) R1–R7 `Assets/Art/Wrestlers/Peaux/peaux_bodyslammed5_1..7.png`, played R1…R7 then R6 held. Cell geometry, pivots and flip rules: `Staging/Art/wrestler/gen-bodyslam-pair-previews-5/bodyslam5_cells.json` (`_notes`; the promoted S1/S2/R1/R2 are the v5c cells). Frames: S1/R1 and S2/R2 = the lift, a pair at the lock-up spacing (art 132 px apart, 30 px pivot shift, D-032/D-033), Barry facing Peaux; S3/R3 = Peaux overhead, **Barry has turned to face the throw direction**; S4/R4 = release, Peaux airborne as a separate sprite; S5/R5 = Peaux about to land; R6 = first contact with the mat (impact); R7 = bounce; R6 again, held. After S5 Barry returns to his normal stand, facing the throw direction.
+  - **Throw:** "This body slam will also send the slammed wrestler in the direction they are facing when locked up." The receiver faces the slammer in the lock-up, so he is carried over and thrown **past the slammer**, landing on the slammer's far side. The throw is along x only, at the lock-up depth.
+  - **Distance:** "The distance that the bodyslammed wrestler is thrown should differentiate by give or take 10%… Use the distance depicted in this guide as the median… once the bodyslammed wrestler is free of the bodyslammer's grip, they should react as two separate sprites." Measured median: **1.59 × the slammer's standing height**, from the slammer's feet centre to the landed receiver's body centre. For Barry (240 px, 60 PPU) that is 382 px = 6.37 units from his feet; (first set as 412 px root to root for a 30 px feet offset; changed to **382 px root to root** by the follow-up below, since Barry's feet are drawn at his root from S3 on). Variation: **uniform ±10%** around the median, drawn once per slam.
+  - **Blocked throw** (designer chose "Stop short + crash damage"): if the landing spot is past the arena edge, or the flight path reaches the truck or pool, the flight stops at contact with normal movement clamping (like the D-041 knockback slide). Reaching the truck/pool also adds the **obstacle collision damage** (8). The arena edge adds no extra damage.
+  - **Damage:** bodyslam damage **12** at landing (unchanged value), **+8** (`obstacleCollisionDamage`) if the throw hit the truck or pool.
+  - **Receiver:** Knocked Down **from the landing** (the impact): the normal health-based knockdown plus the D-043 get-up. No D-041 fall and no knockback slide.
+  - **Slammer free on landing:** the guide shows the slammer "back in his front standing state and free to move" at R6, so the slammer returns to Standing or Recovering at the landing.
+  - **Facing after landing:** the existing rules. The receiver's facing stays locked while down. The slammer turns to the throw direction at S3 (presentation), which is toward where the receiver lands; Combat sets his facing to the throw direction when the move ends, and Focus then keeps him facing the receiver.
+  - **Shared downed pose ("Replace everywhere"):** the new R6 becomes **Peaux's** downed sprite for every knockdown and knockout (replaces D-038/D-041's "last Bodyslammed sprite" for Peaux). Barry keeps his current downed sprite until his own new art exists.
+  - **Bounce:** R7 bakes in a 17 px lift. Pure art, no combat effect.
+  - **No foot jump:** Barry's feet must not visibly jump 30 px when he goes from S5 back to the stand (presentation fix; S5's feet are 30 px from his root, the stand's feet are at the root).
+  - **Rollout:** Barry slams Peaux goes in first, for playtesting. **Peaux slams Barry keeps its old animation and old behaviour (no throw)** until its own new art exists; that art is drawn with the receiver landing in place. The throw is therefore enabled **per slammer** (like `irishWhipByWhipper`): Barry on, Peaux off. Kept minimal: nothing more general than the two wrestlers need.
+  - **Starting point (timing):** Barry's new clip holds S1 120, S2 120, S3 180, S4 100, S5 100 ms (R1–R5 the same), so the **release is at the start of S4/R4, 0.42 s**, and the **landing/impact at 0.62 s** (Barry's bodyslam Startup, was 0.525 under D-036). Then R6 100, R7 150, R6 held. All tunable in the FrameTiming assets and CombatTuning; the designer will retune.
+  - **Starting point (flight):** from the release to the landing Combat moves the receiver's root on x only, linearly, from the release offset (R4's drawn spot: 178 px past the slammer's feet = 208 px from the slammer's root) to the drawn landing distance. The ±10% applies to the root-to-root landing distance (applying it to the 382 px feet-to-body part instead would differ by at most 3 px).
+  - **Starting point (crash timing):** a truck/pool contact raises `ObstacleHit` on the contact tick; both damages are applied together at the landing.
+- **Why:** The designer replaced the Barry-slams-Peaux art with a throw modelled on the arcade reference, wants the throw distance to vary, and wants one lying pose for Peaux. Rolling out one direction first keeps main playable while the Peaux-slams-Barry art is made.
+- **Supersedes:**
+  - D-033: the Barry-slams-Peaux v3 sheets and their 7-frame timing (Peaux slams Barry v3 stays); "Combat does not have to move either wrestler" no longer holds for a throw (Combat moves the receiver's root from the release to the landing).
+  - D-036: Barry's bodyslam impact time 0.525 s → 0.62 s (Starting point) with the new clip. Peaux's 0.475 s and clips are unchanged.
+  - D-038: for a thrown bodyslam, the receiver is Knocked Down at the landing, not after Active + Recovery (0.4 s later), and the slammer is free at the landing; the 0.3 s Recovery still applies to Peaux slams Barry. Peaux's downed sprite is R6, not his last v3 Bodyslammed sprite.
+  - D-041: Peaux's downed sprite at the end of his fall is R6 (`downedMirrorShift` re-measured). Fall rules unchanged; a bodyslam still never falls or slides.
+- **Affects:** docs/COMBAT_SPEC.md (Lock Up/Grappling rules, Knocked Down, Tuning Values), docs/ARCHITECTURE.md §4.2, §4.6, §5, §6, docs/ACCEPTANCE_TESTS.md, docs/ASSET_REGISTRY.csv (v5 rows), Combat (`LockUpController`, `CombatTuning` + `CombatTuning.asset`, `PairedMoveInfo`), presentation (WrestlerAnimationBuilder, WrestlerView, Barry_Bodyslam and Peaux_Bodyslammed clips, Peaux's downed sprite / KnockedDown / Fall clips, FrameTiming, MoveAnimationTable, Peaux prefab `downedMirrorShift`), Juice (no double thud). CPU FSM unchanged.
+- **Follow-up (2026-11-16, presentation build):** Barry's S3–S5 are drawn with his feet at his root (the 30 px lock-up shift is taken during the S3 turn, so S5 → stand has no foot jump; R3 shifted to match). The throw values were therefore set to the guide's feet-based distances: `releaseOffsetPx` **178** and `landingDistancePx` **382 px = 6.37 units root to root** (were 208 / 412). Peaux's `downedMirrorShift` re-measured for R6 (2.2833 → −0.1667) and a `fallLandingShift` (Peaux 1.3333, Barry 0) added so his fall lands on R6 without a jump. The D-036 holds for Barry_Bodyslam and Peaux_Bodyslammed reset to the D-044 starting points (frame counts changed).
+
+---
+
+## D-045: Bodyslam throw (Peaux slams Barry, v5 art)
+
+- **Date:** 2026-11-17
+- **Decided by:** Designer (art approval, throw, Barry's shared downed pose follows D-044's rule); values marked "Starting point" were measured by Unity Animation & Tooling against the drawn art for the designer to retune
+- **Decision:**
+  - **Art:** Peaux slams Barry uses the new 12-frame throw animation, built exactly like D-044's Barry slams Peaux with the roles swapped: Peaux (slammer) S1–S5 `Assets/Art/Wrestlers/Peaux/peaux_bodyslam5_1..5.png`; Barry (slammed) R1–R7 `Assets/Art/Wrestlers/Barry/barry_bodyslammed5_1..7.png`, played R1…R7 then R6 held. Cell geometry, pivots and flip rules: `Assets/Art/Wrestlers/bodyslam_pb_cells.json` (copy of `Staging/Art/wrestler/gen-bodyslam-pb-pair-previews-5c/bodyslam_pb_cells_final.json`). S1/R1 and S2/R2 follow the designer's `Staging/Art/wrestler/Peaux Slams Barry Corrections.pdf` (Peaux's right forearm lifts Barry at the crotch, left palm flat on Barry's chest, Barry's gut reduced). Designer: "Yes, it's all approved."
+  - **Throw:** Peaux's slam throws Barry the same way Barry's slam throws Peaux (D-044 rules: release, linear flight on x, ±variance, blocking, knocked down at the landing, slammer free at the landing). Designer: "Yes, throw."
+  - **Starting point (timing):** S1 120, S2 120, S3 180, S4 100, S5 100 ms (R1–R5 the same), R6 100, R7 150, R6 held. Release at the start of S4/R4, 0.42 s; Peaux's bodyslam Startup (landing) 0.475 → **0.62 s**.
+  - **Starting point (distances):** Peaux's `bodyslamThrowBySlammer` entry: `releaseOffsetPx` **159** (Barry's hands meet Peaux's at S4/R4, from Peaux's feet root), `landingDistancePx` **342** (1.59 × Peaux's 215 px height), `distanceVariance` 0.10, `releaseTime` 0.42. All tunable in the Inspector.
+  - **Shared downed pose:** Barry's R6 becomes his downed sprite for every knockdown and knockout ("replace everywhere", as D-044 did for Peaux; D-044 kept Barry's old sprite only "until his own new art exists"). Barry's `downedMirrorShift` 3.0667 → 0, `fallLandingShift` 0 → 1.1. Crouch get-up (D-043) unchanged.
+- **Why:** The approved Peaux-slams-Barry art is drawn as a throw, so the in-place slam no longer matches it; both wrestlers now share one bodyslam behaviour.
+- **Supersedes:**
+  - D-044: "Peaux slams Barry keeps its old animation, no throw" and "Barry keeps his current downed sprite". The v3 Peaux-slams-Barry sheets stay in the project, unused.
+  - D-036 / D-044: Peaux's bodyslam impact 0.475 s → 0.62 s.
+  - D-038: the 0.3 s Recovery after a bodyslam now applies only to a slammer whose throw entry is disabled (none in the shipped pair).
+  - D-041: Barry's downed sprite at the end of his fall is R6.
+- **Affects:** docs/COMBAT_SPEC.md, docs/ARCHITECTURE.md §6, docs/ACCEPTANCE_TESTS.md (T1.14, T2.6, T2.7), docs/ASSET_REGISTRY.csv (pb5/pb5b/pb5c rows), docs/CREDITS.md, CombatTuning.asset (+ tooltips), WrestlerAnimationBuilder, Peaux_Bodyslam / Barry_Bodyslammed / Barry_KnockedDown / Barry_Fall clips, FrameTiming, MoveAnimationTable, Barry prefab shifts, bodyslam tests.
+
+---
+
 ## Open Questions
 
 Not yet decided. Agents must not resolve these on their own.

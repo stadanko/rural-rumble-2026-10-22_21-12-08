@@ -1,0 +1,411 @@
+{
+  "R1": {
+    "pivot_dx": -30,
+    "flip_when_receiver_faces_right": true,
+    "ground_px_from_bottom": 0,
+    "file": "peaux_bodyslammed5_r1.png",
+    "cell": [
+      228,
+      286
+    ],
+    "pivot_px_from_left": 84,
+    "visible_bbox": [
+      3,
+      2,
+      94,
+      252
+    ],
+    "enclosed_transparent_px": 0,
+    "touches_cell_edge": []
+  },
+  "R2": {
+    "pivot_dx": -30,
+    "flip_when_receiver_faces_right": true,
+    "ground_px_from_bottom": 0,
+    "file": "peaux_bodyslammed5_r2.png",
+    "cell": [
+      372,
+      262
+    ],
+    "pivot_px_from_left": 156,
+    "visible_bbox": [
+      3,
+      2,
+      181,
+      211
+    ],
+    "enclosed_transparent_px": 23,
+    "touches_cell_edge": []
+  },
+  "R3": {
+    "pivot_dx": -30,
+    "flip_when_receiver_faces_right": true,
+    "ground_px_from_bottom": 0,
+    "file": "peaux_bodyslammed5_r3.png",
+    "cell": [
+      556,
+      280
+    ],
+    "pivot_px_from_left": 248,
+    "visible_bbox": [
+      2,
+      2,
+      244,
+      98
+    ],
+    "enclosed_transparent_px": 0,
+    "touches_cell_edge": []
+  },
+  "R4": {
+    "pivot_dx": 0,
+    "flip_when_receiver_faces_left": true,
+    "lowest_pixel_above_ground": 122,
+    "root_offset_from_slammer_feet_px": 178,
+    "file": "peaux_bodyslammed5_r4.png",
+    "cell": [
+      174,
+      324
+    ],
+    "pivot_px_from_left": 87,
+    "visible_bbox": [
+      3,
+      2,
+      171,
+      202
+    ],
+    "enclosed_transparent_px": 0,
+    "touches_cell_edge": []
+  },
+  "R5": {
+    "pivot_dx": 0,
+    "flip_when_receiver_faces_left": true,
+    "lowest_pixel_above_ground": 20,
+    "root_offset_from_slammer_feet_px": 340,
+    "file": "peaux_bodyslammed5_r5.png",
+    "cell": [
+      214,
+      114
+    ],
+    "pivot_px_from_left": 107,
+    "visible_bbox": [
+      3,
+      2,
+      211,
+      94
+    ],
+    "enclosed_transparent_px": 16,
+    "touches_cell_edge": []
+  },
+  "R6": {
+    "pivot_dx": 0,
+    "flip_when_receiver_faces_left": true,
+    "lowest_pixel_above_ground": 0,
+    "root_offset_from_slammer_feet_px": 382,
+    "file": "peaux_bodyslammed5_r6.png",
+    "cell": [
+      244,
+      78
+    ],
+    "pivot_px_from_left": 122,
+    "visible_bbox": [
+      3,
+      2,
+      231,
+      78
+    ],
+    "enclosed_transparent_px": 57,
+    "touches_cell_edge": [],
+    "remeasured": "2026-11-16 after designer hand-edit (background third leg removed); ground line = bottom row of the cell (lowest visible row 78 of 78), semi-transparent px 0"
+  },
+  "R7": {
+    "pivot_dx": 0,
+    "flip_when_receiver_faces_left": true,
+    "lowest_pixel_above_ground": 17,
+    "root_offset_from_slammer_feet_px": 382,
+    "file": "peaux_bodyslammed5_r7.png",
+    "cell": [
+      216,
+      159
+    ],
+    "pivot_px_from_left": 108,
+    "visible_bbox": [
+      3,
+      2,
+      213,
+      142
+    ],
+    "enclosed_transparent_px": 0,
+    "touches_cell_edge": []
+  },
+  "S1": {
+    "pivot_dx": -30,
+    "flip_when_slammer_faces_left": false,
+    "ground_px_from_bottom": 0,
+    "file": "barry_bodyslam5_s1.png",
+    "cell": [
+      108,
+      235
+    ],
+    "pivot_px_from_left": 24,
+    "visible_bbox": [
+      3,
+      2,
+      105,
+      235
+    ],
+    "enclosed_transparent_px": 0,
+    "touches_cell_edge": []
+  },
+  "S2": {
+    "pivot_dx": -30,
+    "flip_when_slammer_faces_left": false,
+    "ground_px_from_bottom": 0,
+    "file": "barry_bodyslam5_s2.png",
+    "cell": [
+      152,
+      233
+    ],
+    "pivot_px_from_left": 46,
+    "visible_bbox": [
+      3,
+      2,
+      127,
+      233
+    ],
+    "enclosed_transparent_px": 77,
+    "touches_cell_edge": []
+  },
+  "S3": {
+    "pivot_dx": 30,
+    "flip_when_slammer_faces_left": true,
+    "ground_px_from_bottom": 0,
+    "file": "barry_bodyslam5_s3.png",
+    "cell": [
+      120,
+      263
+    ],
+    "pivot_px_from_left": 90,
+    "visible_bbox": [
+      3,
+      2,
+      110,
+      263
+    ],
+    "enclosed_transparent_px": 0,
+    "touches_cell_edge": []
+  },
+  "S4": {
+    "pivot_dx": 30,
+    "flip_when_slammer_faces_left": true,
+    "ground_px_from_bottom": 0,
+    "file": "barry_bodyslam5_s4.png",
+    "cell": [
+      204,
+      226
+    ],
+    "pivot_px_from_left": 132,
+    "visible_bbox": [
+      4,
+      2,
+      165,
+      226
+    ],
+    "enclosed_transparent_px": 0,
+    "touches_cell_edge": []
+  },
+  "S5": {
+    "pivot_dx": 30,
+    "flip_when_slammer_faces_left": true,
+    "ground_px_from_bottom": 0,
+    "file": "barry_bodyslam5_s5.png",
+    "cell": [
+      180,
+      215
+    ],
+    "pivot_px_from_left": 120,
+    "visible_bbox": [
+      4,
+      2,
+      117,
+      215
+    ],
+    "enclosed_transparent_px": 63,
+    "touches_cell_edge": []
+  },
+  "_notes": {
+    "scale": "Barry 240 px standing / Peaux 215 px (D-013), 60 PPU. Pair frames S1-S3/R1-R3 share one factor (0.30) so contact points line up; singles scaled to match the stand sprites (S4/S5 0.245, R4/R5 0.245, R6 0.255, R7 0.225).",
+    "pair_spacing": "S1-S3/R1-R3 drawn with the feet/roots 132 px apart; every pair pivot moved 30 px toward the opponent (D-032/D-033) so the pair lines up at lockUpPairSpacing 1.2 (72 px).",
+    "flip": "Barry frames stored facing left; S1-S2 unflipped while Barry faces left (lock-up), S3-S5 drawn flipped (he faces the throw direction). R1-R3 follow Locked Up: stored facing left, flipped while Peaux faces right. R4-R7 stored for a throw to screen-right (slammer on the left): unflipped while the throw goes right, flipped when it goes left. R6 lies head-left.",
+    "receiver_roots": "R4-R7 pivot = bottom centre of the cell = body centre on the ground; root = slammer feet centre + root_offset_from_slammer_feet_px along the throw (R6 382 = 1.59 x 240 median; vary +-10%). lowest_pixel_above_ground is baked in as empty rows (R7 bounce 17 px).",
+    "stand_return": "S5 -> stand_front: S5 feet centre is 30 px from the root (pivot shift), stand_front feet are at the root, so the feet jump 30 px on the return to stand_front unless presentation compensates.",
+    "R6": "Shared downed sprite for every knockdown (designer decision): bottom row of the cell = ground line.",
+    "v5b": "S1b/S2b/R1b/R2b (files *5b_*) replace the designer-rejected S1/S2/R1/R2 (2026-11-16). Same conventions as S1/S2/R1/R2: 132 px spacing, pivot shifted 30 px toward the opponent, Barry stored facing left and unflipped during the lift, R stored facing left and flipped while Peaux faces right. Pair factor 0.28 on the 1008 px flux-2-pro outputs (matched by eye to the approved S3 head/cap/boot size).",
+    "v5c": "S1c/S2c/R1c/R2c (files *5c_*) = S1b/S2b/R1b/R2b with only Barry's near (left) hand moved flat onto Peaux's chest/torso (designer request 2026-11-16). Same conventions and same pair factor 0.28 as v5b; feet, ground and roots unchanged, so contact with S3/R3 lines up as before. Cell widths/pivots of S2c and R1c differ from v5b only because the cell is cut symmetric around the feet and the visible bbox changed; roots are the same."
+  },
+  "R1b": {
+    "pivot_dx": -30,
+    "flip_when_receiver_faces_right": true,
+    "ground_px_from_bottom": 0,
+    "file": "peaux_bodyslammed5b_r1.png",
+    "cell": [
+      220,
+      237
+    ],
+    "pivot_px_from_left": 80,
+    "visible_bbox": [
+      3,
+      2,
+      101,
+      214
+    ],
+    "enclosed_transparent_px": 0,
+    "touches_cell_edge": []
+  },
+  "R2b": {
+    "pivot_dx": -30,
+    "flip_when_receiver_faces_right": true,
+    "ground_px_from_bottom": 0,
+    "file": "peaux_bodyslammed5b_r2.png",
+    "cell": [
+      308,
+      223
+    ],
+    "pivot_px_from_left": 124,
+    "visible_bbox": [
+      3,
+      2,
+      168,
+      185
+    ],
+    "enclosed_transparent_px": 0,
+    "touches_cell_edge": []
+  },
+  "S1b": {
+    "pivot_dx": -30,
+    "flip_when_slammer_faces_left": false,
+    "ground_px_from_bottom": 0,
+    "file": "barry_bodyslam5b_s1.png",
+    "cell": [
+      184,
+      203
+    ],
+    "pivot_px_from_left": 62,
+    "visible_bbox": [
+      3,
+      2,
+      155,
+      203
+    ],
+    "enclosed_transparent_px": 47,
+    "touches_cell_edge": []
+  },
+  "S2b": {
+    "pivot_dx": -30,
+    "flip_when_slammer_faces_left": false,
+    "ground_px_from_bottom": 0,
+    "file": "barry_bodyslam5b_s2.png",
+    "cell": [
+      164,
+      201
+    ],
+    "pivot_px_from_left": 52,
+    "visible_bbox": [
+      4,
+      2,
+      146,
+      201
+    ],
+    "enclosed_transparent_px": 78,
+    "touches_cell_edge": []
+  },
+  "S1c": {
+    "pivot_dx": -30,
+    "flip_when_slammer_faces_left": false,
+    "ground_px_from_bottom": 0,
+    "file": "barry_bodyslam5c_s1.png",
+    "cell": [
+      184,
+      203
+    ],
+    "pivot_px_from_left": 62,
+    "visible_bbox": [
+      4,
+      2,
+      155,
+      203
+    ],
+    "enclosed_transparent_px": 0,
+    "touches_cell_edge": []
+  },
+  "R1c": {
+    "pivot_dx": -30,
+    "flip_when_receiver_faces_right": true,
+    "ground_px_from_bottom": 0,
+    "file": "peaux_bodyslammed5c_r1.png",
+    "cell": [
+      184,
+      237
+    ],
+    "pivot_px_from_left": 62,
+    "visible_bbox": [
+      4,
+      2,
+      83,
+      214
+    ],
+    "enclosed_transparent_px": 0,
+    "touches_cell_edge": []
+  },
+  "S2c": {
+    "pivot_dx": -30,
+    "flip_when_slammer_faces_left": false,
+    "ground_px_from_bottom": 0,
+    "file": "barry_bodyslam5c_s2.png",
+    "cell": [
+      180,
+      201
+    ],
+    "pivot_px_from_left": 60,
+    "visible_bbox": [
+      4,
+      2,
+      154,
+      201
+    ],
+    "enclosed_transparent_px": 78,
+    "touches_cell_edge": []
+  },
+  "R2c": {
+    "pivot_dx": -30,
+    "flip_when_receiver_faces_right": true,
+    "ground_px_from_bottom": 0,
+    "file": "peaux_bodyslammed5c_r2.png",
+    "cell": [
+      308,
+      223
+    ],
+    "pivot_px_from_left": 124,
+    "visible_bbox": [
+      3,
+      2,
+      168,
+      185
+    ],
+    "enclosed_transparent_px": 0,
+    "touches_cell_edge": []
+  },
+  "promoted_files": {
+    "S1c": "Assets/Art/Wrestlers/Barry/barry_bodyslam5_1.png",
+    "S2c": "Assets/Art/Wrestlers/Barry/barry_bodyslam5_2.png",
+    "S3": "Assets/Art/Wrestlers/Barry/barry_bodyslam5_3.png",
+    "S4": "Assets/Art/Wrestlers/Barry/barry_bodyslam5_4.png",
+    "S5": "Assets/Art/Wrestlers/Barry/barry_bodyslam5_5.png",
+    "R1c": "Assets/Art/Wrestlers/Peaux/peaux_bodyslammed5_1.png",
+    "R2c": "Assets/Art/Wrestlers/Peaux/peaux_bodyslammed5_2.png",
+    "R3": "Assets/Art/Wrestlers/Peaux/peaux_bodyslammed5_3.png",
+    "R4": "Assets/Art/Wrestlers/Peaux/peaux_bodyslammed5_4.png",
+    "R5": "Assets/Art/Wrestlers/Peaux/peaux_bodyslammed5_5.png",
+    "R6": "Assets/Art/Wrestlers/Peaux/peaux_bodyslammed5_6.png",
+    "R7": "Assets/Art/Wrestlers/Peaux/peaux_bodyslammed5_7.png"
+  }
+}

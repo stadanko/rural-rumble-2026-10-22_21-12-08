@@ -160,6 +160,10 @@ namespace RuralRumble.EditorTooling
             public MoveClipSpec IrishWhip;           // Irish Whip whipper (A, Grappling, D-039); contact = release (f4); turn = f2; null -> LockUp hold stand-in
             public MoveClipSpec Fall;                // Falling Down (D-041): struck_a, fall2, fall3, downed; turn = downed (landing); null -> downed-only PLACEHOLDER
             public Sprite Crouch;                    // Crouch (D-043), the get-up; null -> PLACEHOLDER (StandFront pose)
+            /// <summary>D-044: the downed sprite's pivot is the body centre (Peaux's v5 R6), not a bodyslam pair root, so
+            /// after a fall it is moved toward the fall side until its feet end meets fall3's (WrestlerView
+            /// fallLandingShift). False keeps the accepted D-041 landing (Barry): shift 0.</summary>
+            public bool AlignFallLandingToFeet;
         }
 
         public const string RebuildMenuPath = "Rural Rumble/Rebuild Wrestler Animations";
@@ -246,21 +250,17 @@ namespace RuralRumble.EditorTooling
                 // D-032: gen-barry-lockup-5 / gen-barry-lockedup-5 (pair sheets vs Peaux), imported by ImportLockUpSheets.
                 LockUp = LoadSprites(art + "barry_lockup.png"),
                 LockedUp = LoadSprites(art + "barry_lockedup.png"),
-                // D-033: gen-barry-bodyslam-3 (Barry slams Peaux, 7 frames) and gen-barry-bodyslammed-3 (Peaux slams
-                // Barry, 6 frames), imported by ImportBodyslamSheets.
-                Bodyslam = new MoveClipSpec
-                {
-                    Sprites = LoadSprites(art + "barry_bodyslam.png"),
-                    KeyFrames = BodyslamKeyFrames7, LengthFrames = BodyslamLengthFrames7, ContactIndex = BodyslamImpactIndex7,
-                },
-                Bodyslammed = new MoveClipSpec
-                {
-                    Sprites = LoadSprites(art + "barry_bodyslammed.png"),
-                    KeyFrames = BodyslamKeyFrames6, LengthFrames = BodyslamLengthFrames6, ContactIndex = BodyslamImpactIndex6,
-                },
+                // D-044: Barry slams Peaux is the v5 throw (barry_bodyslam5_1..5 + his stand, set below). Peaux slams
+                // Barry is the same throw since 2026-11-17 (barry_bodyslammed5_1..7, R1-R7 then R6); the D-033 v3 sheet
+                // barry_bodyslammed.png stays in the project, unused.
+                Bodyslammed = BarryThrowSlammedSpec(),
+                // R6 is centred on the body (like Peaux's), so the fall lands it feet-aligned (fallLandingShift).
+                AlignFallLandingToFeet = true,
                 // D-039: gen-barry-irishwhip-4 (Barry whips, 4 frames), imported by ImportIrishWhipSheets.
                 IrishWhip = IrishWhipSpec(LoadSprites(art + "barry_irishwhip.png"), RuralRumble.Combat.IrishWhipChoreography.BarryStaged),
             };
+            // D-044: S1-S5 (barry_bodyslam5_1..5, imported here from bodyslam5_cells.json if needed), then his stand.
+            spec.Bodyslam = BarryThrowSlamSpec(spec.StandFront);
             // D-041: gen-barry-fall2-D-1 / gen-barry-fall3-B-1 (barry_fall2.png, barry_fall3.png).
             spec.Fall = FallSpec(art, "barry", spec);
             // D-043: barry_crouch.png (186x175, root at (93,175) = Bottom Center), drawn at the root.
@@ -334,21 +334,17 @@ namespace RuralRumble.EditorTooling
                 // D-032: gen-peaux-lockup-5 / gen-peaux-lockedup-5 (pair sheets vs Barry), imported by ImportLockUpSheets.
                 LockUp = LoadSprites(art + "peaux_lockup.png"),
                 LockedUp = LoadSprites(art + "peaux_lockedup.png"),
-                // D-033: gen-peaux-bodyslam-3 (Peaux slams Barry, 6 frames) and gen-peaux-bodyslammed-3 (Barry slams
-                // Peaux, 7 frames), imported by ImportBodyslamSheets.
-                Bodyslam = new MoveClipSpec
-                {
-                    Sprites = LoadSprites(art + "peaux_bodyslam.png"),
-                    KeyFrames = BodyslamKeyFrames6, LengthFrames = BodyslamLengthFrames6, ContactIndex = BodyslamImpactIndex6,
-                },
-                Bodyslammed = new MoveClipSpec
-                {
-                    Sprites = LoadSprites(art + "peaux_bodyslammed.png"),
-                    KeyFrames = BodyslamKeyFrames7, LengthFrames = BodyslamLengthFrames7, ContactIndex = BodyslamImpactIndex7,
-                },
+                // D-044: Barry slams Peaux is the v5 throw (peaux_bodyslammed5_1..7). Peaux slams Barry is the same
+                // throw since 2026-11-17 (peaux_bodyslam5_1..5 + his stand, set below). The v3 sheets peaux_bodyslam.png
+                // and peaux_bodyslammed.png stay in the project, unused.
+                Bodyslammed = PeauxThrowSlammedSpec(),
+                // D-044: R6 is centred on the body, unlike the D-033 receiver sprites, so the fall lands it feet-aligned.
+                AlignFallLandingToFeet = true,
                 // D-039: gen-peaux-irishwhip-4 (Peaux whips, 4 frames), imported by ImportIrishWhipSheets.
                 IrishWhip = IrishWhipSpec(LoadSprites(art + "peaux_irishwhip.png"), RuralRumble.Combat.IrishWhipChoreography.PeauxStaged),
             };
+            // Peaux slams Barry throw (2026-11-17): S1-S5 (peaux_bodyslam5_1..5), then his stand.
+            spec.Bodyslam = PeauxThrowSlamSpec(spec.StandFront);
             // D-041: gen-peaux-fall2-D-1 / gen-peaux-fall3-C-1 (peaux_fall2.png, peaux_fall3.png).
             spec.Fall = FallSpec(art, "peaux", spec);
             // D-043: peaux_crouch.png (192x145, root at (96,145) = Bottom Center), drawn at the root.
@@ -581,6 +577,209 @@ namespace RuralRumble.EditorTooling
             }) + $"\nBodyslam pivot shift: {shift} px toward the opponent.";
         }
 
+        // ---------- D-044 bodyslam throw (Barry slams Peaux, v5) ----------
+
+        /// <summary>Cell geometry, pivots and flip rules of the v5 throw frames (Art Wrangler, D-044).</summary>
+        public const string BodyslamThrowCellsPath = "Assets/Art/Wrestlers/bodyslam5_cells.json";
+        /// <summary>barry_bodyslam5_{1..5}.png = these cells.json entries (its promoted_files map).</summary>
+        public static readonly string[] BarryThrowSlamCells = { "S1c", "S2c", "S3", "S4", "S5" };
+        /// <summary>peaux_bodyslammed5_{1..7}.png = these cells.json entries.</summary>
+        public static readonly string[] PeauxThrowSlammedCells = { "R1c", "R2c", "R3", "R4", "R5", "R6", "R7" };
+        public const string BarryThrowSlamArt = "Assets/Art/Wrestlers/Barry/barry_bodyslam5_";
+        public const string PeauxThrowSlammedArt = "Assets/Art/Wrestlers/Peaux/peaux_bodyslammed5_";
+
+        /// <summary>Peaux slams Barry, same 12-frame throw structure (designer-approved 2026-11-17; Art Wrangler's
+        /// bodyslam_pb_cells_final.json, copied here). Its pivots already include the D-044 follow-up (S3-S5 = the
+        /// feet, R3 = the lift pivot moved with S3), so they are used as written.</summary>
+        public const string PeauxThrowCellsPath = "Assets/Art/Wrestlers/bodyslam_pb_cells.json";
+        public static readonly string[] PeauxThrowSlamCells = { "S1", "S2", "S3", "S4", "S5" };
+        public static readonly string[] BarryThrowSlammedCells = { "R1", "R2", "R3", "R4", "R5", "R6", "R7" };
+        public const string PeauxThrowSlamArt = "Assets/Art/Wrestlers/Peaux/peaux_bodyslam5_";
+        public const string BarryThrowSlammedArt = "Assets/Art/Wrestlers/Barry/barry_bodyslammed5_";
+
+        /// <summary>D-044 Starting point: S1 120, S2 120, S3 180, S4 100, S5 100 ms, then Barry's stand. The stand's hold
+        /// only sets the clip length (Barry is Standing from the landing on); its start is the landing (0.62 s).</summary>
+        public static readonly float[] ThrowSlamDefaultHoldsMs = { 120f, 120f, 180f, 100f, 100f, 100f };
+        /// <summary>D-044 Starting point: R1-R5 = S1-S5's holds, R6 100 (impact), R7 150 (bounce), then R6 held. The last
+        /// hold only sets the clip length: the end of the landing tail, after which the Knocked Down clip (same R6) shows.</summary>
+        public static readonly float[] ThrowSlammedDefaultHoldsMs = { 120f, 120f, 180f, 100f, 100f, 100f, 150f, 100f };
+        /// <summary>Sprite index of the turn: S3 (Barry turns to the throw direction) / R4 (the release: from here the
+        /// receiver's frames are stored for a throw to screen-right). Recorded as MoveAnimationTable TurnTime.</summary>
+        public const int ThrowSlamTurnIndex = 2;
+        public const int ThrowSlammedTurnIndex = 3;
+        /// <summary>Sprite index of the landing (contact): Barry's stand / R6, both at 0.62 s with the defaults.</summary>
+        public const int ThrowSlamContactIndex = 5;
+        public const int ThrowSlammedContactIndex = 5;
+
+        /// <summary>One cells.json entry: cell size, pivot (px from the cell's left edge, ground = the bottom row) and
+        /// the pair pivot shift it already contains (pivot_dx).</summary>
+        public struct ThrowCell
+        {
+            public int Width, Height, PivotFromLeft, PivotDx;
+        }
+
+        /// <summary>Reads one entry of <see cref="BodyslamThrowCellsPath"/> (flat JSON objects; no Unity JSON dictionary
+        /// support, so each field is read by name).</summary>
+        public static ThrowCell ReadThrowCell(string key) => ReadThrowCell(BodyslamThrowCellsPath, key);
+
+        /// <summary>Reads one entry of a throw cells.json (<see cref="BodyslamThrowCellsPath"/> or
+        /// <see cref="PeauxThrowCellsPath"/>).</summary>
+        public static ThrowCell ReadThrowCell(string cellsPath, string key)
+        {
+            string text = System.IO.File.ReadAllText(cellsPath);
+            var block = System.Text.RegularExpressions.Regex.Match(text,
+                "\"" + System.Text.RegularExpressions.Regex.Escape(key) + "\"\\s*:\\s*\\{(?<b>[^{}]*)\\}");
+            if (!block.Success)
+                throw new InvalidOperationException($"{cellsPath}: no entry \"{key}\".");
+            string b = block.Groups["b"].Value;
+            int Field(string name)
+            {
+                var m = System.Text.RegularExpressions.Regex.Match(b, "\"" + name + "\"\\s*:\\s*(-?\\d+)");
+                if (!m.Success)
+                    throw new InvalidOperationException($"{cellsPath} \"{key}\": no {name}.");
+                return int.Parse(m.Groups[1].Value);
+            }
+            var cell = System.Text.RegularExpressions.Regex.Match(b, "\"cell\"\\s*:\\s*\\[\\s*(\\d+)\\s*,\\s*(\\d+)");
+            if (!cell.Success)
+                throw new InvalidOperationException($"{cellsPath} \"{key}\": no cell.");
+            return new ThrowCell
+            {
+                Width = int.Parse(cell.Groups[1].Value), Height = int.Parse(cell.Groups[2].Value),
+                PivotFromLeft = Field("pivot_px_from_left"), PivotDx = Field("pivot_dx"),
+            };
+        }
+
+        /// <summary>
+        /// The pivot (px from the left edge, stored orientation) each throw frame is imported with (D-044):
+        /// <list type="bullet">
+        /// <item>S1, S2, R1, R2, R4-R7: as in cells.json. S1/S2/R1/R2 keep the lock-up 30 px pair shift (D-032/D-033), so
+        /// the lift lines up with the lock-up; R4-R7 are bottom centre = the receiver's body centre on the ground.</item>
+        /// <item>S3-S5: the feet centre (cells.json pivot minus its pivot_dx): "no foot jump" (designer). Barry's feet go
+        /// back to his root at S3, where he turns anyway, so S4, S5 and the stand after them do not jump.</item>
+        /// <item>R3: moved by the same amount as S3 (both are stored facing left and flip together), so Peaux stays on
+        /// Barry's hands overhead.</item>
+        /// </list>
+        /// </summary>
+        public static int ThrowPivotFromLeft(string key)
+        {
+            ThrowCell c = ReadThrowCell(key);
+            switch (key)
+            {
+                case "S3": case "S4": case "S5":
+                    return c.PivotFromLeft - c.PivotDx;
+                case "R3":
+                    return c.PivotFromLeft - ReadThrowCell("S3").PivotDx;
+                default:
+                    return c.PivotFromLeft;
+            }
+        }
+
+        /// <summary>
+        /// Imports the 24 throw PNGs (12 D-044 Barry slams Peaux + 12 Peaux slams Barry; one cell each, whole image) with the wrestler settings (PPU 60, Point,
+        /// uncompressed, no mipmaps, Full Rect) and the pivots of <see cref="ThrowPivotFromLeft"/>, ground on the bottom
+        /// row. Skips a file that already has exactly those settings. The builders call it on their own.
+        /// </summary>
+        public static string ImportBodyslamThrowSprites()
+        {
+            var lines = new List<string>();
+            for (int i = 0; i < BarryThrowSlamCells.Length; i++)
+                lines.Add(EnsureThrowSpriteImport(BarryThrowSlamArt + (i + 1) + ".png", BarryThrowSlamCells[i]));
+            for (int i = 0; i < PeauxThrowSlammedCells.Length; i++)
+                lines.Add(EnsureThrowSpriteImport(PeauxThrowSlammedArt + (i + 1) + ".png", PeauxThrowSlammedCells[i]));
+            // Peaux slams Barry (2026-11-17): pivots exactly as its cells.json (see PeauxThrowCellsPath).
+            for (int i = 0; i < PeauxThrowSlamCells.Length; i++)
+                lines.Add(EnsureThrowSpriteImport(PeauxThrowSlamArt + (i + 1) + ".png", PeauxThrowSlamCells[i], PeauxThrowCellsPath));
+            for (int i = 0; i < BarryThrowSlammedCells.Length; i++)
+                lines.Add(EnsureThrowSpriteImport(BarryThrowSlammedArt + (i + 1) + ".png", BarryThrowSlammedCells[i], PeauxThrowCellsPath));
+            return string.Join("\n", lines);
+        }
+
+        /// <param name="cellsPath">Null = the v5 Barry-slams-Peaux file with <see cref="ThrowPivotFromLeft"/>'s pivot
+        /// moves; otherwise that file's pivot_px_from_left as written.</param>
+        private static string EnsureThrowSpriteImport(string texturePath, string cellKey, string cellsPath = null)
+        {
+            var importer = AssetImporter.GetAtPath(texturePath) as TextureImporter;
+            if (importer == null)
+                throw new InvalidOperationException($"No TextureImporter at {texturePath}.");
+            importer.GetSourceTextureWidthAndHeight(out int width, out int height);
+            ThrowCell cell = ReadThrowCell(cellsPath ?? BodyslamThrowCellsPath, cellKey);
+            if (cell.Width != width || cell.Height != height)
+                throw new InvalidOperationException(
+                    $"{texturePath} is {width}x{height}, but {cellsPath ?? BodyslamThrowCellsPath} \"{cellKey}\" says {cell.Width}x{cell.Height}.");
+            int pivotPx = cellsPath == null ? ThrowPivotFromLeft(cellKey) : cell.PivotFromLeft;
+            Sprite[] sprites = AssetDatabase.LoadAllAssetsAtPath(texturePath).OfType<Sprite>().ToArray();
+            bool ok = importer.textureType == TextureImporterType.Sprite &&
+                      importer.spriteImportMode == SpriteImportMode.Multiple &&
+                      Mathf.Approximately(importer.spritePixelsPerUnit, WrestlerPpu) &&
+                      importer.filterMode == FilterMode.Point &&
+                      importer.textureCompression == TextureImporterCompression.Uncompressed &&
+                      !importer.mipmapEnabled &&
+                      sprites.Length == 1 &&
+                      Mathf.Approximately(sprites[0].rect.width, width) && Mathf.Approximately(sprites[0].rect.height, height) &&
+                      Mathf.Abs(sprites[0].pivot.x - pivotPx) < 0.01f && Mathf.Abs(sprites[0].pivot.y) < 0.01f;
+            if (ok)
+                return $"{texturePath}: already imported (pivot {pivotPx} px).";
+            // ImportSheet moves the pivot pivotTowardOpponentPx toward -x from the cell centre.
+            return ImportSheet(texturePath, width, height, width / 2 - pivotPx) + $" ({cellKey}, pivot {pivotPx} px from the left)";
+        }
+
+        private static Sprite ThrowSprite(string artPrefix, int number) =>
+            LoadSprites(artPrefix + number + ".png").Single();
+
+        /// <summary>
+        /// Barry_Bodyslam (D-044): S1-S5 then Barry's stand sprite, played once (stand held). Contact = the stand (start
+        /// = the landing, 0.62 s), so the clip is contact-scaled onto the bodyslam Startup and the landing falls on the
+        /// start of a real frame; turn = S3 (WrestlerView draws S3 on facing the throw direction).
+        /// </summary>
+        private static MoveClipSpec BarryThrowSlamSpec(Sprite stand) => ThrowSlamSpec(BarryThrowSlamArt, stand);
+
+        /// <summary>Peaux_Bodyslam (Peaux slams Barry, 2026-11-17): S1-S5 then Peaux's stand, built exactly like
+        /// <see cref="BarryThrowSlamSpec"/>.</summary>
+        private static MoveClipSpec PeauxThrowSlamSpec(Sprite stand) => ThrowSlamSpec(PeauxThrowSlamArt, stand);
+
+        private static MoveClipSpec ThrowSlamSpec(string artPrefix, Sprite stand)
+        {
+            ImportBodyslamThrowSprites();
+            var sprites = new List<Sprite>();
+            for (int i = 1; i <= 5; i++)
+                sprites.Add(ThrowSprite(artPrefix, i));
+            sprites.Add(stand);
+            return new MoveClipSpec
+            {
+                Sprites = sprites.ToArray(),
+                KeyFrames = Enumerable.Range(0, sprites.Count).ToArray(), LengthFrames = sprites.Count,
+                ContactIndex = ThrowSlamContactIndex, TurnIndex = ThrowSlamTurnIndex,
+                DefaultHoldsMs = (float[])ThrowSlamDefaultHoldsMs.Clone(),
+            };
+        }
+
+        /// <summary>
+        /// Peaux_Bodyslammed (D-044): R1-R7 then R6 held. Contact = the first R6 (impact, 0.62 s); turn = R4 (the release:
+        /// R1-R3 follow the Locked Up facing, R4-R7 are stored for a throw to screen-right). The last sprite (R6) is
+        /// Peaux's downed sprite for every knockdown.
+        /// </summary>
+        private static MoveClipSpec PeauxThrowSlammedSpec() => ThrowSlammedSpec(PeauxThrowSlammedArt);
+
+        /// <summary>Barry_Bodyslammed (Peaux slams Barry, 2026-11-17): R1-R7 then R6 held, built exactly like
+        /// <see cref="PeauxThrowSlammedSpec"/>. Its R6 is Barry's downed sprite for every knockdown.</summary>
+        private static MoveClipSpec BarryThrowSlammedSpec() => ThrowSlammedSpec(BarryThrowSlammedArt);
+
+        private static MoveClipSpec ThrowSlammedSpec(string artPrefix)
+        {
+            ImportBodyslamThrowSprites();
+            var sprites = new List<Sprite>();
+            for (int i = 1; i <= 7; i++)
+                sprites.Add(ThrowSprite(artPrefix, i));
+            sprites.Add(sprites[5]); // R6 again, held
+            return new MoveClipSpec
+            {
+                Sprites = sprites.ToArray(),
+                KeyFrames = Enumerable.Range(0, sprites.Count).ToArray(), LengthFrames = sprites.Count,
+                ContactIndex = ThrowSlammedContactIndex, TurnIndex = ThrowSlammedTurnIndex,
+                DefaultHoldsMs = (float[])ThrowSlammedDefaultHoldsMs.Clone(),
+            };
+        }
+
         /// <summary>Imports the approved single-frame Struck sprites (gen-barry-struck2-B-1, gen-barry-struck3-B-1,
         /// gen-barry-struck-c-E-1, gen-peaux-struck-a-1, gen-peaux-struck-b-1, gen-peaux-struck-c-A-2) with the wrestler
         /// settings, one sprite each, pivot Bottom Center: Barry A 186x197, B 132x230, C 116x239; Peaux A 172x187,
@@ -782,7 +981,8 @@ namespace RuralRumble.EditorTooling
 
             string prefabPath = writePrefab ? WritePrefab(spec, overrides, table) : "(not rebuilt)";
             // Knockdowns not caused by a bodyslam show the downed sprite mirrored in place (WrestlerView). Kept in sync
-            // on every rebuild, also when the prefab is otherwise left alone (only this one value is written).
+            // on every rebuild, also when the prefab is otherwise left alone (only downedMirrorShift and the D-044
+            // fallLandingShift are written).
             WriteDownedMirrorShift(spec);
             AssetDatabase.SaveAssets();
 
@@ -1230,6 +1430,7 @@ namespace RuralRumble.EditorTooling
             changed |= EnsureLockUpStates(controller);
             changed |= EnsureFallState(controller);
             changed |= EnsureCrouchState(controller);
+            changed |= EnsureSlamTail(controller);
 
             if (changed)
             {
@@ -1427,6 +1628,39 @@ namespace RuralRumble.EditorTooling
                 state.writeDefaultValues = false;
                 AnimatorStateTransition t = AddAnyStateTransition(sm, state, CombatState.KnockedDown);
                 t.AddCondition(AnimatorConditionMode.If, 0f, CrouchParam);
+                changed = true;
+            }
+            return changed;
+        }
+
+        /// <summary>Animator bool parameter (D-044): the thrown receiver's Bodyslammed clip is still playing its landing tail
+        /// (R6 -> R7 -> R6) after Combat made him Knocked Down / Knocked Out. Set by WrestlerView.</summary>
+        public const string SlamTailParam = "SlamTail";
+
+        /// <summary>
+        /// D-044 landing tail: parameter SlamTail (bool, set by WrestlerView); the Any State -> KnockedDown / KnockedOut /
+        /// Fall transitions get "SlamTail false", so the Bodyslammed state keeps playing after the receiver turns Knocked
+        /// Down on the landing tick, until WrestlerView clears SlamTail at the clip's end (the Knocked Down clip then shows
+        /// the same R6). The Crouch transition is left alone (the get-up always wins). Adds only what is missing.
+        /// </summary>
+        public static bool EnsureSlamTail(AnimatorController controller)
+        {
+            bool changed = false;
+            if (controller.parameters.All(p => p.name != SlamTailParam))
+            {
+                controller.AddParameter(SlamTailParam, AnimatorControllerParameterType.Bool);
+                changed = true;
+            }
+            AnimatorStateMachine sm = controller.layers[0].stateMachine;
+            foreach (AnimatorStateTransition t in sm.anyStateTransitions)
+            {
+                string dest = t.destinationState != null ? t.destinationState.name : null;
+                if (dest != CombatState.KnockedDown.ToString() && dest != CombatState.KnockedOut.ToString() &&
+                    dest != WrestlerView.FallStateName)
+                    continue;
+                if (t.conditions.Any(c => c.parameter == SlamTailParam))
+                    continue;
+                t.AddCondition(AnimatorConditionMode.IfNot, 0f, SlamTailParam);
                 changed = true;
             }
             return changed;
@@ -1951,6 +2185,21 @@ namespace RuralRumble.EditorTooling
         /// the x shift that puts the mirrored downed sprite back on the same ground as the unmirrored one. Writes the
         /// prefab only when the value changes. No-op if the prefab does not exist yet.
         /// </summary>
+        /// <summary>
+        /// D-044: extra x shift (world units, toward the fall side) of the landed downed sprite after a fall, so a downed
+        /// sprite centred on the body (Peaux's R6) lands with its feet end where fall3's feet end is (feet toward what hit
+        /// him, the D-041 look), instead of jumping back over the root. For a fall to +x, fall3 (stored head right) is
+        /// drawn unflipped and its feet end is its left opaque edge; the mirrored, shifted downed sprite covers its stored
+        /// span [left, right] with the feet on the left. 0 when the spec keeps the D-041 landing or has no fall art.
+        /// </summary>
+        private static float FallLandingShift(WrestlerArtSpec spec, Vector2 downedExtent)
+        {
+            if (!spec.AlignFallLandingToFeet || spec.Fall == null || spec.Fall.Sprites.Length <= FallLandIndex)
+                return 0f;
+            Vector2 fall3 = OpaqueExtentX(spec.Fall.Sprites[FallLandIndex - 1]);
+            return fall3.x - downedExtent.x;
+        }
+
         private static void WriteDownedMirrorShift(WrestlerArtSpec spec)
         {
             string path = $"{PrefabFolder}/{spec.Name}.prefab";
@@ -1959,8 +2208,10 @@ namespace RuralRumble.EditorTooling
                 return;
             Vector2 extent = OpaqueExtentX(spec.Bodyslammed.Sprites[spec.Bodyslammed.Sprites.Length - 1]);
             float shift = extent.x + extent.y;
+            float landing = FallLandingShift(spec, extent);
             var current = prefab.GetComponent<WrestlerView>();
-            if (current != null && Mathf.Abs(current.DownedMirrorShift - shift) < 1e-4f)
+            if (current != null && Mathf.Abs(current.DownedMirrorShift - shift) < 1e-4f &&
+                Mathf.Abs(current.FallLandingShift - landing) < 1e-4f)
                 return;
             GameObject contents = PrefabUtility.LoadPrefabContents(path);
             try
@@ -1970,6 +2221,7 @@ namespace RuralRumble.EditorTooling
                     return;
                 var so = new SerializedObject(view);
                 so.FindProperty("downedMirrorShift").floatValue = shift;
+                so.FindProperty("fallLandingShift").floatValue = landing;
                 so.ApplyModifiedPropertiesWithoutUndo();
                 PrefabUtility.SaveAsPrefabAsset(contents, path, out bool ok);
                 if (!ok)

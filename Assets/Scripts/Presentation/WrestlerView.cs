@@ -52,6 +52,13 @@ namespace RuralRumble.Presentation
     /// designer removed the slide after playtesting). A Stomp knockout during the get-up goes back to the lying pose (end of
     /// the Fall clip, or the KnockedOut clip's end).
     ///
+    /// Bodyslam throw (D-044, Barry slams Peaux; PairedMoveInfo.ThrowDirection T != 0): the slammer's S1-S2 face the lock-up
+    /// facing and S3 on faces T; the receiver's R1-R3 follow the Locked Up facing at the lock-up spot, R4-R7 (stored for a
+    /// throw to screen-right) are flipped for a throw left at the root Combat moves. Both switch at their clip's
+    /// MoveAnimationTable TurnTime in <see cref="LateUpdate"/>. The receiver turns Knocked Down on the landing tick; the
+    /// Animator bool "SlamTail" keeps the Bodyslammed clip (R6, R7, R6) playing to its end before the Knocked Down clip
+    /// (the same R6, same orientation). A slam without T (Peaux slams Barry) keeps the D-033/D-038 path unchanged.
+    ///
     /// Clip offsets and rotations are authored for left-facing art. When the sprite is flipped,
     /// <see cref="LateUpdate"/> mirrors the child sprite's animated x offset and z rotation so a knock-back
     /// or a fall still goes away from the way the wrestler faces.
@@ -118,6 +125,11 @@ namespace RuralRumble.Presentation
         public const string CrouchStateName = "Crouch";
         /// <summary>Animator bool parameter: show the crouch (D-043). True while the wrestler gets up.</summary>
         public static readonly int CrouchParam = Animator.StringToHash("Crouch");
+        /// <summary>Animator bool parameter (D-044): a thrown receiver who is already Knocked Down / Knocked Out still plays
+        /// the Bodyslammed clip's landing tail (R6, R7, R6); the downed transitions wait for it to be false.</summary>
+        public static readonly int SlamTailParam = Animator.StringToHash("SlamTail");
+        private static readonly int BodyslamStateHash = Animator.StringToHash(BodyslamStateName);
+        private static readonly int BodyslammedStateHash = Animator.StringToHash(BodyslammedStateName);
 
         /// <summary>Shared-controller slot clip for a move: "Slot_" + MoveId (e.g. Slot_Strike1, Slot_Stomp).</summary>
         public static string SlotNameFor(MoveId move) => "Slot_" + move;
@@ -212,6 +224,10 @@ namespace RuralRumble.Presentation
                  "relative to its pivot (left-facing art). A knockdown that did not come from a bodyslam shows the downed " +
                  "sprite mirrored and shifted by this, so the body stays on the same ground with head and feet swapped.")]
         [SerializeField] private float downedMirrorShift;
+        [Tooltip("World units, set by WrestlerAnimationBuilder (D-044): extra x shift toward the fall side of the downed " +
+                 "sprite at the end of a fall, so a downed sprite whose pivot is the body centre (Peaux's v5 R6) lands with " +
+                 "its feet end on fall3's. 0 = the D-041 landing (Barry).")]
+        [SerializeField] private float fallLandingShift;
 
         private IWrestlerView view;
         private CombatEvents events;
@@ -236,6 +252,17 @@ namespace RuralRumble.Presentation
         private int whipDirection;
         private bool inFrontOfWhipper;
         private WrestlerId whipperId;
+
+        // Bodyslam throw (D-044), from PairedMoveStarted(Bodyslam) with a ThrowDirection: the throw direction T while this
+        // wrestler plays a throwing slam (0 otherwise), which side it plays, and the receiver's root x at the press (the
+        // lock-up spot, where R1-R3 are drawn even if the root has already moved on that rendered frame).
+        private int throwDirection;
+        private bool throwReceiver;
+        private float throwPinX;
+        private float throwPinOffset;
+        // A receiver knocked down / out by a throw: T, so the landing tail and the downed R6 keep the throw's orientation.
+        private int downedThrowDirection;
+        private bool slamTail;
 
         private float moveSpeed = 1f;
         private CombatState? lastState;
@@ -325,6 +352,8 @@ namespace RuralRumble.Presentation
             paired = false;
             whipDirection = 0;
             inFrontOfWhipper = false;
+            throwDirection = 0;
+            throwReceiver = false;
         }
 
         private void OnDestroy() => UnbindEvents();
@@ -353,6 +382,11 @@ namespace RuralRumble.Presentation
             whipDirection = whip && info.Initiator == eventsId ? info.WhipDirection : 0;
             inFrontOfWhipper = whip && info.Receiver == eventsId;
             whipperId = info.Initiator;
+            // D-044: a throwing slam (ThrowDirection != 0). Peaux slams Barry has none and keeps the old path untouched.
+            bool thrown = info.Move == MoveId.Bodyslam && info.ThrowDirection != 0;
+            throwDirection = thrown ? info.ThrowDirection : 0;
+            throwReceiver = thrown && info.Receiver == eventsId;
+            throwPinX = transform.position.x; // the receiver's root does not move before the release
         }
 
         private void OnMovePhaseChanged(WrestlerId id, MoveId move, MovePhase phase)
@@ -407,9 +441,20 @@ namespace RuralRumble.Presentation
                     downedFallSide = 0;
                 fallLanded = false;
                 fallStarted = downedFallSide != 0;
+                // D-044: knocked down / out by a throw's landing: keep the throw's orientation for the tail and the R6.
+                downedThrowDirection = downedFromSlam && throwReceiver ? throwDirection : 0;
             }
             if (!downed)
+            {
                 downedFallSide = 0;
+                downedThrowDirection = 0;
+            }
+            // The throw (D-044) lasts while this wrestler is Grappling / Grappled in the bodyslam.
+            if (view.CurrentMove != MoveId.Bodyslam || (state != CombatState.Grappling && state != CombatState.Grappled))
+            {
+                throwDirection = 0;
+                throwReceiver = false;
+            }
             bool falling = downedFallSide != 0;
             if (falling)
             {
@@ -419,6 +464,12 @@ namespace RuralRumble.Presentation
             }
             else
                 downedMirrored = downed && !downedFromSlam;
+            if (downed && downedThrowDirection != 0)
+            {
+                // D-044: R6 (and the tail before it) is stored for a throw to screen-right: head toward the slammer.
+                facingFlip = ThrownReceiverLateFlip(downedThrowDirection, artFacesLeft);
+                downedMirrored = false;
+            }
 
             // D-043 get-up: the crouch, drawn by the combat facing (locked while down; the stand that follows uses it),
             // never mirrored, at the root with no offset (designer, after playtesting: no slide).
@@ -460,6 +511,15 @@ namespace RuralRumble.Presentation
                 animator.SetBool(PairedParam, showPaired);
                 animator.SetBool(FallParam, falling);
                 animator.SetBool(CrouchParam, gettingUp);
+                // D-044: the thrown receiver turns Knocked Down on the landing tick, when R6 starts. Keep the Bodyslammed
+                // clip (R6 -> R7 -> R6) until its end; the Knocked Down clip then shows the same R6, the same way round.
+                slamTail = false;
+                if (downed && downedThrowDirection != 0 && !gettingUp)
+                {
+                    AnimatorStateInfo current = animator.GetCurrentAnimatorStateInfo(0);
+                    slamTail = current.shortNameHash == BodyslammedStateHash && current.normalizedTime < 1f;
+                }
+                animator.SetBool(SlamTailParam, slamTail);
 
                 // The reaction comes from the hit that landed, set before the Animator evaluates: Strike 2 (combo hit 2)
                 // shows StruckC, any other hit StruckB (D-042). A Struck entered with no hit this frame (an obstacle
@@ -527,6 +587,7 @@ namespace RuralRumble.Presentation
                 return;
             ApplyWhipperFacing();
             ApplyFallOrientation();
+            ApplyThrowSlamFacing();
             Transform t = spriteRenderer.transform;
             if (t == transform)
                 return; // never touch the root
@@ -552,6 +613,10 @@ namespace RuralRumble.Presentation
                 r = -r;
             }
             x += DownedMirrorOffset(downedMirrored, facingFlip, downedMirrorShift);
+            // D-044: a fall's landed downed sprite lines its feet up with fall3; the receiver's R1-R3 stay on the lock-up spot.
+            if (downedMirrored && downedFallSide != 0)
+                x += downedFallSide * fallLandingShift;
+            x += throwPinOffset;
 
             bool changed = Mathf.Abs(x - currentX) > 1e-5f || Mathf.Abs(r - currentRotZ) > 1e-3f;
             if (changed)
@@ -608,6 +673,61 @@ namespace RuralRumble.Presentation
             downedMirrored = landed;
             spriteRenderer.flipX = facingFlip ^ downedMirrored;
         }
+
+        // D-044: after the Animator has evaluated this frame, orient a throwing slam's frames from the clip's current time
+        // against its MoveAnimationTable TurnTime, like the whip turn (so the flip changes with the sprite at any speed):
+        //  - slammer (Bodyslam: S1-S5, stand): before TurnTime (S1-S2) the lock-up facing Combat still reports, from it
+        //    (S3 on) the throw direction T;
+        //  - receiver (Bodyslammed: R1-R7, R6): before TurnTime (R1-R3, the release) the Locked Up facing (= T), drawn at
+        //    the lock-up spot even if the root already moved this frame; from it (R4-R7, stored for a throw to
+        //    screen-right) flipped for a throw to the left, at the root Combat moves.
+        // Combat facing is never touched. Peaux slams Barry (no ThrowDirection) never gets here.
+        private void ApplyThrowSlamFacing()
+        {
+            throwPinOffset = 0f;
+            if (throwDirection == 0 || animator == null || !animator.isActiveAndEnabled || moveTable == null)
+                return;
+            AnimatorStateInfo info = animator.GetCurrentAnimatorStateInfo(0);
+            string stateName = throwReceiver ? BodyslammedStateName : BodyslamStateName;
+            if (info.shortNameHash != (throwReceiver ? BodyslammedStateHash : BodyslamStateHash))
+                return;
+            AnimationClip clip = ClipForSlot(SlotNameForState(stateName));
+            if (clip == null || !moveTable.TryGetTurnTime(clip, out float turnTime))
+                return;
+            float clipTime = Mathf.Clamp01(info.normalizedTime) * clip.length;
+            if (throwReceiver)
+            {
+                bool released = ThrowHasReleased(clipTime, turnTime);
+                facingFlip = released ? ThrownReceiverLateFlip(throwDirection, artFacesLeft) : ShouldFlip(view.HorizontalFacing, artFacesLeft);
+                if (!released)
+                    throwPinOffset = throwPinX - transform.position.x;
+            }
+            else
+                facingFlip = ShouldFlip(WhipperFacing(clipTime, turnTime, view.HorizontalFacing, throwDirection), artFacesLeft);
+            spriteRenderer.flipX = facingFlip;
+        }
+
+        /// <summary>D-044: the throwing slam's clip has reached its turn key (slammer S3 / receiver R4, the release).</summary>
+        public static bool ThrowHasReleased(float clipTime, float turnTime) => clipTime >= turnTime - TurnTimeEpsilon;
+
+        /// <summary>
+        /// D-044: flip of the receiver's R4-R7 and his downed R6 after a throw. Those frames are stored for a throw to
+        /// screen-right (slammer on the left, R6 head left = toward the slammer), so they are flipped for a throw to the
+        /// left: the stored art "faces" right while the receiver's facing is T.
+        /// </summary>
+        public static bool ThrownReceiverLateFlip(int throwDirection, bool artFacesLeft) => ShouldFlip(-throwDirection, artFacesLeft);
+
+        /// <summary>The throw direction while this wrestler plays a throwing slam (D-044), else 0.</summary>
+        public int ThrowDirection => throwDirection;
+
+        /// <summary>The throw direction this wrestler was knocked down / out by (D-044), else 0.</summary>
+        public int DownedThrowDirection => downedThrowDirection;
+
+        /// <summary>True while a thrown receiver, already down, still plays the Bodyslammed landing tail (D-044).</summary>
+        public bool PlayingSlamTail => slamTail;
+
+        /// <summary>See the Inspector tooltip; set by WrestlerAnimationBuilder (D-044).</summary>
+        public float FallLandingShift => fallLandingShift;
 
         /// <summary>
         /// D-041: the "facing flip" a fall is drawn with: flipped for a fall toward -x. The fall frames are stored head on

@@ -44,6 +44,14 @@
         - Grapple animation is triggered
         - Wrestler B enters a Knocked Down state
         - Damage is applied to Wrestler B
+        - **Bodyslam throw (D-044).** Whether the slam throws depends on the slammer (Wrestler A): **on for both Barry and Peaux** (Barry D-044, Peaux D-045).
+            - **Without a throw** (a slammer whose throw is off or has no entry; not used by the shipped pair since D-045, kept as the fallback): neither wrestler moves. Damage lands at the slammer's impact time; B stays Grappled until the move's Recovery ends (0.4 s later), then B is Knocked Down and A returns to Standing or Recovering (D-033, D-036, D-038).
+            - **With a throw** (Barry slams Peaux, Peaux slams Barry): B is thrown in the direction B faced in the lock-up. B faces A, so B is carried over A and lands on A's far side. The throw is along x only, at the lock-up depth. Neither wrestler has control during the slam.
+                - Lift (from the press to the **release**, 0.42 s): neither root moves. A turns to face the throw direction partway through (presentation).
+                - Flight (from the release to the **landing**, 0.62 s): B's root moves on x, linearly, from the release offset (Barry 178 px, Peaux 159 px from A's root along the throw; A's feet are at his root from S3 on) to the landing distance. B passes through A (no wrestler blocking during the slam).
+                - **Distance:** the median is 1.59 × the slammer's standing height from A's feet to B's landed body centre: for Barry **382 px = 6.37 units root to root**, for Peaux (215 px tall) **342 px = 5.70 units** (each slammer's feet are drawn at his root from S3 on). Each slam draws a distance uniformly within **±10%** of the median.
+                - **Blocked:** if the landing spot is past an arena end, or the flight reaches the truck or pool, B stops at contact with normal movement clamping (like the D-041 knockback slide) and lands there. Reaching the truck or pool adds the obstacle collision damage (8) at the landing. An arena end adds nothing. (The throw stays at the lock-up depth, so it never reaches the back wall.)
+                - **Landing** (the impact): bodyslam damage (12, plus 8 if the throw hit the truck or pool) to B. B enters **Knocked Down** at once (normal health-based length plus the D-043 get-up; no fall, no knockback slide) or Knocked Out at 0. A returns to Standing or Recovering at the same moment, facing the throw direction (toward B), and is free to act. The R7 bounce is art only.
     - Wrestler A presses Irish Whip button
         - If Wrestler A is pressing a Left or Right Movement (the left/right part of the stick or D-pad; up/down alone counts as no direction, D-039)
             - Irish Whip animation is triggered in the direction Wrestler A is pressing.
@@ -170,6 +178,13 @@ Values marked *Set* were decided by the designer. Values marked *Starting point*
 | Strike 1/2 wind-up, hit window, recovery | 0.21 / 0.1 / 0.15 s | Starting point | D-024; wind-up matches the art's contact frame |
 | Strike 3 wind-up, hit window, recovery | 0.125 / 0.1 / 0.25 s | Starting point | D-024 |
 | Whip no-control time | 3.0 s | Set | D-028; after this the whipped wrestler may cancel with Run |
+| Bodyslam impact (landing) time, per slammer | Barry 0.62 s, Peaux 0.62 s | Starting point | D-036, D-044; `bodyslamStartupByInitiator`. With a throw this is the landing: damage, B Knocked Down and A free all happen here. Each matches its slammer's throw clip (S1–S5 120 / 120 / 180 / 100 / 100 ms; Peaux's was 0.475 until his throw art, 2026-11-17); the designer will retune |
+| Bodyslam active / recovery after impact (no throw only) | 0.1 / 0.3 s | Starting point | D-038; `bodyslamTiming`; B stays Grappled this long after impact. Not used by a thrown slam, so unused by the shipped pair since D-045 (fallback for a disabled entry) |
+| Bodyslam throw on, per slammer | Barry on, Peaux on | Set | D-044, D-045; `bodyslamThrowBySlammer[].throwEnabled`. A slammer with no entry does not throw |
+| Bodyslam release time | 0.42 s (Barry), 0.42 s (Peaux) | Starting point | D-044, D-045; `releaseTime`; start of S4/R4; must not be later than the impact time |
+| Bodyslam release offset | 178 px (Barry), 159 px (Peaux) | Starting point | D-044, D-045; `releaseOffsetPx`; receiver root from the slammer root along the throw at the release (R4's drawn spot past the slammer's feet, which are at his root from S3 on; Peaux's 159 = where Barry's hands meet Peaux's at S4/R4, measured from the art) |
+| Bodyslam throw distance (median) | 382 px = 6.37 units (Barry), 342 px = 5.70 units (Peaux) | Set (Peaux: Starting point) | D-044, D-045; `landingDistancePx`; root to root = 1.59 × the slammer's standing height (Barry 240 px, Peaux 215 px; the slammer's feet are at his root from S3 on) |
+| Bodyslam throw variance | ±10% (both) | Set | D-044, D-045; `distanceVariance` 0.10; uniform, drawn once per slam, applied to the root-to-root distance |
 | Irish Whip frame times f1 / f2 / f3 / f4 | 0.12 / 0.10 / 0.12 / 0.33 s (Barry whipping), 0.12 / 0.10 / 0.12 / 0.25 s (Peaux whipping) | Starting point | D-039; per whipper (`CombatTuning.irishWhipByWhipper`). The whipper is rooted for all four; the runner is released at the end of f3 and the whipper is free when f4 ends |
 | Irish Whip runner offsets (px along the whip direction from the whipper, f1 / f2 / f3 / f4) | Barry whipping: through −80 / 55 / 98 / 222, away 58 / 64 / 98 / 222; Peaux whipping: through −55 / 50 / 80 / 167, away 70 / 74 / 82 / 167 | Starting point | D-039; the approved art's staging. Each key is held for its whole frame; from the f4 key the runner runs at run speed. "Through" = the runner keeps the direction it faced in the lock-up and passes the whipper; "away" = the way the whipper faced |
 
@@ -182,9 +197,9 @@ Values marked *Set* were decided by the designer. Values marked *Starting point*
 | Strike 1 damage | 3 | Starting point | First hit of the combo |
 | Strike 2 damage | 4 | Starting point | Second hit of the combo |
 | Strike 3 damage | 6 | Starting point | Combo finisher; 13 total for a full combo |
-| Bodyslam damage | 12 | Starting point | Grapples hit harder than strikes but need close range |
+| Bodyslam damage | 12 | Starting point | Grapples hit harder than strikes but need close range. A throw that reaches the truck or pool adds obstacle collision damage at the landing (D-044) |
 | Irish Whip impact damage | 8 | Starting point | Whipped Wrestler runs into an arena object (truck or pool; used for the whole whip run instead of obstacle collision damage) |
-| Obstacle collision damage | 8 | Starting point | A running Wrestler runs into the truck or pool (D-027) |
+| Obstacle collision damage | 8 | Starting point | A running Wrestler runs into the truck or pool (D-027); also added when a bodyslam throw reaches the truck or pool (D-044) |
 | Stomp damage | 3 | Starting point | D-025 |
 | Run-collision damage | 0 | Starting point | D-029; running into the opponent knocks both down |
 | Walk speed horizontal / vertical / diagonal | 3.0 / 2.0 / 3.6 units/s | Set | D-029; three separate values |

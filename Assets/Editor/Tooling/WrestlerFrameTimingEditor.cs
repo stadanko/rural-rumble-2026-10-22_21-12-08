@@ -289,6 +289,7 @@ namespace RuralRumble.EditorTooling
             string singleLabel = null, note = null;
             float fittedTotal = -1f;
             bool startupIsMoveTimings = false; // startup is moveTiming's own Startup (strikes, stomp, bodyslam fallback)
+            WrestlerDefinition bodyslamSlammer = null; // D-044: the slammer whose throw entry to show
 
             switch (move)
             {
@@ -300,6 +301,7 @@ namespace RuralRumble.EditorTooling
                 case "Bodyslam": case "Bodyslammed":
                 {
                     WrestlerDefinition initiator = move == "Bodyslam" ? selfDef : otherDef;
+                    bodyslamSlammer = initiator;
                     startup = BodyslamStartupFor(initiator);
                     if (startup == null)
                     {
@@ -417,6 +419,86 @@ namespace RuralRumble.EditorTooling
                 else if (fittedTotal > 0f && clip.Playback == ClipPlayback.FittedToMove)
                     DrawSpeedReadout(clip.TotalMs / 1000f, fittedTotal, $"the clip is {clip.TotalMs:0.#} ms and is fitted to the move's {fittedTotal * 1000f:0.#} ms");
             }
+            if (bodyslamSlammer != null)
+                DrawBodyslamThrow(clip, bodyslamSlammer);
+        }
+
+        // ---------------------------------------------------------------- Bodyslam throw (D-044)
+
+        /// <summary>Sprite step where the throw's release shows: S4 / R4 (after S1-S3 / R1-R3).</summary>
+        private const int ThrowReleaseStep = 3;
+
+        /// <summary>
+        /// D-044: the slammer's bodyslamThrowBySlammer entry (enabled, release, release offset, landing distance, variance),
+        /// editable in place with Undo, with a check that the clip's release sprite (start of S4 / R4) shows when Combat
+        /// releases the receiver, and "Match release to this clip" writing releaseTime from the holds. The landing is the
+        /// impact time above. Nothing is shown for a slammer with no entry.
+        /// </summary>
+        private void DrawBodyslamThrow(WrestlerFrameTiming.ClipTiming clip, WrestlerDefinition slammer)
+        {
+            SerializedProperty entry = BodyslamThrowFor(slammer);
+            if (entry == null)
+                return;
+            string who = slammer.DisplayName;
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField(new GUIContent("Bodyslam throw  (CombatTuning: changes gameplay)",
+                    "This slammer's entry in 'Bodyslam Throw By Slammer' (Assets/Data/Tuning/CombatTuning.asset), edited in place."),
+                    EditorStyles.miniBoldLabel);
+                SerializedProperty enabled = entry.FindPropertyRelative(nameof(BodyslamThrow.throwEnabled));
+                SerializedProperty release = entry.FindPropertyRelative(nameof(BodyslamThrow.releaseTime));
+                EditorGUILayout.PropertyField(enabled, new GUIContent($"{who} throws",
+                    "On: the receiver is thrown past the slammer and lands at the impact time. Off: the old bodyslam (no throw)."));
+                EditorGUILayout.PropertyField(release, new GUIContent("Release at (s)",
+                    "Seconds from the Grapple press until the receiver leaves the slammer's hands (start of S4 / R4)."));
+                EditorGUILayout.PropertyField(entry.FindPropertyRelative(nameof(BodyslamThrow.releaseOffsetPx)),
+                    new GUIContent("Receiver at release (px)", "Receiver root from slammer root along the throw at the release (60 px = 1 unit)."));
+                EditorGUILayout.PropertyField(entry.FindPropertyRelative(nameof(BodyslamThrow.landingDistancePx)),
+                    new GUIContent("Landing distance (px)", "Median receiver root from slammer root along the throw at the landing."));
+                EditorGUILayout.PropertyField(entry.FindPropertyRelative(nameof(BodyslamThrow.distanceVariance)),
+                    new GUIContent("Distance variance (+/- fraction)", "Uniform, drawn once per slam."));
+                if (!enabled.boolValue)
+                    return;
+                if (clip.Steps.Count <= ThrowReleaseStep)
+                {
+                    EditorGUILayout.HelpBox("This clip doesn't have the throw frames, so its release can't be compared with combat.", MessageType.Warning);
+                    return;
+                }
+                float clipRelease = clip.StartMs(ThrowReleaseStep) / 1000f;
+                bool match = Mathf.Abs(clipRelease - release.floatValue) < 0.0005f;
+                EditorGUILayout.LabelField($"Release: clip {clipRelease * 1000f:0.#} ms (start of frame 4), combat {release.floatValue * 1000f:0.#} ms" +
+                                           (match ? "" : "   <- differs"), EditorStyles.miniLabel);
+                if (!match)
+                    EditorGUILayout.HelpBox("The receiver's root jumps at the combat release time; if frame 4 starts at another time " +
+                                            "the receiver is drawn in the wrong place for a moment. Keep the slammer's and the receiver's " +
+                                            "clips in step and match the release.", MessageType.Warning);
+                using (new EditorGUI.DisabledScope(match))
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button(new GUIContent("Match release to this clip",
+                            "Sets the throw's release time to the start of frame 4 of this clip. This changes gameplay timing."),
+                            GUILayout.Width(240)) &&
+                        EditorUtility.DisplayDialog("Change combat timing?",
+                            $"Set {who}'s throw release to {clipRelease:0.###} s (now {release.floatValue:0.###} s)?",
+                            "Change it", "Cancel"))
+                        release.floatValue = clipRelease;
+                }
+            }
+        }
+
+        /// <summary>The bodyslamThrowBySlammer entry for this slammer, or null if it has none.</summary>
+        private SerializedProperty BodyslamThrowFor(WrestlerDefinition slammer)
+        {
+            SerializedProperty list = tuningSo?.FindProperty(nameof(CombatTuning.bodyslamThrowBySlammer));
+            if (list == null || slammer == null) return null;
+            for (int i = 0; i < list.arraySize; i++)
+            {
+                SerializedProperty e = list.GetArrayElementAtIndex(i);
+                if (e.FindPropertyRelative(nameof(BodyslamThrow.slammer)).objectReferenceValue == slammer)
+                    return e;
+            }
+            return null;
         }
 
         private static void DrawSpeedReadout(float clipSeconds, float gameSeconds, string detail)

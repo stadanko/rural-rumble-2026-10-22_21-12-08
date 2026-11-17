@@ -368,14 +368,14 @@ Timeline (default tuning): Grapple press → A Grappling, B Grappled, `CurrentMo
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
 | L5.1 | Grapple pressed by A anywhere in the lock-up window (including the first tick after the lock-up and late in the window): A = Grappling, B = Grappled, `CurrentMove` = Bodyslam for both, `PairedMoveStarted(Bodyslam)` with initiator, receiver, facing, anchor and the bodyslam timing; no `MoveStarted`; no damage yet | Spec, ARCHITECTURE 6 | `BodyslamTests.GrappleInLockUp_StartsBodyslam_GrapplingAndGrappled_RaisesPairedMoveStarted`, `GrapplePressedLateInTheLockUpWindow_StillStartsBodyslam`, `CpuInitiator_SameRules` | Auto |
-| L5.2 | Neither root moves at the start, during, or at the end of the bodyslam (the art assumes both stay `lockUpPairSpacing` apart) | D-033, ARCHITECTURE 6 | `BodyslamTests.GrappleInLockUp_StartsBodyslam_*`, `MoveEnd_ReceiverKnockedDown_InitiatorStanding_RootsNeverMove` | Auto |
+| L5.2 | Neither root moves at the start, during, or at the end of the bodyslam (the art assumes both stay `lockUpPairSpacing` apart). Since D-044 this is the no-throw path only (since D-045 only a disabled throw entry); a throwing slam is T1 | D-033, ARCHITECTURE 6 | `BodyslamTests.GrappleInLockUp_StartsBodyslam_*`, `MoveEnd_ReceiverKnockedDown_InitiatorStanding_RootsNeverMove` | Auto |
 | L5.3 | Impact at the bodyslam Startup: Bodyslam damage (12) to B, `HitLanded(Bodyslam)` and `HealthChanged`; B stays Grappled (still on the clip) | Spec Damage table | `BodyslamTests.Impact_AtBodyslamStartup_AppliesDamage_ReceiverStaysGrappled` | Auto |
 | L5.4 | At the end of the move (Startup + Active + Recovery): B Knocked Down with the normal health-based length (`KnockedDown` event), A Standing (or Recovering), both `CurrentMove` None; phase events Bodyslam Active → Recovery → None | Spec Grapple, Knocked Down, D-025 | `BodyslamTests.MoveEnd_ReceiverKnockedDown_InitiatorStanding_RootsNeverMove`, `Bodyslam_LowHealthReceiver_KnockedDownThenRecovering` | Auto |
 | L5.5 | Bodyslam damage taking B to 0: Knocked Out at the impact, `MatchEnded` with A the winner | Spec Damage | `BodyslamTests.Bodyslam_ToZeroHealth_KnocksOutAtImpact_EndsTheMatch` | Auto |
 | L5.6 | Neither wrestler has control during the bodyslam (no moves, movement, facing changes, second paired move) | Spec, D-031 | `BodyslamTests.DuringBodyslam_NeitherWrestlerHasControl` | Auto |
 | L5.7 | After it, A has normal control (Strike over the downed B is a Stomp) | D-025 | `BodyslamTests.AfterBodyslam_InitiatorHasControl_AndCanStompTheDownedReceiver` | Auto |
 | L5.8 | No bodyslam outside a lock-up: Grapple in range from Standing is a lock-up, out of range a whiff (presses during the whiff do nothing), Locked Up B's Grapple does nothing, Grapple during the break does nothing | Spec "A Grapple can only be performed when A is in Lock Up and B in Locked Up" | `BodyslamTests.GrapplePressInRange_OutsideALockUp_IsALockUp_NotABodyslam`, `GrapplePressOutOfRange_Whiffs_NoBodyslam`, `LockedUpWrestlerPressingGrapple_DoesNotBodyslam`, `GrappleDuringBreak_DoesNotBodyslam` | Auto |
-| L5.9 | Bodyslam Startup comes from the initiator's `bodyslamStartupByInitiator` entry (Barry 0.525, Peaux 0.475 (D-036; were 1.208 / 1.083 under D-033) in the project asset), else `bodyslamTiming`; Active and Recovery are shared | D-033 | `BodyslamTests.PerInitiatorStartup_FromTheInitiatorsDefinition` | Auto (the project asset's entries are set; the Match scene passes the definitions only once MatchBootstrap does, see ARCHITECTURE 6) |
+| L5.9 | Bodyslam Startup comes from the initiator's `bodyslamStartupByInitiator` entry (Barry 0.525, Peaux 0.475 (D-036; were 1.208 / 1.083 under D-033) in the project asset; D-044 sets Barry to 0.62 with his v5 clip), else `bodyslamTiming`; Active and Recovery are shared (no-throw path; a throwing slam uses (Startup, 0, 0), T1.2) | D-033 | `BodyslamTests.PerInitiatorStartup_FromTheInitiatorsDefinition` | Auto (the project asset's entries are set; the Match scene passes the definitions only once MatchBootstrap does, see ARCHITECTURE 6) |
 | L5.10 | Bodyslam damage and timing are read at use; new tuning carries damage 12 and Active + Recovery ≈ 1.209 s | Spec table, D-005 | `BodyslamTests.BodyslamDamageAndTiming_AreReadAtUse`, `NewTuning_HasBodyslamDefaults` | Auto |
 | L5.11 | Strikes can't land on Grappling or Grappled | Spec allowed-state list | `StrikeAllowedStatesTests.CanBeStruck_MatchesSpecList` | Auto |
 
@@ -457,6 +457,61 @@ The whipper's Irish Whip clips are in (L9).
 9. FrameTiming: change a whip hold, click "Match combat to this clip", rebuild, and play: does the whip speed change as expected with the arm still hidden? (L9.5)
 
 ---
+
+## Bodyslam Throw (D-044)
+
+Barry slams Peaux throws Peaux past Barry (COMBAT_SPEC Lock Up/Grappling rules "Bodyslam throw", Tuning Values; ARCHITECTURE 6 "Bodyslam throw (D-044): integration contract"; D-044). Since D-045 (2026-11-17) Peaux slams Barry throws Barry past Peaux by the same rules (Peaux's values 0.42 / 159 / 342 / 0.10); the no-throw path (L5) remains only as the fallback for a disabled entry. **Status: built**; every Auto row below names an existing test, all passing on 2026-11-16 (EditMode 521/522 with only the known ComboTiming failure, PlayMode 35/35). Human playtest checklist still open.
+
+EditMode tests build the throw from their own `CombatTuning` fixture: a new instance has no `bodyslamThrowBySlammer` entries, so the existing `BodyslamTests` keep testing the no-throw path. Throw tests add a `BodyslamThrow` entry for the slammer's definition and inject `random01` (`() => 0f` = −10%, `() => 0.5f` = median, `() => 0.9999f` ≈ +10%). Values are read from the fixture, never hard-coded. Proposed files: `Assets/Tests/EditMode/Combat/BodyslamThrowTests.cs`, presentation cases in `CombatPresentationTests`.
+
+Timeline (Barry's Starting points): Grapple press → A Grappling, B Grappled, `PairedMoveStarted(Bodyslam)` with `ThrowDirection` = −`Facing` and Timing (0.62, 0, 0) → 0–0.42 s neither root moves → 0.42 s release: B's root at 178 px from A's root along the throw → linear on x → 0.62 s landing at the drawn distance (382 px ±10% root to root): 12 damage (+8 if the truck/pool stopped the flight), B Knocked Down (or Out), A Standing/Recovering facing the throw direction.
+
+### T1. Combat (COMBAT_SPEC, ARCHITECTURE 6, D-044)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| T1.1 | Per slammer: an enabled entry throws; a disabled entry, no entry, or no wrestler definitions gives the unchanged step 2 bodyslam (`ThrowDirection` 0, roots never move, B Knocked Down after Active + Recovery) | D-044 rollout | `BodyslamThrowTests.EnabledSlammer_Throws`, `DisabledOrMissingEntry_OldBodyslamUnchanged`, `NoDefinitions_NoThrow` | Auto |
+| T1.2 | `PairedMoveStarted(Bodyslam)` carries `ThrowDirection` = −`Facing` (B's lock-up facing) and Timing (Startup = the slammer's `bodyslamStartupByInitiator`, Active 0, Recovery 0); both facings | D-044 throw direction | `BodyslamThrowTests.PairedMoveInfo_ThrowDirectionIsReceiversFacing_BothSides` | Auto |
+| T1.3 | Before `releaseTime` neither root moves | D-044, ARCHITECTURE 6 | `BodyslamThrowTests.BeforeRelease_RootsDoNotMove` | Auto |
+| T1.4 | From the release to the landing B's root x follows A.x + T × lerp(`releaseOffsetPx`, drawn distance, fraction) / 60 within one tick's step, y unchanged (lock-up depth); A's root never moves; B passes through A with no blocking or run collision | D-044 Starting point (linear) | `BodyslamThrowTests.Flight_IsLinearOnX_AtLockUpDepth_ThroughTheSlammer` | Auto |
+| T1.5 | Landing at root-to-root distance `landingDistancePx` × (1 + `distanceVariance` × (2r − 1)) / 60 for r = 0, 0.5, ≈1 (−10%, median, +10%); `random01` is called exactly once per thrown slam and never for a slam without a throw | D-044 distance, variance | `BodyslamThrowTests.LandingDistance_FollowsTheInjectedRandom`, `RandomDrawnOncePerThrow_NeverWithoutThrow` | Auto |
+| T1.6 | Landing at the impact time: one `HitLanded(Bodyslam)` with `bodyslamDamage`, `HealthChanged`; B Knocked Down on the same tick (health-based length, `KnockedDown` event, `FallSide` 0, no slide), then the D-043 get-up; A Standing (or Recovering) on the same tick, `HorizontalFacing` = T, `CurrentMove` None for both; phase events Active, Recovery, None in order | D-044 receiver, slammer free | `BodyslamThrowTests.Landing_DamageKnockdownAndSlammerFree_SameTick`, `Landing_LowHealthSlammer_Recovering` | Auto |
+| T1.7 | The slammer can act on the tick after the landing (walk, strike; Strike in stomp range of B is a Stomp) | D-044 slammer free, D-025 | `BodyslamThrowTests.AfterLanding_SlammerHasControl` | Auto |
+| T1.8 | Landing spot past an arena end: B stops at the end with normal clamping, lands there with 12 damage only, no `ObstacleHit` | D-044 blocked throw | `BodyslamThrowTests.BlockedByArenaEnd_StopsShort_NoExtraDamage` | Auto |
+| T1.9 | Flight reaching the truck or the pool (at the lock-up depth): B stops at contact, `ObstacleHit` once on the contact tick, lands there at the landing time with `bodyslamDamage` + `obstacleCollisionDamage` in one `HitLanded`; a flight outside the obstacles' depth band takes no extra damage | D-044 blocked throw | `BodyslamThrowTests.BlockedByTruck_StopsShort_AddsObstacleDamage`, `BlockedByPool_*`, `FlightOutsideObstacleDepth_NoExtraDamage` | Auto |
+| T1.10 | Knockout at the landing (to 0 health): B Knocked Out, `MatchEnded` with A the winner, A already Standing in the frozen match | D-044, spec Damage | `BodyslamThrowTests.LandingKnockout_EndsMatch_SlammerStanding` | Auto |
+| T1.11 | Neither wrestler has control from the press to the landing (no movement, facing changes, moves) | Spec, D-031 | `BodyslamThrowTests.DuringThrow_NeitherWrestlerHasControl` | Auto |
+| T1.12 | A blocked throw that leaves B overlapping A is separated by normal blocking afterwards (no stuck pair) | ARCHITECTURE 6 | `BodyslamThrowTests.BlockedNextToSlammer_BlockingSeparatesThem` | Auto |
+| T1.13 | The throw entry is read at the press: edits during a slam apply to the next one; `releaseTime` above the Startup is clamped to it | D-005, ARCHITECTURE 6 | `BodyslamThrowTests.ThrowTuning_ReadAtPress_ReleaseClamped` | Auto |
+| T1.14 | Project asset: Barry entry enabled (0.42 / 178 / 382 / 0.10), Peaux enabled (0.42 / 159 / 342 / 0.10); both impacts 0.62. A copy with Peaux's entry disabled runs the old no-throw bodyslam | D-044, D-045 | `BodyslamThrowTests.ProjectAsset_BothSlammersThrow`, `ProjectAssetCopy_PeauxEntryDisabled_OldBodyslam` | Auto |
+| T1.15 | CPU unchanged: a CPU Barry slams and throws through the same rules; a thrown CPU Peaux mashes once Knocked Down; the brain gives no input during the slam | Spec CPU AI, D-044 | existing `OpponentBrainBodyslamTests.*` plus `BodyslamThrowTests.CpuSlammer_SameRules` | Auto |
+
+### T2. Presentation (ARCHITECTURE 6, D-044)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| T2.1 | Barry_Bodyslam plays S1–S5 and Peaux_Bodyslammed R1–R7 then R6 held, with the default holds; R4 starts on the release tick and R6 on the landing tick (contact-scaled, 1x at the defaults) | D-044 timing | `BodyslamThrowPresentationTests.BarrySlamsPeaux_ThrowLeft` / `_ThrowRight` | Auto |
+| T2.2 | Barry draws S1–S2 facing the lock-up facing and S3–S5 facing the throw direction, changing on the same rendered frame as S2 → S3; both throw directions | D-044, like D-039 | `BodyslamThrowPresentationTests.BarrySlamsPeaux_ThrowLeft` / `_ThrowRight` | Auto |
+| T2.3 | R1–R3 drawn at the receiver root paired with S1–S3; R4–R7 drawn at the receiver root Combat moves (no child offset), oriented for the throw direction; R6 head toward Barry | D-044 | `BodyslamThrowPresentationTests.BarrySlamsPeaux_ThrowLeft` / `_ThrowRight` | Auto |
+| T2.4 | The R6 → R7 → R6 tail plays after the receiver turns Knocked Down (not cut to the downed clip), then the downed pose is the same R6 with no jump; the crouch takes over at the get-up | D-044, D-043 | `BodyslamThrowPresentationTests.BarrySlamsPeaux_ThrowLeft` / `_ThrowRight` | Auto |
+| T2.5 | No visible foot jump when Barry goes from S5 to the stand: his drawn feet stay within 1 px on that frame, both throw directions | D-044 | `BodyslamThrowPresentationTests.BarrySlamsPeaux_ThrowLeft` / `_ThrowRight` (root offset 0 and bottom-centre pivots for S3–S5 and the stand) | Auto + Human |
+| T2.6 | Peaux's downed sprite is R6 for every knockdown and knockout (strike fall both sides, run collision, obstacle, bodyslam, stomp KO); fall3 → R6 lines up with the re-measured `downedMirrorShift`; since 2026-11-17 Barry's downed sprite is likewise his own R6 | D-044 replace everywhere, D-041 | `BodyslamThrowPresentationTests.DownedSprites_PeauxR6_BarryR6`, `PeauxStrikeKnockdown_PlaysHisFall` (updated) | Auto + Human |
+| T2.7 | Peaux slams Barry throws (D-045): T2.1–T2.5 with the roles swapped on the project values; with Peaux's entry disabled in a tuning copy, the no-throw fallback keeps Barry's root still, plays no slam tail and ends on Barry's R6 | D-044 rollout, D-045 | `BodyslamThrowPresentationTests.PeauxSlamsBarry_ThrowLeft/Right`, `PeauxSlamsBarry_Throw*_EnabledInCopy`, `PeauxSlamsBarry_DisabledInCopy_NoThrow` | Auto |
+
+### Bodyslam Throw: human playtest checklist
+
+1. Barry slams Peaux, both directions and both sides of the arena: does the lift read, does Barry turn at the right moment (S3), and does Peaux fly over and land on Barry's far side? (T1.2, T2.2)
+2. Release and flight: does R4 start where Barry lets go, and does the linear flight look right, or does Peaux seem to drift or hang before R5? (Linear motion puts R5 about 60 px short of the art's spot.) (T1.4, T2.3)
+3. Distance: over ten or so slams, do landings vary noticeably but stay believable (±10% around 6.4 units root to root, about 5.7–7.0)? (T1.5)
+4. Timing: S1–S5 120 / 120 / 180 / 100 / 100 ms, landing at 0.62 s. Too fast or too slow? Retune in the FrameTiming Inspector (Barry_Bodyslam and Peaux_Bodyslammed together) and keep release and impact matched. (T2.1)
+5. Landing: does the R7 bounce read as force, and does Peaux then lie still in R6 with no pop when the downed clip takes over? Does the health bar drop on first contact? (T1.6, T2.4)
+6. Slammer free at the landing: does Barry being able to act the moment Peaux lands feel right, or too strong? (T1.7)
+7. Barry's feet when he returns to his stand after S5: any jump or slide? (T2.5)
+8. Throws toward an arena end and into the truck and the pool: does stopping short look acceptable, and does the crash (sound, +8 damage) read? (T1.8, T1.9)
+9. Peaux's new downed pose (R6) after a strike knockdown, run collision and obstacle crash, both fall sides: does the fall land into it cleanly? (T2.6)
+10. Draw order during the lift and overhead (Barry in front): any frame where the wrong one covers the other? (ARCHITECTURE 6)
+11. Peaux slams Barry (D-045): does Peaux's throw distance and timing feel right, does Barry's flight and landing read, and does Barry's new R6 downed pose look right? (T2.7)
+12. The CPU as Barry: does being thrown about 7 units away change the pace of the match in a good way? (T1.15)
 
 ## Focus (D-037)
 

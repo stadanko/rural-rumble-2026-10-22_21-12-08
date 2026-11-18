@@ -257,10 +257,10 @@ namespace RuralRumble.Tests.EditMode
             h.TickUntil(() => h.KnockDowns.Count > 0, 1f, Dt);
             Vector2 start = h.Cpu.Position;
             float d = h.Tuning.knockdownSlideDistance, T = h.Tuning.knockdownSlideDuration;
-            Assert.AreEqual(0.5f, d, 1e-6f, "default (D-041)");
-            Assert.AreEqual(0.35f, T, 1e-6f, "default (D-041)");
+            Assert.AreEqual(1.0f, d, 1e-6f, "default (D-046; D-041 was 0.5)");
+            Assert.AreEqual(0.45f, T, 1e-6f, "default (D-046; D-041 was 0.35)");
 
-            h.Tick(10, Dt); // 0.10 s of 0.35 s
+            h.Tick(10, Dt); // 0.10 s of 0.45 s
             Assert.AreEqual(start.x + d * (0.10f / T), h.Cpu.Position.x, 1e-4f, "linear");
 
             h.TickSeconds(T, Dt);

@@ -1032,10 +1032,6 @@ namespace RuralRumble.EditorTooling
         public const int StompLengthFrames = 15;
         public const int StompContactIndex = 1;
 
-        private static readonly Color HitTint = new Color(1f, 0.45f, 0.45f, 1f);
-        private static readonly Color HitTintFade = new Color(1f, 0.7f, 0.7f, 1f);
-        private static readonly Color HitTintFaint = new Color(1f, 0.88f, 0.88f, 1f);
-
         /// <summary>
         /// Temporary clips for states with no art yet, built only from the wrestler's approved stand/walk sprites
         /// with child-sprite offset, rotation and tint (ARCHITECTURE 6). Named {Name}_{State}_PLACEHOLDER.anim.
@@ -1054,18 +1050,19 @@ namespace RuralRumble.EditorTooling
             // Struck: approved hit reactions StruckA (lean back, built but unused since D-040), StruckB (head snap) and
             // StruckC (combo hit 2). WrestlerView shows StruckC for a Strike 2 hit and StruckB for every other
             // non-knockdown hit (Slot_Struck / Slot_StruckB / Slot_StruckC). Each holds its sprite for 10 frames (0.417 s; Struck lasts
-            // 0.4 s by default, D-024) and is restarted on every hit. Same red flash and 6 px knockback as the old
-            // stand-in, fading over 0.25 s, but no rotation: the sprites already lean, and rotating them about the feet
+            // 0.4 s by default, D-024) and is restarted on every hit. Same 6 px knockback as the old stand-in, easing back
+            // over 0.25 s, but no rotation: the sprites already lean, and rotating them about the feet
             // would lift a boot off the ground. Without both sprites, the PLACEHOLDER (stand sprite, leaning back
             // 6 deg) fills every slot. StruckC without its sprite reuses the StruckB clip.
+            // No red tint: the hit flash is code-driven (Juice WrestlerFlashOverlay, D-046), so color stays white.
             AnimationClip struck, struckB, struckC;
             if (spec.StruckA != null && spec.StruckB != null)
             {
                 PoseKey[] hit =
                 {
-                    new PoseKey(0, 6, 0, 0, HitTint),
-                    new PoseKey(2, 4, 0, 0, HitTintFade),
-                    new PoseKey(4, 2, 0, 0, HitTintFaint),
+                    new PoseKey(0, 6, 0, 0),
+                    new PoseKey(2, 4, 0, 0),
+                    new PoseKey(4, 2, 0, 0),
                     new PoseKey(6, 0, 0, 0),
                 };
                 struck = WriteSpriteClip($"{folder}/{spec.Name}_StruckA.anim", new[] { spec.StruckA }, one, 10, loop: false, hit);
@@ -1078,9 +1075,9 @@ namespace RuralRumble.EditorTooling
             {
                 struck = struckB = struckC = WriteSpriteClip(P("Struck"), stand, one, 10, loop: false, new[]
                 {
-                    new PoseKey(0, 6, 0, -6, HitTint),
-                    new PoseKey(2, 4, 0, -4, HitTintFade),
-                    new PoseKey(4, 2, 0, -2, HitTintFaint),
+                    new PoseKey(0, 6, 0, -6),
+                    new PoseKey(2, 4, 0, -4),
+                    new PoseKey(4, 2, 0, -2),
                     new PoseKey(6, 0, 0, 0),
                 });
             }

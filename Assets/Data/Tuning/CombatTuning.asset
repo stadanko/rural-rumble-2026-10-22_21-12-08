@@ -52,13 +52,13 @@ MonoBehaviour:
     throwEnabled: 1
     releaseTime: 0.42
     releaseOffsetPx: 178
-    landingDistancePx: 382
+    landingDistancePx: 477.5
     distanceVariance: 0.1
   - slammer: {fileID: 11400000, guid: 88fa395ed34cfaa4cb5494a98b84eec2, type: 2}
     throwEnabled: 1
     releaseTime: 0.42
     releaseOffsetPx: 159
-    landingDistancePx: 342
+    landingDistancePx: 427.5
     distanceVariance: 0.1
   whipNoControlTime: 3
   irishWhip:
@@ -125,8 +125,11 @@ MonoBehaviour:
   maxKnockdownTime: 3
   mashReductionPerPress: 0.08
   shortestKnockdown: 0.5
-  knockdownSlideDistance: 0.5
-  knockdownSlideDuration: 0.35
+  knockdownSlideDistance: 1
+  knockdownSlideDuration: 0.45
+  hitPushbackDistance: 0.2
+  crashPushbackDistance: 0.4
+  pushbackDuration: 0.1
   getUpTime: 0.25
   walkSpeedHorizontal: 3
   walkSpeedDepth: 2

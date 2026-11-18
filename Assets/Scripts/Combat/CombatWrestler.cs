@@ -60,6 +60,19 @@ namespace RuralRumble.Combat
         private int fallSide;
         private float slideElapsed;
 
+        // Hit / crash pushback (D-046): which way a Struck wrestler is pushed on x (0 = none), whether it came from a
+        // truck/pool crash (crashPushbackDistance) or a hit (hitPushbackDistance), and seconds of it done so far.
+        // A hit pushback is also capped at hit time (pushbackCap, world units) so it never carries the wrestler out of the
+        // attacker's Strike 3 reach (the 3-hit combo must still connect); a crash pushback has no cap.
+        private int pushbackSide;
+        private bool pushbackFromCrash;
+        private float pushbackElapsed;
+        private float pushbackCap = float.MaxValue;
+
+        /// <summary>Numerical guard for the D-046 combo cap: the cap stops this far inside Strike 3's reach so float
+        /// rounding can't turn an exact-reach kick into a miss. Not a tuning value.</summary>
+        private const float ComboReachGuard = 1e-3f;
+
         /// <param name="definition">Which wrestler this is (Barry, Peaux), or null. Combat uses it only to pick
         /// per-wrestler tuning entries (bodyslam Startup, D-033); the rules are the same for both.</param>
         public CombatWrestler(WrestlerId id, CombatTuning tuning, CombatEvents events, Vector2 startFeet, int startHorizontalFacing,
@@ -95,6 +108,9 @@ namespace RuralRumble.Combat
         public float GetUpTimeRemaining => IsGettingUp ? getUpLeft : 0f;
         /// <summary>D-043: the tuned get-up length (<c>CombatTuning.getUpTime</c>, read now), in any state.</summary>
         public float GetUpDuration => tuning.getUpTime;
+        /// <summary>D-046: +1 / -1 = this Struck wrestler is being pushed back toward +x / -x (away from the attacker or
+        /// the obstacle); 0 = no pushback (not Struck).</summary>
+        public int PushbackSide => pushbackSide;
 
         /// <summary>The selected wrestler this combat object plays, or null (tests, match built without one).</summary>
         public WrestlerDefinition Definition { get; }
@@ -180,6 +196,8 @@ namespace RuralRumble.Combat
                     return;
 
                 case CombatState.Struck:
+                    // D-046: the pushback moves only while Struck; this tick's share is kept even if Struck ends now.
+                    PendingDelta = PushbackDelta(dt);
                     struckLeft -= dt;
                     if (struckLeft <= 0f)
                     {
@@ -367,6 +385,50 @@ namespace RuralRumble.Combat
             if (t <= 0f) return 0f;
             float duration = tuning.knockdownSlideDuration;
             return duration <= 0f ? 1f : Mathf.Clamp01(t / duration);
+        }
+
+        /// <summary>
+        /// D-046 hit / crash pushback: this tick's share of hitPushbackDistance (or crashPushbackDistance) along
+        /// <see cref="pushbackSide"/>, linear over pushbackDuration (all read now). Moved by CombatMatch like any other
+        /// movement (arena ends, obstacles, wrestler blocking).
+        /// </summary>
+        private Vector2 PushbackDelta(float dt)
+        {
+            if (pushbackSide == 0)
+                return Vector2.zero;
+            float before = PushbackProgress(pushbackElapsed);
+            pushbackElapsed += dt;
+            float after = PushbackProgress(pushbackElapsed);
+            float distance = pushbackFromCrash ? tuning.crashPushbackDistance : Mathf.Min(tuning.hitPushbackDistance, pushbackCap);
+            return new Vector2(pushbackSide * Mathf.Max(0f, distance) * (after - before), 0f);
+        }
+
+        private float PushbackProgress(float t)
+        {
+            if (t <= 0f) return 0f;
+            float duration = tuning.pushbackDuration;
+            return duration <= 0f ? 1f : Mathf.Clamp01(t / duration);
+        }
+
+        /// <summary>Starts (or restarts) a pushback toward <paramref name="side"/> from the next tick (D-046), at most
+        /// <paramref name="cap"/> world units for a hit pushback.</summary>
+        private void BeginPushback(int side, bool fromCrash, float cap = float.MaxValue)
+        {
+            pushbackSide = side;
+            pushbackFromCrash = fromCrash;
+            pushbackElapsed = 0f;
+            pushbackCap = Mathf.Max(0f, cap);
+        }
+
+        /// <summary>
+        /// D-046 combo cap for a hit pushback: how far this wrestler can be pushed away from <paramref name="attackerX"/>
+        /// before its hurt box leaves the attacker's Strike 3 reach (strike3Reach + hurtHalfWidth on x, read now), so the
+        /// next combo hit can still land. 0 when already at or past that reach.
+        /// </summary>
+        private float ComboPushbackCap(float attackerX)
+        {
+            float kickRange = tuning.strike3Reach + tuning.hurtHalfWidth - ComboReachGuard;
+            return Mathf.Max(0f, kickRange - Mathf.Abs(position.x - attackerX));
         }
 
         private void Regenerate(float dt)
@@ -785,16 +847,19 @@ namespace RuralRumble.Combat
             }
             else
             {
-                // D-024: Struck, restarted by every hit (no StateChanged for a restart).
+                // D-024: Struck, restarted by every hit (no StateChanged for a restart). D-046: pushed back away from
+                // the attacker, restarted by every hit.
                 struckLeft = tuning.struckDuration;
                 SetState(CombatState.Struck);
+                BeginPushback(AwayFrom(attackerX), fromCrash: false, cap: ComboPushbackCap(attackerX));
             }
             return damage;
         }
 
         /// <summary>
         /// A run into the truck or pool (D-027): obstacle collision damage, or Irish Whip impact damage for a whip run
-        /// (COMBAT_SPEC Tuning Values), then Struck, or Knocked Down below the threshold (D-030).
+        /// (COMBAT_SPEC Tuning Values), then Struck with the crash pushback (D-046), or Knocked Down below the threshold
+        /// (D-030) with the knockdown slide (D-041).
         /// </summary>
         internal void HitObstacle(Vector2 contactPoint)
         {
@@ -818,6 +883,7 @@ namespace RuralRumble.Combat
             }
             struckLeft = tuning.struckDuration;
             SetState(CombatState.Struck);
+            BeginPushback(away, fromCrash: true); // D-046: pushed back away from the obstacle
         }
 
         /// <summary>A runner met this wrestler, or this wrestler ran into the opponent (D-029): both go down, each
@@ -904,6 +970,8 @@ namespace RuralRumble.Combat
                 whipRun = false; // the run origin lives only as long as the run
             if (next != CombatState.KnockedDown && next != CombatState.KnockedOut)
                 fallSide = 0; // D-041: the fall side lives only as long as the knockdown / knockout
+            if (next != CombatState.Struck)
+                pushbackSide = 0; // D-046: the pushback lives only as long as Struck
             if (next != CombatState.KnockedDown)
                 gettingUp = false; // D-043: the get-up phase is part of Knocked Down only (a Stomp KO ends it)
             events.RaiseStateChanged(Id, prev, next);

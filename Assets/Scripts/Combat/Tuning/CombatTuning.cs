@@ -102,10 +102,16 @@ namespace RuralRumble.Combat
         [Range(0f, 1f)] public float mashReductionPerPress = 0.08f;
         [Tooltip("COMBAT_SPEC Starting point. Mashing cannot make a knockdown shorter than this, seconds.")]
         [Min(0f)] public float shortestKnockdown = 0.5f;
-        [Tooltip("Set (D-041). How far a wrestler slides on x during a knockdown fall (every knockdown except the bodyslam's, and a knockout from standing), away from whoever or whatever hit them, world units. Uses normal combat movement, so arena ends and obstacles stop it. Does not change knockdown length.")]
-        [Min(0f)] public float knockdownSlideDistance = 0.5f;
-        [Tooltip("Set (D-041). Seconds the knockdown slide takes (linear), from the first tick after the knockdown starts. Matches the fall animation's default length. 0 = the whole slide in one tick.")]
-        [Min(0f)] public float knockdownSlideDuration = 0.35f;
+        [Tooltip("Starting point (D-046; D-041 set 0.5). How far a wrestler slides on x during a knockdown fall (every knockdown except the bodyslam's, and a knockout from standing: strike 3, a strike below the Recovering threshold, a truck/pool crash below the threshold, a run collision), away from whoever or whatever hit them, world units. Uses normal combat movement, so arena ends and obstacles stop it. Does not change knockdown length.")]
+        [Min(0f)] public float knockdownSlideDistance = 1.0f;
+        [Tooltip("Starting point (D-046; D-041 set 0.35). Seconds the knockdown slide takes (linear), from the first tick after the knockdown starts. The default Fall clip is 0.35 s (100/120/130 ms), so the last 0.1 s is a short skid on the downed sprite. 0 = the whole slide in one tick.")]
+        [Min(0f)] public float knockdownSlideDuration = 0.45f;
+        [Tooltip("Starting point (D-046). Pushback on a hit that does not knock down (Strike 1 or 2 -> Struck): the Struck wrestler slides this far on x, away from the attacker, world units, with normal movement clamping (arena ends, obstacles, wrestler blocking). So the 3-hit combo still connects, each hit's pushback is cut short where the wrestler would leave the attacker's Strike 3 reach (strike3Reach + hurtHalfWidth feet to feet, 2.3 at the defaults): a combo that would connect without pushback still connects. 0 = no pushback.")]
+        [Min(0f)] public float hitPushbackDistance = 0.2f;
+        [Tooltip("Starting point (D-046). Pushback on a truck/pool crash that does not knock down (run or whip run into the truck or pool -> Struck): slides this far on x, away from the obstacle, world units, normal movement clamping. 2x the hit pushback; no combo cap. A crash that knocks down uses the knockdown slide instead. 0 = no pushback.")]
+        [Min(0f)] public float crashPushbackDistance = 0.4f;
+        [Tooltip("Starting point (D-046). Seconds a hit or crash pushback takes (linear), from the first tick after the hit. Only while Struck: if Struck ends (or another hit restarts it) first, the rest is dropped. 0 = the whole pushback in one tick.")]
+        [Min(0f)] public float pushbackDuration = 0.1f;
         [Tooltip("COMBAT_SPEC Starting point (D-043). Get-up phase at the end of every knockdown, seconds: once the (mashable) knockdown timer runs out the wrestler is still Knocked Down for this long (crouch), with no control; mashing does not shorten it and only a Stomp can hit. 0 = gets up at once (pre-D-043).")]
         [Min(0f)] public float getUpTime = 0.25f;
 
@@ -316,7 +322,7 @@ namespace RuralRumble.Combat
         [Min(0f)] public float releaseTime;
         [Tooltip("Starting point (D-044). Receiver root distance from the slammer root along the throw at the release, pixels (60 px = 1 unit). Barry 178, Peaux 159 (R4's drawn spot past the slammer's feet, which are at his root from S3 on).")]
         public float releaseOffsetPx;
-        [Tooltip("Set (D-044). Median root-to-root landing distance along the throw, pixels (60 px = 1 unit). Barry 382 (1.59 x 240 px standing height), Peaux 342 (1.59 x 215 px); the slammer's feet are at his root from S3 on.")]
+        [Tooltip("Starting point (D-046; D-044/D-045 set 382 / 342). Median root-to-root landing distance along the throw, pixels (60 px = 1 unit). D-046 scales the art-measured 1.59 x standing height by 1.25: Barry 477.5 (1.25 x 382), Peaux 427.5 (1.25 x 342); the slammer's feet are at his root from S3 on.")]
         public float landingDistancePx;
         [Tooltip("Set (D-044). Landing distance variation, fraction: uniform within +/- this of the median, drawn once per slam. Clamped to [0, 1]. 0.10 = +/-10%.")]
         [Range(0f, 1f)] public float distanceVariance;

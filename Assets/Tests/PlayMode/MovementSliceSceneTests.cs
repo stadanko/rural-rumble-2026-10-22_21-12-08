@@ -20,9 +20,10 @@ namespace RuralRumble.Tests.PlayMode
     /// </summary>
     public class MovementSliceSceneTests
     {
-        // ARCHITECTURE 4.4 "Bootstrap order (built)": player (9.0, -11.6667), CPU (17.6667, -11.6667).
-        internal static readonly Vector2 PlayerSpawn = new Vector2(9.0f, -11.6667f);
-        internal static readonly Vector2 CpuSpawn = new Vector2(17.6667f, -11.6667f);
+        // ARCHITECTURE 4.4 "Bootstrap order (built)", D-048 layout: player (13.6667, -15), CPU (22.3333, -15)
+        // (canvas x 820 and 1340, row 900: mid-yard, either side of the centre x 18).
+        internal static readonly Vector2 PlayerSpawn = new Vector2(13.6667f, -15f);
+        internal static readonly Vector2 CpuSpawn = new Vector2(22.3333f, -15f);
 
         private readonly MatchSceneLoader loader = new MatchSceneLoader();
 
@@ -72,7 +73,31 @@ namespace RuralRumble.Tests.PlayMode
             Assert.AreEqual(4.5f, cam.TargetCamera.orthographicSize, 1e-3f, "default zoom at 16:9");
             float mid = (PlayerSpawn.x + CpuSpawn.x) * 0.5f;
             Assert.AreEqual(mid, cam.transform.position.x, 0.02f, "camera centers on the wrestlers' midpoint");
-            Assert.AreEqual(-570f / 60f, cam.transform.position.y, 0.02f, "default view centered on canvas row 570");
+            // Vertical framing (D-048): centered between the feet - footroom (0.6) and the feet + headroom (4.6) = y -13.0.
+            Assert.AreEqual(-13f, cam.transform.position.y, 0.02f, "default view framed on the wrestlers' bodies");
+            Assert.LessOrEqual(cam.transform.position.y - 4.5f, PlayerSpawn.y - 0.5f, "feet in view");
+            Assert.GreaterOrEqual(cam.transform.position.y + 4.5f, PlayerSpawn.y + 4.0f, "Barry's head (4.0 units) in view");
+        }
+
+        // D-048: both spawn feet points lie inside the walkable band (with feetHalfWidth) and outside the truck and
+        // pool footprints, the wrestlers start apart, and the arena's centre (x 18) lies between them.
+        [UnityTest]
+        public IEnumerator Match_SpawnPoints_AreValidOnTheArena()
+        {
+            yield return loader.Load(silenceCpu: true);
+            CombatMatch match = MatchBootstrap.Current.Match;
+            float half = match.Tuning.feetHalfWidth;
+            ArenaRect band = match.Arena.Bounds;
+            foreach (Vector2 s in new[] { PlayerSpawn, CpuSpawn })
+            {
+                Assert.That(s.x, Is.InRange(band.XMin + half, band.XMax - half), $"spawn {s} x inside the band");
+                Assert.That(s.y, Is.InRange(band.YMin, band.YMax), $"spawn {s} y inside the band");
+                foreach (ArenaRect o in match.Arena.Obstacles)
+                    Assert.IsFalse(s.x > o.XMin - half && s.x < o.XMax + half && s.y > o.YMin && s.y < o.YMax,
+                        $"spawn {s} inside obstacle footprint {o}");
+            }
+            Assert.Greater(CpuSpawn.x - PlayerSpawn.x, 4f, "the wrestlers start apart");
+            Assert.AreEqual(18f, (PlayerSpawn.x + CpuSpawn.x) * 0.5f, 0.01f, "spawns centered on the yard (x 18)");
         }
 
         // ARCHITECTURE 4.4 "CPU brain wiring (built)": MatchBootstrap.Start creates an OpponentBrain bound to the
@@ -107,10 +132,8 @@ namespace RuralRumble.Tests.PlayMode
             {
                 Vector2 start = match.Player.Position;
 
-                // D-035 put the truck at (-2, -13) and D-047 deepened its footprint (x -2..6.37, y -13.17..-11.33): it
-                // fills the depth band around the spawn's height to the left. Test the vertical keys from the spawn
-                // (nothing above or below it), and end up behind the truck (above y -11.33) so the left walk and run
-                // below pass behind it.
+                // D-048: the spawn (13.67, -15) is in front of the truck's footprint (y -13.88 .. -12.25, x up to 5.6),
+                // so the vertical keys, the left walk and the left run below all have open ground.
                 keyboard.SetPressed("W");
                 yield return new WaitForSeconds(0.6f);
                 Assert.Greater(match.Player.Position.y, start.y + 0.2f, "holding W should move toward the trailer (+y)");
@@ -119,7 +142,7 @@ namespace RuralRumble.Tests.PlayMode
                 keyboard.SetPressed("S");
                 yield return new WaitForSeconds(0.2f);
                 Assert.Less(match.Player.Position.y, afterUp.y - 0.2f, "holding S should move away from the trailer (-y)");
-                Assert.Greater(match.Player.Position.y, -11.3333f, "stay behind the truck for the left walk and run");
+                Assert.That(match.Player.Position.y, Is.InRange(match.Arena.Bounds.YMin, match.Arena.Bounds.YMax), "still inside the band");
 
                 Vector2 beforeWalk = match.Player.Position;
                 keyboard.SetPressed("A");

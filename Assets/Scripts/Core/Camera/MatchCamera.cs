@@ -3,7 +3,8 @@ using UnityEngine;
 namespace RuralRumble.Core
 {
     /// <summary>
-    /// Scrolling, zooming match camera (ARCHITECTURE 3.1, D-017). Presentation only: never affects combat.
+    /// Scrolling, zooming match camera (ARCHITECTURE 3.1, D-017 behaviour, D-048 numbers). Presentation only: never
+    /// affects combat. Scrolls horizontally and vertically over the arena art and never shows past its edges.
     /// Put this on the camera rig root; the Camera itself may sit on a child so Juice can shake
     /// the child's local offset without fighting this component.
     /// World frame: the arena backdrop's top-left corner is the world origin; canvas (x px, row px)
@@ -18,36 +19,47 @@ namespace RuralRumble.Core
         [Tooltip("Orthographic camera driven by this rig. Defaults to a Camera on this object or a child.")]
         [SerializeField] private Camera targetCamera;
 
-        [Header("Arena (world units)")]
+        [Header("Arena art (world units, D-048: 2160x1080 native px)")]
         [Tooltip("Left edge of the arena art (canvas x 0).")]
         [SerializeField] private float arenaLeft = 0f;
-        [Tooltip("Right edge of the arena art (canvas x 1600).")]
-        [SerializeField] private float arenaRight = 1600f / PixelsPerUnit;
+        [Tooltip("Right edge of the arena art (canvas x 2160).")]
+        [SerializeField] private float arenaRight = 2160f / PixelsPerUnit;
         [Tooltip("Top edge of the arena art (canvas row 0).")]
         [SerializeField] private float arenaTop = 0f;
-        [Tooltip("Bottom edge of the arena art (canvas row 900).")]
-        [SerializeField] private float arenaBottom = -900f / PixelsPerUnit;
-        [Tooltip("Vertical center of the default view: canvas rows 300-840, center row 570.")]
-        [SerializeField] private float defaultCenterY = -570f / PixelsPerUnit;
+        [Tooltip("Bottom edge of the arena art (canvas row 1080).")]
+        [SerializeField] private float arenaBottom = -1080f / PixelsPerUnit;
 
         [Header("Zoom")]
-        [Tooltip("Fraction of the arena width visible at the default zoom (D-017: 0.6 = 960 native px).")]
-        [Range(0.1f, 1f)]
-        [SerializeField] private float defaultVisibleWidthFraction = 0.6f;
-        [Tooltip("Fraction of the arena width visible at full zoom-out (1.0 = whole arena).")]
-        [Range(0.1f, 1f)]
-        [SerializeField] private float maxVisibleWidthFraction = 1f;
-        [Tooltip("World units kept between each target and the screen edge before zooming out.")]
+        [Tooltip("World units visible across the screen at the default zoom (D-013/D-048: 16 = 960 native px, x2 at 1080p).")]
+        [Min(1f)]
+        [SerializeField] private float defaultVisibleWidth = 960f / PixelsPerUnit;
+        [Tooltip("Largest zoom-out, as a multiple of the default orthographic size (D-048 Starting point 1.45; " +
+                 "1.45 shows 1392x783 native px). Capped well short of the whole arena so the wrestlers stay readable.")]
+        [Range(1f, 3f)]
+        [SerializeField] private float maxZoomOut = 1.45f;
+        [Tooltip("World units kept between each target and the left/right screen edge before zooming out.")]
         [Min(0f)]
         [SerializeField] private float edgeMargin = 2f;
+        [Tooltip("World units kept in view above the higher target's feet (Barry is 4.0 units tall).")]
+        [Min(0f)]
+        [SerializeField] private float headroom = 4.6f;
+        [Tooltip("World units kept in view below the lower target's feet.")]
+        [Min(0f)]
+        [SerializeField] private float footroom = 0.6f;
+        [Tooltip("When the wrestlers are farther apart than the largest zoom-out can show, keep the first target " +
+                 "(the player) on screen instead of centering on the midpoint.")]
+        [SerializeField] private bool keepFirstTargetInView = true;
         [Tooltip("Seconds to ease the zoom toward its target size.")]
         [Min(0f)]
         [SerializeField] private float zoomSmoothTime = 0.35f;
 
         [Header("Follow")]
-        [Tooltip("Seconds to ease the horizontal position toward the targets' midpoint.")]
+        [Tooltip("Seconds to ease the horizontal position toward the targets.")]
         [Min(0f)]
         [SerializeField] private float followSmoothTime = 0.2f;
+        [Tooltip("Seconds to ease the vertical position toward the targets (D-048 vertical scrolling).")]
+        [Min(0f)]
+        [SerializeField] private float verticalFollowSmoothTime = 0.3f;
 
         [Header("Punch-in (D-046, requested by Juice)")]
         [Tooltip("Seconds to ease into and out of a punch-in (zoom and position). Real time.")]
@@ -75,8 +87,13 @@ namespace RuralRumble.Core
         /// <summary>Wrestler roots passed to <see cref="SetTargets"/> (read-only; scene lighting follows them).</summary>
         public Transform TargetA => targetA;
         public Transform TargetB => targetB;
-        public float DefaultOrthographicSize => SizeForWidthFraction(defaultVisibleWidthFraction);
-        public float MaxOrthographicSize => SizeForWidthFraction(Mathf.Max(maxVisibleWidthFraction, defaultVisibleWidthFraction));
+        public float DefaultOrthographicSize => defaultVisibleWidth * 0.5f / CurrentAspect;
+        public float MaxOrthographicSize => DefaultOrthographicSize * Mathf.Max(1f, maxZoomOut);
+        /// <summary>Arena art edges in world units (the view never shows past them).</summary>
+        public float ArenaLeft => arenaLeft;
+        public float ArenaRight => arenaRight;
+        public float ArenaTop => arenaTop;
+        public float ArenaBottom => arenaBottom;
         /// <summary>True while a punch-in holds the framing.</summary>
         public bool IsPunchedIn => punchInRemaining > 0f;
 
@@ -147,7 +164,7 @@ namespace RuralRumble.Core
             float maxSize = MaxOrthographicSize;
 
             bool punchedIn = punchInRemaining > 0f;
-            float zoomTime = zoomSmoothTime, followTimeX = followSmoothTime, followTimeY = zoomSmoothTime;
+            float zoomTime = zoomSmoothTime, followTimeX = followSmoothTime, followTimeY = verticalFollowSmoothTime;
             float desiredSize;
             Vector2 desiredCenter;
             if (punchedIn)
@@ -161,8 +178,7 @@ namespace RuralRumble.Core
             }
             else
             {
-                desiredSize = Mathf.Clamp(RequiredSize(aspect), defaultSize, maxSize);
-                desiredCenter = new Vector2(TargetMidX(), defaultCenterY);
+                Framing(aspect, out desiredSize, out desiredCenter);
             }
 
             float size = Mathf.SmoothDamp(targetCamera.orthographicSize, desiredSize, ref zoomVelocity, zoomTime, Mathf.Infinity, dt);
@@ -189,9 +205,9 @@ namespace RuralRumble.Core
             if (targetCamera == null)
                 return;
             float aspect = Mathf.Max(0.01f, targetCamera.aspect);
-            float size = Mathf.Clamp(RequiredSize(aspect), DefaultOrthographicSize, MaxOrthographicSize);
+            Framing(aspect, out float size, out Vector2 framed);
             targetCamera.orthographicSize = size;
-            Vector2 center = ClampedCenter(TargetMidX(), defaultCenterY, size, aspect);
+            Vector2 center = ClampedCenter(framed.x, framed.y, size, aspect);
             currentX = center.x;
             currentY = center.y;
             zoomVelocity = followVelocityX = followVelocityY = 0f;
@@ -211,18 +227,42 @@ namespace RuralRumble.Core
             transform.position = new Vector3(x, y, transform.position.z);
         }
 
-        private float SizeForWidthFraction(float fraction)
-        {
-            float aspect = targetCamera != null ? Mathf.Max(0.01f, targetCamera.aspect) : 16f / 9f;
-            return fraction * (arenaRight - arenaLeft) * 0.5f / aspect;
-        }
+        private float CurrentAspect => targetCamera != null ? Mathf.Max(0.01f, targetCamera.aspect) : 16f / 9f;
 
-        private float RequiredSize(float aspect)
+        /// <summary>
+        /// Normal follow framing (D-017 behaviour, D-048 numbers): the size that keeps both targets' feet within
+        /// edgeMargin of the side edges and their bodies (headroom/footroom) within the top/bottom, clamped to
+        /// default..max; centered on the targets. Past the max zoom-out the first target (player) is kept in view.
+        /// </summary>
+        private void Framing(float aspect, out float size, out Vector2 center)
         {
-            if (targetA == null || targetB == null)
-                return 0f;
-            float halfWidth = Mathf.Abs(targetA.position.x - targetB.position.x) * 0.5f + edgeMargin;
-            return halfWidth / aspect;
+            float defaultSize = DefaultOrthographicSize;
+            float required = 0f;
+            float cx = TargetMidX();
+            float cy = initialized ? currentY : (arenaTop + arenaBottom) * 0.5f;
+            if (targetA != null || targetB != null)
+            {
+                Vector2 pa = targetA != null ? (Vector2)targetA.position : (Vector2)targetB.position;
+                Vector2 pb = targetB != null ? (Vector2)targetB.position : pa;
+                float top = Mathf.Max(pa.y, pb.y) + headroom;
+                float bottom = Mathf.Min(pa.y, pb.y) - footroom;
+                cy = (top + bottom) * 0.5f;
+                float requiredW = (Mathf.Abs(pa.x - pb.x) * 0.5f + edgeMargin) / aspect;
+                float requiredH = (top - bottom) * 0.5f;
+                required = Mathf.Max(requiredW, requiredH);
+            }
+            size = Mathf.Clamp(required, defaultSize, MaxOrthographicSize);
+            if (keepFirstTargetInView && targetA != null && targetB != null)
+            {
+                float halfW = size * aspect;
+                float slack = halfW - edgeMargin;
+                float ax = targetA.position.x;
+                if (slack > 0f)
+                    cx = Mathf.Clamp(cx, ax - slack, ax + slack);
+                else
+                    cx = ax;
+            }
+            center = new Vector2(cx, cy);
         }
 
         private float TargetMidX()

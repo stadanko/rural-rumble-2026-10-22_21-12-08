@@ -6,7 +6,7 @@ A single-player 2D arcade wrestling game set in a fictional Louisiana trailer pa
 
 Some sound effects come from paid Unity Asset Store packs. Their license doesn't allow redistribution, so they are **git-ignored** and not in this public repository (DECISION_LOG D-034, amendment). The game runs without them; those sounds are simply silent.
 
-To get the full audio, buy and import these packs in Unity, then copy the files listed in `docs/ASSET_REGISTRY.csv` (license `Unity Asset Store EULA`) into `Assets/Audio/ThirdParty/`:
+To get the full audio, buy and import these packs in Unity, then copy the files listed in `docs/ASSET_REGISTRY.csv` (license `Unity Asset Store EULA`) into `Assets/Audio/ThirdParty/`, at the exact path and name in each row's `file_path`. Some files (the footsteps) are trimmed copies; the row's `modifications` column says how to recreate them:
 
 | Pack | Publisher | Store page |
 |---|---|---|

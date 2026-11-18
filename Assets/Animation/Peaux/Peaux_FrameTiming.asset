@@ -25,6 +25,7 @@ MonoBehaviour:
       HoldMs: 41.666668
       DefaultHoldMs: 41.666668
       BuiltInHoldMs: 41.666668
+    FootContacts: []
   - ClipName: Peaux_StandBack
     Loops: 1
     Playback: 0
@@ -36,6 +37,7 @@ MonoBehaviour:
       HoldMs: 41.666668
       DefaultHoldMs: 41.666668
       BuiltInHoldMs: 41.666668
+    FootContacts: []
   - ClipName: Peaux_WalkFront
     Loops: 1
     Playback: 0
@@ -82,6 +84,13 @@ MonoBehaviour:
       HoldMs: 125
       DefaultHoldMs: 125
       BuiltInHoldMs: 125
+    FootContacts:
+    - Step: 1
+      Foot: 0
+      TimeMs: 125
+    - Step: 3
+      Foot: 1
+      TimeMs: 375
   - ClipName: Peaux_WalkBack
     Loops: 1
     Playback: 0
@@ -128,6 +137,13 @@ MonoBehaviour:
       HoldMs: 125
       DefaultHoldMs: 125
       BuiltInHoldMs: 125
+    FootContacts:
+    - Step: 0
+      Foot: 1
+      TimeMs: 0
+    - Step: 4
+      Foot: 0
+      TimeMs: 500
   - ClipName: Peaux_Run
     Loops: 1
     Playback: 0
@@ -164,6 +180,13 @@ MonoBehaviour:
       HoldMs: 83.333336
       DefaultHoldMs: 83.333336
       BuiltInHoldMs: 83.333336
+    FootContacts:
+    - Step: 1
+      Foot: 0
+      TimeMs: 83.333336
+    - Step: 4
+      Foot: 1
+      TimeMs: 333.33334
   - ClipName: Peaux_Strike1
     Loops: 0
     Playback: 1
@@ -185,6 +208,7 @@ MonoBehaviour:
       HoldMs: 125
       DefaultHoldMs: 125
       BuiltInHoldMs: 125
+    FootContacts: []
   - ClipName: Peaux_Strike2
     Loops: 0
     Playback: 1
@@ -206,6 +230,7 @@ MonoBehaviour:
       HoldMs: 125
       DefaultHoldMs: 125
       BuiltInHoldMs: 125
+    FootContacts: []
   - ClipName: Peaux_Strike3
     Loops: 0
     Playback: 1
@@ -222,6 +247,7 @@ MonoBehaviour:
       HoldMs: 250
       DefaultHoldMs: 250
       BuiltInHoldMs: 250
+    FootContacts: []
   - ClipName: Peaux_Struck_PLACEHOLDER
     Loops: 0
     Playback: 0
@@ -248,6 +274,7 @@ MonoBehaviour:
       HoldMs: 166.66667
       DefaultHoldMs: 166.66667
       BuiltInHoldMs: 166.66667
+    FootContacts: []
   - ClipName: Peaux_KnockedDown_PLACEHOLDER
     Loops: 0
     Playback: 0
@@ -259,6 +286,7 @@ MonoBehaviour:
       HoldMs: 500
       DefaultHoldMs: 500
       BuiltInHoldMs: 500
+    FootContacts: []
   - ClipName: Peaux_RecoveringStand_PLACEHOLDER
     Loops: 1
     Playback: 0
@@ -275,6 +303,7 @@ MonoBehaviour:
       HoldMs: 500
       DefaultHoldMs: 500
       BuiltInHoldMs: 500
+    FootContacts: []
   - ClipName: Peaux_RecoveringStandBack_PLACEHOLDER
     Loops: 1
     Playback: 0
@@ -291,6 +320,7 @@ MonoBehaviour:
       HoldMs: 500
       DefaultHoldMs: 500
       BuiltInHoldMs: 500
+    FootContacts: []
   - ClipName: Peaux_RecoveringWalk_PLACEHOLDER
     Loops: 1
     Playback: 0
@@ -337,6 +367,7 @@ MonoBehaviour:
       HoldMs: 250
       DefaultHoldMs: 250
       BuiltInHoldMs: 250
+    FootContacts: []
   - ClipName: Peaux_RecoveringWalkBack_PLACEHOLDER
     Loops: 1
     Playback: 0
@@ -383,6 +414,7 @@ MonoBehaviour:
       HoldMs: 250
       DefaultHoldMs: 250
       BuiltInHoldMs: 250
+    FootContacts: []
   - ClipName: Peaux_Stomp_PLACEHOLDER
     Loops: 0
     Playback: 1
@@ -424,6 +456,7 @@ MonoBehaviour:
       HoldMs: 125
       DefaultHoldMs: 125
       BuiltInHoldMs: 125
+    FootContacts: []
   - ClipName: Peaux_LockUp
     Loops: 0
     Playback: 0
@@ -445,6 +478,7 @@ MonoBehaviour:
       HoldMs: 41.666668
       DefaultHoldMs: 41.666668
       BuiltInHoldMs: 41.666668
+    FootContacts: []
   - ClipName: Peaux_LockedUp
     Loops: 0
     Playback: 0
@@ -466,6 +500,7 @@ MonoBehaviour:
       HoldMs: 41.666668
       DefaultHoldMs: 41.666668
       BuiltInHoldMs: 41.666668
+    FootContacts: []
   - ClipName: Peaux_BreakLockUp_PLACEHOLDER
     Loops: 0
     Playback: 2
@@ -502,6 +537,7 @@ MonoBehaviour:
       HoldMs: 41.666668
       DefaultHoldMs: 41.666668
       BuiltInHoldMs: 41.666668
+    FootContacts: []
   - ClipName: Peaux_BreakLockUpReceiver_PLACEHOLDER
     Loops: 0
     Playback: 2
@@ -538,6 +574,7 @@ MonoBehaviour:
       HoldMs: 41.666668
       DefaultHoldMs: 41.666668
       BuiltInHoldMs: 41.666668
+    FootContacts: []
   - ClipName: Peaux_LockUpWhiff_PLACEHOLDER
     Loops: 0
     Playback: 2
@@ -574,6 +611,7 @@ MonoBehaviour:
       HoldMs: 41.666668
       DefaultHoldMs: 41.666668
       BuiltInHoldMs: 41.666668
+    FootContacts: []
   - ClipName: Peaux_Bodyslam
     Loops: 0
     Playback: 1
@@ -610,6 +648,7 @@ MonoBehaviour:
       HoldMs: 100
       DefaultHoldMs: 100
       BuiltInHoldMs: 100
+    FootContacts: []
   - ClipName: Peaux_Bodyslammed
     Loops: 0
     Playback: 1
@@ -656,6 +695,7 @@ MonoBehaviour:
       HoldMs: 100
       DefaultHoldMs: 100
       BuiltInHoldMs: 100
+    FootContacts: []
   - ClipName: Peaux_Stomp
     Loops: 0
     Playback: 1
@@ -672,6 +712,7 @@ MonoBehaviour:
       HoldMs: 416.66666
       DefaultHoldMs: 416.66666
       BuiltInHoldMs: 416.66666
+    FootContacts: []
   - ClipName: Peaux_StruckA
     Loops: 0
     Playback: 0
@@ -698,6 +739,7 @@ MonoBehaviour:
       HoldMs: 166.66667
       DefaultHoldMs: 166.66667
       BuiltInHoldMs: 166.66667
+    FootContacts: []
   - ClipName: Peaux_StruckB
     Loops: 0
     Playback: 0
@@ -724,6 +766,7 @@ MonoBehaviour:
       HoldMs: 166.66667
       DefaultHoldMs: 166.66667
       BuiltInHoldMs: 166.66667
+    FootContacts: []
   - ClipName: Peaux_IrishWhip
     Loops: 0
     Playback: 1
@@ -750,6 +793,7 @@ MonoBehaviour:
       HoldMs: 250
       DefaultHoldMs: 250
       BuiltInHoldMs: 250
+    FootContacts: []
   - ClipName: Peaux_Fall_PLACEHOLDER
     Loops: 0
     Playback: 0
@@ -761,6 +805,7 @@ MonoBehaviour:
       HoldMs: 500
       DefaultHoldMs: 500
       BuiltInHoldMs: 500
+    FootContacts: []
   - ClipName: Peaux_Fall
     Loops: 0
     Playback: 0
@@ -787,6 +832,7 @@ MonoBehaviour:
       HoldMs: 500
       DefaultHoldMs: 500
       BuiltInHoldMs: 500
+    FootContacts: []
   - ClipName: Peaux_StruckC
     Loops: 0
     Playback: 0
@@ -813,6 +859,7 @@ MonoBehaviour:
       HoldMs: 166.66667
       DefaultHoldMs: 166.66667
       BuiltInHoldMs: 166.66667
+    FootContacts: []
   - ClipName: Peaux_Crouch
     Loops: 0
     Playback: 0
@@ -824,6 +871,7 @@ MonoBehaviour:
       HoldMs: 250
       DefaultHoldMs: 250
       BuiltInHoldMs: 250
+    FootContacts: []
   - ClipName: Peaux_StompBounce
     Loops: 0
     Playback: 0
@@ -835,3 +883,4 @@ MonoBehaviour:
       HoldMs: 150
       DefaultHoldMs: 150
       BuiltInHoldMs: 150
+    FootContacts: []

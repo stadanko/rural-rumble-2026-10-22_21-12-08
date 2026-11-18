@@ -29,6 +29,8 @@ namespace RuralRumble.Match
         [SerializeField] private WrestlerRoster roster;
         [SerializeField] private CombatMatchRunner combatRunner;
         [SerializeField] private MatchCamera matchCamera;
+        [Tooltip("Footstep surface map on the Arena (D-049). Empty = the first ArenaSurfaceMap in the scene.")]
+        [SerializeField] private ArenaSurfaceMap surfaceMap;
 
         [Tooltip("Match opened directly (no GameSession): play roster entry 1 vs 0 instead of 0 vs 1. Testing aid only.")]
         [SerializeField] private bool directPlaySwapWrestlers;
@@ -39,8 +41,8 @@ namespace RuralRumble.Match
         [SerializeField] private bool disableCpuAi;
 
         [Header("Spawn feet points (world units)")]
-        [SerializeField] private Vector2 playerSpawn = new Vector2(9.0f, -11.6667f);
-        [SerializeField] private Vector2 cpuSpawn = new Vector2(17.6667f, -11.6667f);
+        [SerializeField] private Vector2 playerSpawn = new Vector2(13.6667f, -15f);
+        [SerializeField] private Vector2 cpuSpawn = new Vector2(22.3333f, -15f);
 
         private Transform playerRoot;
         private Transform cpuRoot;
@@ -64,6 +66,8 @@ namespace RuralRumble.Match
         public CombatMatchRunner Runner => combatRunner;
         /// <summary>The scene's camera rig: D-046 KO punch-in (MatchCamera.PunchIn, ARCHITECTURE 3.1).</summary>
         public MatchCamera MatchCamera => matchCamera;
+        /// <summary>The arena's footstep surface map (D-049, ARCHITECTURE 4.8), or null if the scene has none. Presentation data only.</summary>
+        public ArenaSurfaceMap SurfaceMap => surfaceMap;
         /// <summary>The CPU's brain (ARCHITECTURE 4.1), or null before Start.</summary>
         public OpponentBrain CpuBrain { get; private set; }
 
@@ -71,6 +75,8 @@ namespace RuralRumble.Match
         {
             Current = this;
             cpuInput.Muted = () => disableCpuAi;
+            if (surfaceMap == null)
+                surfaceMap = FindAnyObjectByType<ArenaSurfaceMap>();
 
             if (combatRunner == null)
             {

@@ -229,6 +229,13 @@ namespace RuralRumble.EditorTooling
                         GUILayout.Label($"{step.DefaultHoldMs:0.#}", EditorStyles.miniLabel, GUILayout.Width(56));
                         GUILayout.Label(s == clip.ContactStep ? new GUIContent("HIT", "Contact sprite: the hit lands when this sprite appears.") : GUIContent.none,
                             EditorStyles.boldLabel, GUILayout.Width(36));
+                        // D-049: foot-contact frames (set in WrestlerAnimationBuilder from the art; the event follows this step's start).
+                        WrestlerFrameTiming.FootContactMark foot = clip.FootContactAt(s);
+                        GUILayout.Label(foot != null
+                                ? new GUIContent(foot.Foot == RuralRumble.Core.Foot.Left ? "STEP L" : "STEP R",
+                                    "Foot contact (D-049): the footstep event fires when this sprite appears.")
+                                : GUIContent.none,
+                            EditorStyles.boldLabel, GUILayout.Width(52));
                     }
                 }
 

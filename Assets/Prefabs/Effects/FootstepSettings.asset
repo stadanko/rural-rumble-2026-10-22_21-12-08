@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f48b00ce89c365440b30716e43ab69af, type: 3}
+  m_Name: FootstepSettings
+  m_EditorClassIdentifier: RuralRumble.Juice::RuralRumble.Juice.FootstepSettings
+  masterVolume: 0.6
+  levelVariationDb: 1
+  pitchVariation: 0
+  dirtWalk:
+    trimDb: 0
+    clips:
+    - clip: {fileID: 8300000, guid: d004068a5914c134ebbeaaadc1ae0efd, type: 3}
+      gainDb: -4.8
+    - clip: {fileID: 8300000, guid: a9423f7aa90f2f44fb4d084848858e24, type: 3}
+      gainDb: -4.2
+    - clip: {fileID: 8300000, guid: bc87b1b98dea17f48a7054dbc1e74fcc, type: 3}
+      gainDb: -4.5
+    - clip: {fileID: 8300000, guid: 35c1ae48740b1074297351e1959783de, type: 3}
+      gainDb: -3.6
+    - clip: {fileID: 8300000, guid: 970e9d67f2d363941b39f2632e6398bc, type: 3}
+      gainDb: -3.6
+  dirtRun:
+    trimDb: 0
+    clips:
+    - clip: {fileID: 8300000, guid: 64083f7533935ea4aa58a6f92da37a67, type: 3}
+      gainDb: -1.8
+    - clip: {fileID: 8300000, guid: 1eb6d001467180647a5939dba59823e9, type: 3}
+      gainDb: -0.5
+    - clip: {fileID: 8300000, guid: 0782dc8f2ae6e3446b752e61379bb581, type: 3}
+      gainDb: -2.5
+    - clip: {fileID: 8300000, guid: e71c70182e500fe4092a2cbbb2da4a63, type: 3}
+      gainDb: 2.9
+    - clip: {fileID: 8300000, guid: fa5f98133dfa37844820b1bddd58ce3b, type: 3}
+      gainDb: -0.8
+  grassWalk:
+    trimDb: 0
+    clips:
+    - clip: {fileID: 8300000, guid: 080be43e6f318214e913a80fa4f95239, type: 3}
+      gainDb: -1.9
+    - clip: {fileID: 8300000, guid: 546244fa70921874b85416a214461ab7, type: 3}
+      gainDb: -1.3
+  grassRun:
+    trimDb: 0
+    clips:
+    - clip: {fileID: 8300000, guid: 916e367d74b2dc54587dd862e45a1187, type: 3}
+      gainDb: 3.3
+    - clip: {fileID: 8300000, guid: fdfc41b7d59b2d043b6ca5abeec82fb1, type: 3}
+      gainDb: -0.3
+  puddleWalk:
+    trimDb: 0
+    clips:
+    - clip: {fileID: 8300000, guid: a0aa1a7e335bc2049a9a1499176b4e4a, type: 3}
+      gainDb: -0.9
+    - clip: {fileID: 8300000, guid: 35a28c2be12e88e48941b50371a996fa, type: 3}
+      gainDb: 0
+  puddleRun:
+    trimDb: 0
+    clips:
+    - clip: {fileID: 8300000, guid: e724d635e1a080e4eacf1d23fb1a4913, type: 3}
+      gainDb: 1.8
+    - clip: {fileID: 8300000, guid: 237f59e8117e44a49a6d7c1520a92c1d, type: 3}
+      gainDb: 2.2

@@ -60,6 +60,10 @@ namespace RuralRumble.Match
         public MatchSetup Setup { get; private set; }
         public Transform PlayerRoot => playerRoot;
         public Transform CpuRoot => cpuRoot;
+        /// <summary>The scene's combat runner: D-046 time hook (RequestHitstop / RequestSlowMotion, ARCHITECTURE 4.2).</summary>
+        public CombatMatchRunner Runner => combatRunner;
+        /// <summary>The scene's camera rig: D-046 KO punch-in (MatchCamera.PunchIn, ARCHITECTURE 3.1).</summary>
+        public MatchCamera MatchCamera => matchCamera;
         /// <summary>The CPU's brain (ARCHITECTURE 4.1), or null before Start.</summary>
         public OpponentBrain CpuBrain { get; private set; }
 

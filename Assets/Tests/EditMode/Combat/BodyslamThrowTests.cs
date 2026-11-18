@@ -644,21 +644,22 @@ namespace RuralRumble.Tests.EditMode
         [Test]
         public void ProjectAsset_BothSlammersThrow()
         {
-            // D-044 (Barry) and D-045 (Peaux, 2026-11-17): both throws on in the shipped asset.
+            // D-044 (Barry) and D-045 (Peaux, 2026-11-17): both throws on in the shipped asset. D-046: landing distances
+            // 1.25x the art-measured 382 / 342 px.
             CombatTuning tuning = ProjectTuning(out WrestlerDefinition b, out WrestlerDefinition p);
 
             Assert.IsTrue(tuning.TryGetBodyslamThrow(b, out BodyslamThrow e), "Barry throws");
             Assert.AreEqual(b, e.slammer);
             Assert.AreEqual(0.42f, e.releaseTime, 1e-5f);
             Assert.AreEqual(178f, e.releaseOffsetPx, 1e-4f);
-            Assert.AreEqual(382f, e.landingDistancePx, 1e-4f);
+            Assert.AreEqual(477.5f, e.landingDistancePx, 1e-4f, "D-046: 1.25 x 382");
             Assert.AreEqual(0.10f, e.distanceVariance, 1e-5f);
 
             Assert.IsTrue(tuning.TryGetBodyslamThrow(p, out BodyslamThrow f), "Peaux throws");
             Assert.AreEqual(p, f.slammer);
             Assert.AreEqual(0.42f, f.releaseTime, 1e-5f);
             Assert.AreEqual(159f, f.releaseOffsetPx, 1e-4f);
-            Assert.AreEqual(342f, f.landingDistancePx, 1e-4f);
+            Assert.AreEqual(427.5f, f.landingDistancePx, 1e-4f, "D-046: 1.25 x 342");
             Assert.AreEqual(0.10f, f.distanceVariance, 1e-5f);
 
             Assert.AreEqual(0.62f, tuning.BodyslamTimingFor(b).Startup, 1e-5f, "Barry's impact (landing)");

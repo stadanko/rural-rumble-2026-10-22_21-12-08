@@ -38,10 +38,11 @@ namespace RuralRumble.Tests.EditMode
         }
 
         // COMBAT_SPEC: Struck is "Wrestler B only", so a Struck wrestler can't throw a strike; it also can't walk.
+        // (D-046's hit pushback is turned off here; PushbackTests covers it.)
         [Test]
         public void Struck_CannotStrikeOrMove()
         {
-            using var h = new MatchHarness(P, C, configure: t => t.struckDuration = 0.5f);
+            using var h = new MatchHarness(P, C, configure: t => { t.struckDuration = 0.5f; t.hitPushbackDistance = 0f; });
             h.CpuIdle = false;
             h.PlayerInput.PressStrikeOnce();
             h.TickUntil(() => h.Hits.Count > 0, 1f, Dt);

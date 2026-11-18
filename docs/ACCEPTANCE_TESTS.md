@@ -65,7 +65,7 @@ Last run: 2026-10-31 (with the combat-core slice; see that section). Movement te
 | M3.2 | ~~Facing straight up or down, the run goes toward the last left/right facing~~ Superseded by D-037: holding straight up or down (no left/right) runs toward the opponent | D-037 | `RunningTests.Run_HoldingStraightUpOrDown_RunsTowardOpponent` (4 cases; replaces `Run_FacingStraightUpOrDown_UsesLastHorizontalFacing`) | Auto |
 | M3.3 | ~~A diagonal facing runs along its horizontal part~~ Superseded by D-037: a diagonal held on the press runs along its left/right part | D-037 | `RunningTests.Run_HoldingDiagonal_RunsAlongHeldHorizontal` (4 cases; replaces `Run_FacingDiagonal_RunsHorizontally`) | Auto |
 | M3.4 | A run is left or right only: holding up or down does not steer depth | COMBAT_SPEC Running | `RunningTests.Run_HoldingUpOrDown_DoesNotSteerDepth` | Auto |
-| M3.5 | The run ends at the arena ends and the back wall (back to Standing, no damage); a run into the truck or pool is Struck with obstacle collision damage, then Standing (D-027; Knocked Down below 30, D-030, see C9) | D-020, D-027 | `RunningTests.Run_StopsAt{Right,Left}Edge_*`, `Run_StopsAtTruck_StruckThenStanding`, `Run_StopsAtPool_StruckThenStanding`, `Run_StartedAgainstEdge_*`; `RunRulesTests.RunIntoArenaEndOrBackWall_NoDamageNoEvent` | Auto |
+| M3.5 | The run ends at the arena ends and the back wall (back to Standing, no damage); a run into the truck or pool is Struck with obstacle collision damage, pushed `crashPushbackDistance` back off the face (D-046, see TH1.4), then Standing (D-027; Knocked Down below 30, D-030, see C9) | D-020, D-027, D-046 | `RunningTests.Run_StopsAt{Right,Left}Edge_*`, `Run_StopsAtTruck_StruckThenStanding`, `Run_StopsAtPool_StruckThenStanding`, `Run_StartedAgainstEdge_*`; `RunRulesTests.RunIntoArenaEndOrBackWall_NoDamageNoEvent` | Auto |
 | M3.6 | After a run the wrestler can walk and run again | D-020 | `RunningTests.Run_AfterStopping_CanWalkAndRunAgain` | Auto |
 | M3.7 | Run ends on "gets hit" or "performs another action" | D-020, D-029 | Combat-core slice C9.2, C9.3 (`StrikeTests.Strike_LandsOnRunningWrestler`, `RunRulesTests.StrikeWhileRunning_*`) | Auto |
 | M3.8 | Recovering: walking slowed, running not allowed | COMBAT_SPEC Recovering | Combat-core slice C7 (`RecoveringTests.Recovering_WalksAtReducedSpeed_*`, `Recovering_CannotRun`) | Auto |
@@ -174,7 +174,7 @@ Last run: 2026-10-31. EditMode 233/234 (1 known failure, C1.4). PlayMode 15/15.
 |---|---|---|---|---|
 | C3.1 | Struck lasts `struckDuration`, then Standing (or Recovering) | D-024 | `StrikeTests.Struck_LastsStruckDuration_ThenStanding` | Auto |
 | C3.2 | Each hit restarts Struck; no repeated `StateChanged` | D-024, ARCHITECTURE 4.2 | `StrikeTests.Struck_RestartedByNextComboHit_NoRepeatStateChanged` | Auto |
-| C3.3 | A Struck wrestler can't strike or move | Spec (Struck is "Wrestler B only") | `StrikeAllowedStatesTests.Struck_CannotStrikeOrMove` | Auto |
+| C3.3 | A Struck wrestler can't strike or move (other than the D-046 hit pushback, TH1.1; the test turns the pushback off) | Spec (Struck is "Wrestler B only") | `StrikeAllowedStatesTests.Struck_CannotStrikeOrMove` | Auto |
 
 ### C4. Damage and knockdowns (COMBAT_SPEC Damage, Knocked Down, D-025, D-029)
 
@@ -185,7 +185,7 @@ Last run: 2026-10-31. EditMode 233/234 (1 known failure, C1.4). PlayMode 15/15.
 | C4.3 | Knockdown length is linear in health lost, min at full health to max near 0 | D-025 | `KnockdownTests.KnockdownDuration_LinearInHealthLost`, `KnockdownDuration_Endpoints` | Auto |
 | C4.4 | At the end of a knockdown: Standing at 30+ health, Recovering below | Spec | `KnockdownTests.Knockdown_EndsStanding_*`, `Knockdown_EndsRecovering_*` | Auto |
 | C4.5 | A downed wrestler can't move (other than the D-041 knockback slide, C4.6) or strike; no invulnerability after getting up | Spec, D-025 | `StrikeAllowedStatesTests.KnockedDown_StrikeIsMashNotAMove_AndCannotMove`, `KnockdownTests.KnockedDown_ComboStrikeDoesNotLand_ButLandsRightAfterGettingUp` | Auto |
-| C4.6 | Falling down (D-041): `FallSide` is ±1 away from what hit them for a strike knockdown, an obstacle knockdown, both wrestlers in a run collision, and a knockout from standing (strike, obstacle, run collision); exactly level on x falls opposite `HorizontalFacing`; 0 for a bodyslam knockdown or knockout, a stomp knockout while down, and once the knockdown ends. The knockdown slides `knockdownSlideDistance` (0.5) on x that way over `knockdownSlideDuration` (0.35 s), linearly, depth unchanged; it stops at an arena end or obstacle (no `ObstacleHit`); knockdown length and damage are unchanged; tuning edits apply to the next knockdown. A knockout from standing (strike, obstacle, run collision) slides the same way after the match is over, clamped at the arena ends; a stomp KO while down does not slide (C8.2) | D-041 | `KnockdownFallTests.*` (23 cases) | Auto |
+| C4.6 | Falling down (D-041): `FallSide` is ±1 away from what hit them for a strike knockdown, an obstacle knockdown, both wrestlers in a run collision, and a knockout from standing (strike, obstacle, run collision); exactly level on x falls opposite `HorizontalFacing`; 0 for a bodyslam knockdown or knockout, a stomp knockout while down, and once the knockdown ends. The knockdown slides `knockdownSlideDistance` (1.0, D-046; D-041 set 0.5) on x that way over `knockdownSlideDuration` (0.45 s, D-046; D-041 set 0.35), linearly, depth unchanged; it stops at an arena end or obstacle (no `ObstacleHit`); knockdown length and damage are unchanged; tuning edits apply to the next knockdown. A knockout from standing (strike, obstacle, run collision) slides the same way after the match is over, clamped at the arena ends; a stomp KO while down does not slide (C8.2) | D-041, D-046 | `KnockdownFallTests.*` (23 cases; `Slide_MovesDistanceAwayOnX_LinearOverDuration_DepthUnchanged` checks the 1.0 / 0.45 defaults) | Auto |
 | C4.7 | Get-up phase (D-043): when the knockdown timer runs out the wrestler stays Knocked Down for `getUpTime` (0.25 s), so the whole knockdown is timer + get-up (bodyslam receiver too); `IsGettingUp` / `GetUpTimeRemaining` / `GetUpDuration` report it; no control, mashing does not shorten it, only a Stomp lands (damage only, can knock out), no extra events; then Standing or Recovering by health; `getUpTime` 0 gets up when the timer ends; tuning edits apply to the next get-up | D-043 | `GetUpTests.*` (14) | Auto |
 
 ### C5. Mashing (COMBAT_SPEC Knocked Down, Tuning Values, D-025)
@@ -272,7 +272,7 @@ Last run: 2026-10-31. EditMode 233/234 (1 known failure, C1.4). PlayMode 15/15.
 | C13.5 | The contact frame visibly lands when the hit registers; the Stomp and Struck clips and the placeholder Knocked Down and Recovering clips read correctly | STYLE_GUIDE | none | **Human** |
 | C13.6 | Falling Down (D-041), Barry, hit from either side: the Fall state plays struck_a → fall2 → fall3 → downed sprite in that order, landing about 0.35 s in (default holds 100 / 120 / 130 ms); on every frame the head is on the `FallSide` side (fall frames unflipped for +1, flipped for −1; downed sprite mirrored), fall frames have no x offset and the downed sprite is shifted ±`downedMirrorShift`; a run collision ends with both lying as mirror images, feet toward each other | D-041, ARCHITECTURE 6 | `CombatPresentationTests.StrikeKnockdown_HitFromLeft_FallsTowardPlusX`, `StrikeKnockdown_HitFromRight_FallsTowardMinusX`, `RunCollisionKnockdown_ShowsDownedSpriteMirroredInPlace` | Auto |
 | C13.7 | A bodyslam knockdown (`FallSide` 0) never enters the Fall state and shows the downed sprite unmirrored, as the slam left it; Peaux plays his own fall (peaux_struck_a, peaux_fall2, peaux_fall3, his downed sprite) with the same head-side and landing rules as Barry | D-041, D-038 | `CombatPresentationTests.BodyslamKnockdown_ShowsNoFall`, `PeauxStrikeKnockdown_PlaysHisFall` | Auto |
-| C13.8 | The fall reads as one motion with the 0.5-unit slide (no pop between struck_a, fall2, fall3 and the downed sprite; the downed body lands where fall3 was heading); timing feels right; near the arena ends / truck / pool the slide stopping does not look odd | D-041 | none (Play Mode capture of a real Strike-3 knockdown from each side checked by the Animation agent, 2026-11-15) | **Human** |
+| C13.8 | The fall reads as one motion with the 1.0-unit slide over 0.45 s (D-046; the clip lands at 0.35 s, so the last 0.1 s is a skid on the downed sprite) (no pop between struck_a, fall2, fall3 and the downed sprite; the downed body lands where fall3 was heading); timing feels right; near the arena ends / truck / pool the slide stopping does not look odd | D-041 | none (Play Mode capture of a real Strike-3 knockdown from each side checked by the Animation agent, 2026-11-15) | **Human** |
 | C13.9 | Struck B on combo hit 1 switches cleanly to Struck C (head turn) on hit 2 for both wrestlers, with no pop in the feet or pivot; Struck B reads well after a truck or pool crash | D-042 | none | **Human: passed** (designer playtest, 2026-11-15) |
 | C13.10 | Crouch get-up (D-043), both wrestlers, both fall sides / facings: the crouch shows for the whole get-up, drawn by the combat facing at the root (child offset 0, no slide; same anchor as the stand), then he stands as before, lined up on the front boot; a knockout shows no crouch; a Stomp KO during the get-up returns to the lying pose; does the change from the lying pose to the crouch in place read well? | D-043 | `CombatPresentationTests.GetUp_Barry_HitFromLeft_CrouchAtRootThenStands`, `GetUp_Barry_HitFromRight_*`, `GetUp_Peaux_HitFromLeft_*`, `GetUp_Peaux_HitFromRight_*`, `GetUp_AfterBodyslam_CrouchAtRootThenStands`, `Knockout_ShowsNoCrouch`, `StompKnockoutDuringGetUp_ReturnsToLyingPose` (presentation rules) | Auto + **Human: passed** (designer playtest, 2026-11-15) |
 
@@ -460,11 +460,11 @@ The whipper's Irish Whip clips are in (L9).
 
 ## Bodyslam Throw (D-044)
 
-Barry slams Peaux throws Peaux past Barry (COMBAT_SPEC Lock Up/Grappling rules "Bodyslam throw", Tuning Values; ARCHITECTURE 6 "Bodyslam throw (D-044): integration contract"; D-044). Since D-045 (2026-11-17) Peaux slams Barry throws Barry past Peaux by the same rules (Peaux's values 0.42 / 159 / 342 / 0.10); the no-throw path (L5) remains only as the fallback for a disabled entry. **Status: built**; every Auto row below names an existing test, all passing on 2026-11-16 (EditMode 521/522 with only the known ComboTiming failure, PlayMode 35/35). Human playtest checklist still open.
+Barry slams Peaux throws Peaux past Barry (COMBAT_SPEC Lock Up/Grappling rules "Bodyslam throw", Tuning Values; ARCHITECTURE 6 "Bodyslam throw (D-044): integration contract"; D-044). Since D-045 (2026-11-17) Peaux slams Barry throws Barry past Peaux by the same rules (Peaux's values 0.42 / 159 / 342 / 0.10; D-046 scaled the landing distances 1.25×, so the project asset is now Barry 477.5 px, Peaux 427.5 px); the no-throw path (L5) remains only as the fallback for a disabled entry. **Status: built**; every Auto row below names an existing test, all passing on 2026-11-16 (EditMode 521/522 with only the known ComboTiming failure, PlayMode 35/35). Human playtest checklist still open.
 
 EditMode tests build the throw from their own `CombatTuning` fixture: a new instance has no `bodyslamThrowBySlammer` entries, so the existing `BodyslamTests` keep testing the no-throw path. Throw tests add a `BodyslamThrow` entry for the slammer's definition and inject `random01` (`() => 0f` = −10%, `() => 0.5f` = median, `() => 0.9999f` ≈ +10%). Values are read from the fixture, never hard-coded. Proposed files: `Assets/Tests/EditMode/Combat/BodyslamThrowTests.cs`, presentation cases in `CombatPresentationTests`.
 
-Timeline (Barry's Starting points): Grapple press → A Grappling, B Grappled, `PairedMoveStarted(Bodyslam)` with `ThrowDirection` = −`Facing` and Timing (0.62, 0, 0) → 0–0.42 s neither root moves → 0.42 s release: B's root at 178 px from A's root along the throw → linear on x → 0.62 s landing at the drawn distance (382 px ±10% root to root): 12 damage (+8 if the truck/pool stopped the flight), B Knocked Down (or Out), A Standing/Recovering facing the throw direction.
+Timeline (Barry's Starting points): Grapple press → A Grappling, B Grappled, `PairedMoveStarted(Bodyslam)` with `ThrowDirection` = −`Facing` and Timing (0.62, 0, 0) → 0–0.42 s neither root moves → 0.42 s release: B's root at 178 px from A's root along the throw → linear on x → 0.62 s landing at the drawn distance × 1.25 (D-046: 477.5 px ±10% root to root; D-044 set 382): 12 damage (+8 if the truck/pool stopped the flight), B Knocked Down (or Out), A Standing/Recovering facing the throw direction.
 
 ### T1. Combat (COMBAT_SPEC, ARCHITECTURE 6, D-044)
 
@@ -483,7 +483,7 @@ Timeline (Barry's Starting points): Grapple press → A Grappling, B Grappled, `
 | T1.11 | Neither wrestler has control from the press to the landing (no movement, facing changes, moves) | Spec, D-031 | `BodyslamThrowTests.DuringThrow_NeitherWrestlerHasControl` | Auto |
 | T1.12 | A blocked throw that leaves B overlapping A is separated by normal blocking afterwards (no stuck pair) | ARCHITECTURE 6 | `BodyslamThrowTests.BlockedNextToSlammer_BlockingSeparatesThem` | Auto |
 | T1.13 | The throw entry is read at the press: edits during a slam apply to the next one; `releaseTime` above the Startup is clamped to it | D-005, ARCHITECTURE 6 | `BodyslamThrowTests.ThrowTuning_ReadAtPress_ReleaseClamped` | Auto |
-| T1.14 | Project asset: Barry entry enabled (0.42 / 178 / 382 / 0.10), Peaux enabled (0.42 / 159 / 342 / 0.10); both impacts 0.62. A copy with Peaux's entry disabled runs the old no-throw bodyslam | D-044, D-045 | `BodyslamThrowTests.ProjectAsset_BothSlammersThrow`, `ProjectAssetCopy_PeauxEntryDisabled_OldBodyslam` | Auto |
+| T1.14 | Project asset: Barry entry enabled (0.42 / 178 / 477.5 / 0.10), Peaux enabled (0.42 / 159 / 427.5 / 0.10) (landing distances 1.25 × the art-measured 382 / 342, D-046); both impacts 0.62. A copy with Peaux's entry disabled runs the old no-throw bodyslam | D-044, D-045, D-046 | `BodyslamThrowTests.ProjectAsset_BothSlammersThrow`, `ProjectAssetCopy_PeauxEntryDisabled_OldBodyslam` | Auto |
 | T1.15 | CPU unchanged: a CPU Barry slams and throws through the same rules; a thrown CPU Peaux mashes once Knocked Down; the brain gives no input during the slam | Spec CPU AI, D-044 | existing `OpponentBrainBodyslamTests.*` plus `BodyslamThrowTests.CpuSlammer_SameRules` | Auto |
 
 ### T2. Presentation (ARCHITECTURE 6, D-044)
@@ -502,7 +502,7 @@ Timeline (Barry's Starting points): Grapple press → A Grappling, B Grappled, `
 
 1. Barry slams Peaux, both directions and both sides of the arena: does the lift read, does Barry turn at the right moment (S3), and does Peaux fly over and land on Barry's far side? (T1.2, T2.2)
 2. Release and flight: does R4 start where Barry lets go, and does the linear flight look right, or does Peaux seem to drift or hang before R5? (Linear motion puts R5 about 60 px short of the art's spot.) (T1.4, T2.3)
-3. Distance: over ten or so slams, do landings vary noticeably but stay believable (±10% around 6.4 units root to root, about 5.7–7.0)? (T1.5)
+3. Distance: over ten or so slams, do landings vary noticeably but stay believable (±10% around 7.96 units root to root since D-046, about 7.2–8.8; Peaux's throw 7.13, about 6.4–7.8)? (T1.5)
 4. Timing: S1–S5 120 / 120 / 180 / 100 / 100 ms, landing at 0.62 s. Too fast or too slow? Retune in the FrameTiming Inspector (Barry_Bodyslam and Peaux_Bodyslammed together) and keep release and impact matched. (T2.1)
 5. Landing: does the R7 bounce read as force, and does Peaux then lie still in R6 with no pop when the downed clip takes over? Does the health bar drop on first contact? (T1.6, T2.4)
 6. Slammer free at the landing: does Barry being able to act the moment Peaux lands feel right, or too strong? (T1.7)
@@ -511,7 +511,7 @@ Timeline (Barry's Starting points): Grapple press → A Grappling, B Grappled, `
 9. Peaux's new downed pose (R6) after a strike knockdown, run collision and obstacle crash, both fall sides: does the fall land into it cleanly? (T2.6)
 10. Draw order during the lift and overhead (Barry in front): any frame where the wrong one covers the other? (ARCHITECTURE 6)
 11. Peaux slams Barry (D-045): does Peaux's throw distance and timing feel right, does Barry's flight and landing read, and does Barry's new R6 downed pose look right? (T2.7)
-12. The CPU as Barry: does being thrown about 7 units away change the pace of the match in a good way? (T1.15)
+12. The CPU as Barry: does being thrown about 8 units away (D-046) change the pace of the match in a good way? (T1.15)
 
 ## Focus (D-037)
 
@@ -587,3 +587,84 @@ Free wrestlers always face each other (COMBAT_SPEC "Focus (D-037)", CONTROLS Run
 4. Run with left, right, up/down and nothing held, on both sides of the CPU and while backing away. Does each run go where you expect? (F7.4)
 5. Strike or lock up while the CPU crosses behind you: you stay turned until the move ends, then snap around. Does the snap read well? (F3, F7.3)
 6. Watch the CPU (AI on) for a minute: does always facing you make it look engaged, and do its runs look sensible? (F7.5)
+
+---
+
+## Theatrics (D-046)
+
+The "11 out of 10" theatrics pass (DECISION_LOG D-046): knockback and pushback (COMBAT_SPEC "Pushback on hits that don't knock down", "Falling down and knockback slide", Tuning Values), the bodyslam throw distance ×1.25, the match time hook for hitstop and slow motion (ARCHITECTURE 4.2 "Match time hook"), the Juice theatrics (ARCHITECTURE 4.7: red flash, blood, ground stains, impact stars, dust, screen shake, hitstop, KO slow-mo and punch-in), and the Match.unity lighting and post-processing (ARCHITECTURE 3.1). Values D-046 marks Starting point are read from `CombatTuning` or the `ImpactFeelTable` defaults in tests; only the default checks name numbers. **Status: built.** Last run 2026-11-17: EditMode 598/599 (only the known C1.4 `ComboTimingTests` failure), PlayMode 43/43.
+
+Test files: `Assets/Tests/EditMode/Combat/PushbackTests.cs`, `Assets/Tests/EditMode/Combat/MatchClockTests.cs`, `Assets/Tests/EditMode/Juice/TheatricsRulesTests.cs`, `Assets/Tests/EditMode/Juice/TheatricsCombatCoverageTests.cs`, `Assets/Tests/EditMode/Juice/StruckClipTintTests.cs`, `Assets/Tests/PlayMode/MatchTimeHookSceneTests.cs`, `Assets/Tests/PlayMode/TheatricsSceneTests.cs`; updated rows C3.3, C4.6, C13.8, M3.5, T1.14.
+
+### TH1. Knockback and pushback (Combat, COMBAT_SPEC, D-046)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| TH1.1 | A Strike 1 or 2 that leaves the defender Struck pushes him `hitPushbackDistance` (0.2) on x away from the attacker, linearly over `pushbackDuration` (0.1 s), depth unchanged; the attacker does not move; nothing moves after the pushback; from either side | D-046, COMBAT_SPEC Pushback | `PushbackTests.Defaults_D046`, `Strike1_PushesStruckWrestlerAway_LinearOverDuration_DepthUnchanged`, `Strike1_FromTheRight_PushesTowardMinusX` | Auto |
+| TH1.2 | Each hit restarts the pushback (combo hit 2 adds a second pushback) | COMBAT_SPEC Pushback | `PushbackTests.ComboHit2_RestartsThePushback` | Auto |
+| TH1.3 | **The 3-hit combo still connects**: from feet touching to just inside the kick's reach (1.0, 1.6, 2.0, 2.2, 2.29 units) all three hits land and Strike 3 knocks down (slide, no pushback); the pushback is cut short at Strike 3 reach + hurt half width; the CPU's combo still knocks the player down | D-046 "small enough that the 3-hit combo still connects" | `PushbackTests.Combo_StillConnectsAllThreeHits` (5 cases), `Combo_PushbackIsCutShortAtTheKickReach`, `CpuCombo_StillKnocksThePlayerDown_WithPushback` | Auto |
+| TH1.4 | A truck/pool crash that leaves the runner Struck pushes him `crashPushbackDistance` (0.4, 2× the hit pushback) away from the obstacle, never into it; a crash that knocks down slides the full knockdown slide instead | D-046 crash ×2, COMBAT_SPEC | `PushbackTests.TruckCrash_NotKnockedDown_PushesAwayFromTheTruck`, `TruckCrash_KnockedDown_SlidesInsteadOfPushback`; `RunningTests.Run_StopsAtTruck_StruckThenStanding`, `Run_StopsAtPool_StruckThenStanding` | Auto |
+| TH1.5 | Pushback uses normal movement clamping (stops at an arena end); tuning edits apply to the next hit; 0 = no movement | D-046 "normal movement clamping", D-005 | `PushbackTests.Pushback_StopsAtArenaEnd`, `Pushback_TuningEdit_AppliesToTheNextHit`, `Pushback_Zero_DoesNotMove` | Auto |
+| TH1.6 | Knockdown slide 1.0 unit over 0.45 s (was 0.5 / 0.35 under D-041), every other C4.6 rule unchanged | D-046 | `PushbackTests.Defaults_D046`, `KnockdownFallTests.Slide_MovesDistanceAwayOnX_LinearOverDuration_DepthUnchanged` (C4.6) | Auto |
+| TH1.7 | Bodyslam throw landing distance 1.25×: project asset Barry 477.5 px, Peaux 427.5 px (all T1 rules unchanged) | D-046, D-044, D-045 | `BodyslamThrowTests.ProjectAsset_BothSlammersThrow` (T1.14) | Auto |
+| TH1.8 | Pushback only while Struck: Struck ending early drops the rest; whip and bodyslam have no pushback | COMBAT_SPEC Pushback "Only while Struck" | none directly (the default Struck, 0.4 s, outlasts the 0.1 s pushback) | **Gap** (low value) |
+
+### TH2. Match time hook: hitstop and slow motion (ARCHITECTURE 4.2, D-046)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| TH2.1 | The idle hook passes real time through (scale 1); a hitstop freezes combat time for its real-time length, then runs normally; overlapping hitstops take the longest (no stacking) | ARCHITECTURE 4.2 | `MatchClockTests.Idle_ReturnsRealDtUnchanged_ScaleOne`, `Hitstop_FreezesForRequestedRealTime_ThenRunsNormally`, `Hitstop_Overlapping_TakesMax_NoStacking` | Auto |
+| TH2.2 | Slow motion scales combat time for its real-time length; a frame crossing its end is split; a new request replaces the current one; a hitstop during slow motion freezes first, both on the real-time clock; invalid requests are ignored, the scale clamped | ARCHITECTURE 4.2 | `MatchClockTests.SlowMotion_*` (4), `HitstopDuringSlowMotion_FreezesFirst_BothCountRealTime`, `InvalidRequests_AreIgnored_ScaleClamped` | Auto |
+| TH2.3 | Hitstop pauses the match timer and combat; every combat timing is unchanged in combat time (only the clock pauses) | D-046 "Combat rules and timings are unchanged" | `MatchClockTests.Hitstop_PausesMatchTimerAndCombat_TimingsUnchangedInCombatTime` | Auto |
+| TH2.4 | Under the KO slow motion (0.25× for 1.0 s real after the KO hitstop) the knockout slide still finishes and `MatchEnded` fires once | D-046, ARCHITECTURE 4.2 | `MatchClockTests.SlowMotionKnockout_SlideStillFinishes_MatchEndedOnce` | Auto |
+| TH2.5 | In Match.unity, `RequestHitstop` freezes the combat clock and both wrestler Animators, then resumes; `RequestSlowMotion` scales both; `Time.timeScale` stays 1 | D-046 "not `Time.timeScale` set by Juice" | `MatchTimeHookSceneTests.Hitstop_FreezesCombatClockAndAnimators_ThenResumes`, `SlowMotion_ScalesCombatClockAndAnimators`; `TheatricsSceneTests.*` (timeScale 1) | Auto |
+| TH2.6 | The KO punch-in zooms in on the point and returns to the default size | D-046, ARCHITECTURE 3.1 | `MatchTimeHookSceneTests.PunchIn_ZoomsInOnPoint_ThenReturnsToDefault` | Auto |
+| TH2.7 | Hitstop defaults: strike 1–2 50 ms, strike 3 / stomp 90 ms, crash / run collision 100 ms, slam 120 ms | D-046 Starting points | `TheatricsRulesTests.FeelDefaults_MatchD046Hitstops_AndScaleWithImpact` | Auto |
+| TH2.8 | KO timing fits inside UI's 1.5 s real-time Victory hold: the KO hitstop is shorter than the 1.0 s slow motion it overlaps | D-046, ARCHITECTURE 4.2 "After the knockout" | `TheatricsRulesTests.KnockoutHitstop_FitsBeforeVictory` | Auto |
+
+### TH3. Impacts, flash, blood, stains, shake (Juice, ARCHITECTURE 4.7, D-046)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| TH3.1 | Impact classification: Strike 1/2 light, Strike 3 heavy, Stomp, Bodyslam slam; `ObstacleHit` is a crash (source = contact); both down with a runner and no hit is a run collision for both; a knockdown alone or damage alone still gives one impact; a hit's damage and knockdown ride on the hit (one impact) | ARCHITECTURE 4.7 | `TheatricsRulesTests.KindFor_MapsMoves` (5), `Hit_GivesDefenderOneImpact_FromAttacker`, `Strike3WithKnockdown_IsOneHeavyImpact`, `ObstacleHit_IsCrash_AwayFromContact`, `BothDownWithARunner_IsRunCollision_ForBoth`, `KnockdownAlone_IsKnockdown_SoItStillFlashes`, `DamageAlone_IsDamage`, `Empty_GivesNothing`, `Clear_EmptiesTheTick` | Auto |
+| TH3.2 | **Every damage-dealing event and every knockdown / knockout gives its receiver an impact (so it flashes red), the same for both wrestlers**, checked against a real `CombatMatch`: combo hits 1–3 (player and CPU), stomp, bodyslam landing and its later knockdown, truck crash, pool crash, crash knockdown, run collision (0 and 10 damage), whip run into an obstacle, knockout blow | D-046 Red flash | `TheatricsCombatCoverageTests.*` (11) | Auto (see note) |
+| TH3.3 | The knockout rides on the blow that caused it (exactly one knockout impact); a draw marks both | D-046 slow-mo KO | `TheatricsRulesTests.Knockout_RidesOnTheBlowThatCausedIt`, `Draw_KnocksOutBoth`; `TheatricsCombatCoverageTests.KnockoutBlow_IsOneKnockoutImpact` | Auto |
+| TH3.4 | Sprays go away from the attacker / obstacle / other wrestler (a tie uses the fallback) | D-046 Blood | `TheatricsRulesTests.AwayFrom` (4), `SprayVelocity_GoesAwayFromSource_UnlessBackSplash` | Auto |
+| TH3.5 | Feel scales with the impact: shake light < heavy < slam < knockout; blood light < heavy < slam < knockout; slams and crashes raise dust | D-046 Blood, Shake, Impact flashes | `TheatricsRulesTests.FeelDefaults_MatchD046Hitstops_AndScaleWithImpact`, `FeelTable_GetReturnsEachKind` | Auto |
+| TH3.6 | The red flash holds then fades; a retrigger keeps the longer hold | D-046 Red flash | `TheatricsRulesTests.Flash_HoldsThenFades`, `Flash_RetriggerKeepsTheLongerHold` | Auto |
+| TH3.7 | The baked red tint is gone from every `{Name}_Struck*` clip (SpriteRenderer colour keyed flat white), so the Juice flash is the only hit flash | D-046 "replaced", ARCHITECTURE 4.7 | `StruckClipTintTests.StruckClips_KeySpriteRendererColourFlatWhite` | Auto |
+| TH3.8 | Drops arc and land on their ground line, inside the walkable band and below the launch point; particles expire and fade; a full particle list replaces the oldest; zero dt freezes them (hitstop) | D-046 Blood | `TheatricsRulesTests.Drop_ArcsAndLandsOnItsGroundLine`, `Particle_ExpiresAndFades`, `ParticleList_ReplacesOldestWhenFull`, `ZeroDt_FreezesParticles`, `GroundY_StaysInTheWalkableBand_AndBelowTheStart` | Auto |
+| TH3.9 | Ground stains stay inside the walkable ground and never under the truck/pool; past the cap (80) the oldest fade and go (hard limit 2× the cap); effects of a wrestler behind a prop sort behind it | D-046 Blood (stains), ARCHITECTURE 4.7 | `TheatricsRulesTests.Stain_IsClampedInside_AndSkippedUnderObstacles`, `Stains_PastTheCap_OldestFadeAndGo`, `Stains_HardLimitIsTwiceTheCap`, `BehindObstacle_OnlyFartherBackThanItsFrontEdge_AndNearItsSides` | Auto |
+| TH3.10 | Stains are cleared when the Match scene unloads | D-046 | none directly | **Human** (check on a rematch) |
+| TH3.11 | Shake decays to zero, a weak kick never cuts a strong one, offsets snap to whole art pixels | D-046 Shake, ARCHITECTURE 3.1 | `TheatricsRulesTests.Shake_DecaysToZero`, `Shake_WeakKickDoesNotCutAStrongOne`, `Shake_SnapsToArtPixels` | Auto |
+| TH3.12 | The impact star is symmetric pixel art made at runtime (no art file ships) | D-046 Impact flashes | `TheatricsRulesTests.PixelTextures_StarIsSymmetric` | Auto |
+| TH3.13 | Match.unity has exactly one `CombatTheatrics`, at the scene root, still enabled after Start (it found a running match), with one runtime `JuiceFlash` SpriteRenderer under each wrestler; `Time.timeScale` stays 1 | ARCHITECTURE 4.7 "Wired" | `TheatricsSceneTests.CombatTheatrics_OnceAtSceneRoot_EnabledAfterStart_FlashUnderBothWrestlers` | Auto |
+
+Note (TH3.2): the collector that fills `TickEvents` is private to the `CombatTheatrics` MonoBehaviour, so the test rebuilds it from the mapping in ARCHITECTURE 4.7. It proves the classifier covers every event Combat really raises, not that the MonoBehaviour subscribes correctly; TH3.13 and the playtest cover the wiring.
+
+### TH4. Lighting and post-processing (Match.unity, ARCHITECTURE 3.1, D-046)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| TH4.1 | The golden-hour look is kept and enhanced: warm global light, warm key light from the sky side, soft light pools, bloom, vignette, colour grading | D-046 Lighting, D-016 | none | **Human** |
+| TH4.2 | Pixel-perfect rendering still works with the lights and post-processing on | D-046, D-013, D-017 | M8 rows cover the camera, not the rendered look | **Human** |
+| TH4.3 | Wrestlers, blood and dust read clearly everywhere in the arena, including the far-right porch side | D-046 | none | **Human** |
+| TH4.4 | Lighting is presentation only (no light reads or changes combat state) | ARCHITECTURE 3.1, CLAUDE.md | none (assembly rule: `RuralRumble.Lighting` references Core and URP only, nothing references it) | Review |
+
+### Theatrics: human playtest checklist
+
+1. Blood amount: small spray on strikes 1–2, bigger on strike 3 and stomps, big on slams, crashes and run collisions. Heavy but readable, or too much / too little? Do sprays fly away from the attacker or obstacle? (TH3.4, TH3.5)
+2. Ground stains: do they build up over a match, stay on the dirt (never on the truck, pool, trailer or porch), draw under the wrestlers, and clear on a rematch? Does the 80-stain cap look right late in a long match? (TH3.9, TH3.10)
+3. Screen shake: light on strikes, medium on strike 3 / stomps, heavy on slams, crashes and run collisions, heaviest on the KO. Too much anywhere? (TH3.11)
+4. Hitstop feel (50 / 90 / 100 / 120 ms): do hits feel weightier, or does the game feel sticky or laggy, especially in a fast combo and while mashing? (TH2.7)
+5. KO slow-mo and punch-in: 0.25× for about 1 s with the camera zooming in on the loser. Dramatic enough? Does the body stay framed while it slides, and does the Victory screen arrive at the right moment (not cut off, no long wait)? Try a KO by strike, stomp, slam, crash and run collision, and a draw. (TH2.4, TH2.6, TH2.8)
+6. Red flash reads red on both wrestlers, on every hit, crash, run collision, knockdown and knockout, in the warm lighting and with the bloom. Does every hit look the same now that the clip tints are gone? Does any hit not flash? (TH3.2, TH3.6, TH3.7)
+7. Impact stars and dust: white stars at the point of contact; dust on slam landings, knockdown landings and crashes. Do they line up with the art? (TH3.1)
+8. Lighting mood and readability: golden hour kept and stronger; wrestlers readable everywhere, including the far-right porch side; nothing too dark or blown out by the bloom; the vignette does not hide the action at the arena ends. (TH4.1, TH4.3)
+9. Lantern flicker: does it look like a lantern, not a strobe or a bug? Is it distracting in fights near it? (TH4.1)
+10. Pixel-perfect: any shimmer, soft edges or sub-pixel crawl with the new lights and post-processing, at the default zoom and during the punch-in? (TH4.2)
+11. Frame rate in a Windows build (not only the Editor): steady with lots of blood, stains and particles near the end of a long match?
+12. Stomps after the longer slides: after a 1.0-unit knockdown slide, can you still walk over and stomp comfortably, and does the CPU still stomp? (TH1.6)
+13. Pushback feel: does the 0.2-unit pushback make hits feel stronger without the combo whiffing? Does the 0.4-unit crash pushback off the truck and pool look right? (TH1.1, TH1.3, TH1.4)
+14. CPU difficulty with pushback: does the CPU still land its combos and approach sensibly, or is it noticeably easier or harder? (TH1.3)
+15. Bodyslam throw at 1.25×: do landings near the arena ends, truck and pool stop short more often, and does that look acceptable? (TH1.7, T1.8, T1.9)

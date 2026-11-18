@@ -49,6 +49,14 @@ namespace RuralRumble.Core
         [Min(0f)]
         [SerializeField] private float followSmoothTime = 0.2f;
 
+        [Header("Punch-in (D-046, requested by Juice)")]
+        [Tooltip("Seconds to ease into and out of a punch-in (zoom and position). Real time.")]
+        [Min(0f)]
+        [SerializeField] private float punchInSmoothTime = 0.12f;
+        [Tooltip("Smallest orthographic size a punch-in may request, as a fraction of the default size.")]
+        [Range(0.2f, 1f)]
+        [SerializeField] private float minPunchInSizeFraction = 0.5f;
+
         private Transform targetA;
         private Transform targetB;
         private float zoomVelocity;
@@ -57,10 +65,58 @@ namespace RuralRumble.Core
         private float currentX;
         private float currentY;
         private bool initialized;
+        private float punchInRemaining;
+        private float punchInSizeFraction = 1f;
+        private Vector2 punchInPoint;
+        private Transform punchInTarget;
+        private Vector2 punchInTargetOffset;
 
         public Camera TargetCamera => targetCamera;
+        /// <summary>Wrestler roots passed to <see cref="SetTargets"/> (read-only; scene lighting follows them).</summary>
+        public Transform TargetA => targetA;
+        public Transform TargetB => targetB;
         public float DefaultOrthographicSize => SizeForWidthFraction(defaultVisibleWidthFraction);
         public float MaxOrthographicSize => SizeForWidthFraction(Mathf.Max(maxVisibleWidthFraction, defaultVisibleWidthFraction));
+        /// <summary>True while a punch-in holds the framing.</summary>
+        public bool IsPunchedIn => punchInRemaining > 0f;
+
+        /// <summary>
+        /// D-046 KO camera punch-in. For <paramref name="holdSeconds"/> of real time the rig eases (punchInSmoothTime)
+        /// to an orthographic size of DefaultOrthographicSize × <paramref name="sizeFraction"/> (clamped to
+        /// minPunchInSizeFraction..1; e.g. 0.75 = 33% closer) centered on <paramref name="worldPoint"/> (clamped so the
+        /// view stays on the arena art), then eases back to the normal follow/zoom. A new call replaces the current one.
+        /// The view is not pixel-snapped while punched in. Camera shake stays on the child camera's local offset.
+        /// </summary>
+        public void PunchIn(Vector2 worldPoint, float sizeFraction, float holdSeconds)
+        {
+            punchInTarget = null;
+            punchInPoint = worldPoint;
+            StartPunchIn(sizeFraction, holdSeconds);
+        }
+
+        /// <summary>Like <see cref="PunchIn(Vector2,float,float)"/>, but keeps centering on
+        /// <paramref name="target"/>.position + <paramref name="offset"/> (e.g. a sliding knocked-out wrestler's root plus
+        /// about (0, 1) so the body, not the feet, is centered).</summary>
+        public void PunchIn(Transform target, Vector2 offset, float sizeFraction, float holdSeconds)
+        {
+            if (target == null)
+                return;
+            punchInTarget = target;
+            punchInTargetOffset = offset;
+            punchInPoint = (Vector2)target.position + offset;
+            StartPunchIn(sizeFraction, holdSeconds);
+        }
+
+        /// <summary>Ends a punch-in now; the rig eases back to the normal framing.</summary>
+        public void ReleasePunchIn() => punchInRemaining = 0f;
+
+        private void StartPunchIn(float sizeFraction, float holdSeconds)
+        {
+            if (!(holdSeconds > 0f) || float.IsNaN(sizeFraction))
+                return;
+            punchInSizeFraction = Mathf.Clamp(sizeFraction, minPunchInSizeFraction, 1f);
+            punchInRemaining = holdSeconds;
+        }
 
         /// <summary>Assign the two wrestler roots (or placeholders) at runtime.</summary>
         public void SetTargets(Transform a, Transform b)
@@ -90,18 +146,36 @@ namespace RuralRumble.Core
             float defaultSize = DefaultOrthographicSize;
             float maxSize = MaxOrthographicSize;
 
-            float desiredSize = Mathf.Clamp(RequiredSize(aspect), defaultSize, maxSize);
-            float size = Mathf.SmoothDamp(targetCamera.orthographicSize, desiredSize, ref zoomVelocity, zoomSmoothTime, Mathf.Infinity, dt);
-            if (Mathf.Abs(size - defaultSize) < 0.0005f && desiredSize <= defaultSize)
+            bool punchedIn = punchInRemaining > 0f;
+            float zoomTime = zoomSmoothTime, followTimeX = followSmoothTime, followTimeY = zoomSmoothTime;
+            float desiredSize;
+            Vector2 desiredCenter;
+            if (punchedIn)
+            {
+                punchInRemaining = Mathf.Max(0f, punchInRemaining - dt);
+                if (punchInTarget != null)
+                    punchInPoint = (Vector2)punchInTarget.position + punchInTargetOffset;
+                desiredSize = defaultSize * punchInSizeFraction;
+                desiredCenter = punchInPoint;
+                zoomTime = followTimeX = followTimeY = punchInSmoothTime;
+            }
+            else
+            {
+                desiredSize = Mathf.Clamp(RequiredSize(aspect), defaultSize, maxSize);
+                desiredCenter = new Vector2(TargetMidX(), defaultCenterY);
+            }
+
+            float size = Mathf.SmoothDamp(targetCamera.orthographicSize, desiredSize, ref zoomVelocity, zoomTime, Mathf.Infinity, dt);
+            if (!punchedIn && Mathf.Abs(size - defaultSize) < 0.0005f && desiredSize <= defaultSize)
             {
                 size = defaultSize;
                 zoomVelocity = 0f;
             }
             targetCamera.orthographicSize = size;
 
-            Vector2 desired = ClampedCenter(TargetMidX(), defaultCenterY, size, aspect);
-            currentX = Mathf.SmoothDamp(currentX, desired.x, ref followVelocityX, followSmoothTime, Mathf.Infinity, dt);
-            currentY = Mathf.SmoothDamp(currentY, desired.y, ref followVelocityY, zoomSmoothTime, Mathf.Infinity, dt);
+            Vector2 desired = ClampedCenter(desiredCenter.x, desiredCenter.y, size, aspect);
+            currentX = Mathf.SmoothDamp(currentX, desired.x, ref followVelocityX, followTimeX, Mathf.Infinity, dt);
+            currentY = Mathf.SmoothDamp(currentY, desired.y, ref followVelocityY, followTimeY, Mathf.Infinity, dt);
             // Keep the view inside the arena even while easing.
             Vector2 clamped = ClampedCenter(currentX, currentY, size, aspect);
             currentX = clamped.x;

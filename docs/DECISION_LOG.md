@@ -503,6 +503,25 @@ Agents: read this before starting work. If a task conflicts with a decision here
 
 ---
 
+## D-046: Theatrics pass ("over the top trailer park ass beating")
+
+- **Date:** 2026-11-17
+- **Decided by:** Designer (what each effect is for, blood style, knockback size, lighting mood, hitstop, slow-mo KO, impact flashes); numbers marked **Starting point** are set by the agents and tuned in playtest.
+- **Decision:**
+  - **Red flash:** every event that deals damage (strikes, stomps, bodyslam, truck/pool crash, run collision, any other damage source) and every knockdown or knockout flashes the receiving wrestler red. Juice owns it, driven by `CombatEvents`, the same for both wrestlers. Red flashes baked into some animation clips are replaced by this, so every hit looks the same.
+  - **Blood:** chunky pixel-art droplets from particle systems (no generated art), heavy: small spray on a strike, bigger on strike 3 / stomps, big on bodyslam landings, truck/pool crashes and run collisions; sprays fly away from the attacker or obstacle. Drops that land leave **ground stains** on the dirt that build up over the match (Starting point: cap of about 80 stains; past the cap the oldest fade). Stains stay within the walkable ground and draw under the wrestlers. They are cleared when the Match scene unloads.
+  - **Knockback about 2× (Combat, D-005 values in `CombatTuning`):** knockdown slide 0.5 → 1.0 units (D-041; duration may lengthen, Starting point 0.45 s). Non-knockdown hits get a short pushback away from the attacker (Starting point 0.15–0.2 units), small enough that the 3-hit combo still connects. Truck/pool crashes and run collisions push about 2× further than today. Bodyslam throw landing distance about 1.25× (D-044/D-045), keeping the art readable. All of it uses normal movement clamping.
+  - **Screen shake:** scaled by impact (light on strikes, medium on strike 3 / stomps, heavy on slams, crashes and run collisions, heaviest on the knockout). Moves the child camera only (ARCHITECTURE §3.1).
+  - **Hitstop:** a brief freeze of combat and wrestler animation on impact. Starting points: strike 1–2 about 50 ms, strike 3 / stomp about 90 ms, crash / run collision about 100 ms, slam landing about 120 ms. The Architect adds a pause hook in the match runner; Juice asks for it. Combat rules and timings are unchanged; only the clock pauses.
+  - **Slow-mo knockout:** the knockout blow plays in slow motion (Starting point: 0.25× for about 1.0 s real time) with a camera punch-in, then the match ends as usual. This uses the Architect's hook, not `Time.timeScale` set by Juice.
+  - **Impact flashes:** white pixel impact stars at the point of contact on hits, and dust clouds on slam landings, knockdown landings and crashes. No "POW" text.
+  - **Lighting:** keep the approved golden-hour look (D-016) and enhance it: URP 2D lights (warm global light plus warm key light from the sky side and soft light pools), bloom, vignette and colour grading in the Match scene. Pixel-perfect rendering (D-013, D-017) must keep working.
+- **Why:** Designer: "I want the theatrics of the game to feel like an 11 out of 10."
+- **Supersedes:** D-041's 0.5-unit slide; D-044/D-045 landing distances (scaled about 1.25×); red flashes baked into animation clips.
+- **Affects:** Combat (`CombatTuning` + asset, knockback/pushback), Match runner (hitstop/slow-mo hook), Juice (new effects scripts and prefabs), Match.unity (lighting, post-processing, Juice wiring), docs/COMBAT_SPEC.md, docs/ARCHITECTURE.md §3.1/§4.2/§4.6, docs/ACCEPTANCE_TESTS.md.
+
+---
+
 ## Open Questions
 
 Not yet decided. Agents must not resolve these on their own.

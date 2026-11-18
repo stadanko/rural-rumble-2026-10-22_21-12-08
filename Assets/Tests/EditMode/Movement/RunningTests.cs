@@ -175,7 +175,8 @@ namespace RuralRumble.Tests.EditMode
             Assert.IsTrue(h.StateChanges.Contains((WrestlerId.Player, CombatState.Running, CombatState.Struck)));
             Assert.AreEqual(h.Tuning.maxHealth - h.Tuning.obstacleCollisionDamage, h.Player.Health, 1e-4f);
             Assert.AreEqual(CombatState.Standing, h.Player.State);
-            float face = SliceArena.Truck.XMax + h.Tuning.feetHalfWidth;
+            // D-046: the crash pushback moves the runner back off the truck face (+x, away from it).
+            float face = SliceArena.Truck.XMax + h.Tuning.feetHalfWidth + h.Tuning.crashPushbackDistance;
             Assert.That(h.Player.Position.x, Is.InRange(face, face + 0.01f));
         }
 
@@ -188,7 +189,8 @@ namespace RuralRumble.Tests.EditMode
             Assert.IsTrue(h.StateChanges.Contains((WrestlerId.Player, CombatState.Running, CombatState.Struck)));
             Assert.AreEqual(h.Tuning.maxHealth - h.Tuning.obstacleCollisionDamage, h.Player.Health, 1e-4f);
             Assert.AreEqual(CombatState.Standing, h.Player.State);
-            float face = SliceArena.Pool.XMin - h.Tuning.feetHalfWidth;
+            // D-046: the crash pushback moves the runner back off the pool face (-x, away from it).
+            float face = SliceArena.Pool.XMin - h.Tuning.feetHalfWidth - h.Tuning.crashPushbackDistance;
             Assert.That(h.Player.Position.x, Is.InRange(face - 0.01f, face));
         }
 

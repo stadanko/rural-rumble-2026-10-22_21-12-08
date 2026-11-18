@@ -1,0 +1,198 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &597180113181631144
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6817716302315966322}
+  - component: {fileID: 3351477081108904703}
+  m_Layer: 0
+  m_Name: CombatTheatrics
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6817716302315966322
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 597180113181631144}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3351477081108904703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 597180113181631144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40a4c213a42a6774594e0d810f4bd444, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RuralRumble.Juice::RuralRumble.Juice.CombatTheatrics
+  litMaterial: {fileID: 2100000, guid: 08355ac8ffab57647bbf367d37845152, type: 2}
+  unlitMaterial: {fileID: 2100000, guid: 7a71b558c7bf58646a6847c3cbe89a73, type: 2}
+  flashMaterial: {fileID: 2100000, guid: 746e55a0da0571942905323d41080051, type: 2}
+  feel:
+    lightStrike:
+      hitstopSeconds: 0.05
+      shakeAmplitude: 0.05
+      shakeSeconds: 0.14
+      bloodDrops: 18
+      bloodSpeed: 5
+      contactHeight: 0.8
+      stars: 1
+      starPixels: 16
+      dustPuffs: 0
+    heavyStrike:
+      hitstopSeconds: 0.09
+      shakeAmplitude: 0.11
+      shakeSeconds: 0.22
+      bloodDrops: 26
+      bloodSpeed: 6
+      contactHeight: 0.75
+      stars: 2
+      starPixels: 20
+      dustPuffs: 0
+    stomp:
+      hitstopSeconds: 0.09
+      shakeAmplitude: 0.11
+      shakeSeconds: 0.22
+      bloodDrops: 26
+      bloodSpeed: 5.5
+      contactHeight: 0.5
+      stars: 2
+      starPixels: 18
+      dustPuffs: 4
+    slam:
+      hitstopSeconds: 0.12
+      shakeAmplitude: 0.2
+      shakeSeconds: 0.34
+      bloodDrops: 64
+      bloodSpeed: 7.5
+      contactHeight: 0.5
+      stars: 2
+      starPixels: 24
+      dustPuffs: 12
+    crash:
+      hitstopSeconds: 0.1
+      shakeAmplitude: 0.18
+      shakeSeconds: 0.3
+      bloodDrops: 56
+      bloodSpeed: 7
+      contactHeight: 0.6
+      stars: 2
+      starPixels: 24
+      dustPuffs: 10
+    runCollision:
+      hitstopSeconds: 0.1
+      shakeAmplitude: 0.18
+      shakeSeconds: 0.3
+      bloodDrops: 50
+      bloodSpeed: 6.5
+      contactHeight: 0.6
+      stars: 1
+      starPixels: 22
+      dustPuffs: 8
+    knockdown:
+      hitstopSeconds: 0
+      shakeAmplitude: 0.06
+      shakeSeconds: 0.16
+      bloodDrops: 0
+      bloodSpeed: 0
+      contactHeight: 0.5
+      stars: 0
+      starPixels: 12
+      dustPuffs: 6
+    damage:
+      hitstopSeconds: 0.04
+      shakeAmplitude: 0.05
+      shakeSeconds: 0.14
+      bloodDrops: 10
+      bloodSpeed: 4
+      contactHeight: 0.6
+      stars: 1
+      starPixels: 12
+      dustPuffs: 0
+    knockout:
+      hitstopSeconds: 0.14
+      shakeAmplitude: 0.32
+      shakeSeconds: 0.7
+      bloodDrops: 100
+      bloodSpeed: 8.5
+      contactHeight: 0.55
+      stars: 3
+      starPixels: 32
+      dustPuffs: 14
+  koSlowMotionScale: 0.25
+  koSlowMotionSeconds: 1
+  koPunchInSize: 0.6
+  koPunchInHoldSeconds: 1.3
+  koPunchInOffset: {x: 0, y: 0.9}
+  flashColor: {r: 1.5, g: 0.1, b: 0.08, a: 1}
+  flashPeak: 0.85
+  flashHoldSeconds: 0.06
+  flashFadeSeconds: 0.16
+  koFlashHoldSeconds: 0.2
+  koFlashFadeSeconds: 0.6
+  bloodPalette:
+  - {r: 0.38, g: 0.02, b: 0.03, a: 1}
+  - {r: 0.58, g: 0.03, b: 0.04, a: 1}
+  - {r: 0.78, g: 0.06, b: 0.06, a: 1}
+  - {r: 0.95, g: 0.16, b: 0.12, a: 1}
+  dropMinPixels: 3
+  dropMaxPixels: 6
+  bloodGravity: 24
+  sprayMinAngle: -10
+  sprayMaxAngle: 70
+  backSplashChance: 0.12
+  landingDepthJitter: 0.35
+  minimumFall: 0.2
+  sprayOriginSpread: 0.12
+  maxDropsInFlight: 600
+  stainCap: 80
+  stainFadeSeconds: 2
+  stainChance: 0.55
+  stainWidthScale: 2
+  stainHeightScale: 0.8
+  stainDarken: 0.7
+  stainOpacity: 0.9
+  starColor: {r: 1, g: 1, b: 1, a: 1}
+  starLifetime: 0.16
+  starEndScale: 1.4
+  extraStarSpread: 0.35
+  dustColor: {r: 0.8, g: 0.68, b: 0.52, a: 0.6}
+  dustMinPixels: 8
+  dustMaxPixels: 14
+  dustEndScale: 2.2
+  dustLifetime: 0.55
+  dustSpeed: 2.6
+  dustRise: 0.7
+  dustDrag: 3.5
+  fallDustDelay: 0.35
+  fallDustPuffs: 10
+  fallDustBodyOffset: 1.2
+  shakeFrequency: 40
+  shakeSnapToPixels: 1
+  effectsFollowCombatTime: 1
+  snapEffectsToPixels: 1
+  stainSortingOrder: -50
+  dustSortingOrder: 6
+  bloodSortingOrder: 10
+  starSortingOrder: 8
+  behindPropsSortingOrder: -40
+  behindPropsMargin: 1.5

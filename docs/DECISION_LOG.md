@@ -534,6 +534,59 @@ Agents: read this before starting work. If a task conflicts with a decision here
 
 ---
 
+## D-048: Larger, high-resolution arena (backdrop gen-arena-large-a-hd-2)
+
+- **Date:** 2026-11-18
+- **Decided by:** Designer (bigger arena sized from `Staging/Art/larger_arena_example.png`, candidate A's look, the hd-2 rebuild, keeping the current truck and pool sprites for now); layout and camera numbers marked **Starting point** are set by the agents.
+- **Decision:**
+  - **Backdrop:** `gen-arena-large-a-hd-2` (AI placeholder, flagged for review) replaces `arena_backdrop.png` in the arena. It is 2160×1080 native px (36×18 world units at 60 PPU), drawn at 1 native px per art pixel like the wrestlers. Scale ×2.34 from the designer's example, so the trailer stays about its current in-game size and wrestlers keep their on-screen size. The truck and pool are not painted into it.
+  - **Truck and pool:** the existing `arena_truck.png` and `arena_pool.png` sprites stay as separate depth-sorted obstacles with collision footprints (D-047 depth rules), moved to the example's positions (truck lower left, pool right). They may be regenerated later.
+  - **Arena layout:** walkable band, spawn points and obstacle footprints are re-laid on the new backdrop. **Starting point:** the feet band runs from about the bottom of the porch steps to near the bottom of the canvas (about rows 735–1040).
+  - **Camera (supersedes D-017's numbers, keeps its behaviour):** default zoom unchanged (960×540 native view, ×2 at 1080p), so the wrestlers don't look smaller; the camera scrolls over the larger arena, now vertically as well as horizontally where needed. **Starting point:** zoom-out is capped well short of the whole arena so the wrestlers stay readable.
+  - **Lighting (D-046):** sun key, sun shafts, porch lantern and its pool, puddle glows and the fight light are moved to match the new art.
+  - Old `arena_backdrop.png` stays in the project, unused, until the designer says to remove it.
+  - **As built (Starting points, 2026-11-18):**
+    - Feet band x 1.5–34.5, y −17.3333..−12.25 (canvas x 120–2040, rows 735–1040).
+    - Truck at (−2.7667, −13.7167), pool at (29.9, −14.7333).
+    - Spawns at (13.6667, −15) and (22.3333, −15).
+    - Camera: default size 4.5, `maxZoomOut` 1.45, vertical follow. Past the zoom cap the view keeps the player on screen (`keepFirstTargetInView`); the CPU may leave the screen.
+    - Lighting: late-afternoon retune per designer ("too much like it's nighttime. It should be a late afternoon glow"):
+      - Lights: Global Light 0.9 (1, 0.92, 0.80); Sun Key 0.6 (1, 0.78, 0.46); sun shafts 0.18, volume 0.12; Fight Light 0.12.
+      - Post-processing: bloom threshold 0.95, intensity 0.6; vignette 0.18; contrast +8, saturation +6, post exposure +0.05; Neutral tonemapping.
+      - Hue shifted toward yellow-orange per designer ("more on the yellowish orange end of the spectrum"):
+        - Global Light (1, 0.98, 0.78) and sun shafts (1, 0.86, 0.50) after the designer found the haze "on the greenish side"; Sun Key (1, 0.94, 0.52).
+        - Porch Lantern (1, 0.68, 0.30), lantern pool (1, 0.71, 0.34), puddle glows (1, 0.75, 0.44).
+        - Lift Gamma Gain gain (0.99, 1.01, 0.94).
+        - No hue shift, so the hit flash and blood stay red.
+    - **No lane behind the truck or pool:** at the new positions both footprints reach the back of the walkable band, so wrestlers pass only in front (2.9 units at the truck, 2.1 at the pool). This differs from D-035/D-047, where lanes ran behind.
+- **Why:** Designer: "The current arena feels a little small and the background used for it is too low of a resolution."
+- **Supersedes:** D-018's backdrop and layout numbers; D-017's 0.6 default fraction and "whole arena" maximum zoom-out.
+- **Affects:** Assets/Art/Arena/, docs/ASSET_REGISTRY.csv, docs/CREDITS.md, Arena.prefab, Match.unity (lights, camera), docs/ARCHITECTURE.md §3.1, docs/STYLE_GUIDE.md (Arena), docs/ACCEPTANCE_TESTS.md, arena and camera tests.
+
+---
+
+## D-049: Footsteps by surface and gait, synced to foot contact
+
+- **Date:** 2026-11-18
+- **Decided by:** Designer (surfaces, which sound set for each, sync to the steps); implementation details marked **Starting point** are set by the agents.
+- **Decision:**
+  - **Sounds:** Pro Sound Collection footsteps (Unity Asset Store EULA, git-ignored, D-034 amendment). The designer picked them from the demos in `Staging/Audio/psc/_footstep_demos/`. Each surface and gait uses the individual clips behind its demo:
+
+    | Surface | Walking | Running |
+    |---|---|---|
+    | Grass | `walk_cadence_grass.wav` | `run_cadence_grass.wav` |
+    | Dirt | `walk_cadence_gravel.wav` | `run_cadence_gravel.wav` |
+    | Puddle | `walk_cadence_mud.wav` | `run_cadence_mud.wav` |
+
+    Playback treats each clip the way the demos did: trimmed (walk about 0.45 s, run about 0.30 s, so the mud tails don't overlap), random variant with no immediate repeat, about ±1 dB level variation. No run-stop skid.
+  - **Surface map:** the D-048 yard is divided into grass, dirt and puddle areas. Anything not marked is dirt. The surface is read at the planted foot's position. It is presentation data only, with no gameplay effect.
+  - **Sync:** a step sounds on the animation frame where a foot meets the ground in each wrestler's walk and run clips (both wrestlers, both gaits), not on a timer. The animation layer raises a foot-contact event; Juice plays the sound.
+  - **Mix:** steps sit well under hits and voices. **Starting point:** walk about −20 dBFS, run about −17 dBFS.
+- **Why:** Designer request (2026-11-18).
+- **Affects:** Assets/Audio/ThirdParty/ (git-ignored), docs/ASSET_REGISTRY.csv, docs/CREDITS.md, Core (foot-contact event interface), presentation (walk/run clips, WrestlerAnimationBuilder, WrestlerView), arena surface map, Juice (footstep player), Match.unity wiring, docs/ARCHITECTURE.md, docs/ACCEPTANCE_TESTS.md.
+
+---
+
 ## Open Questions
 
 Not yet decided. Agents must not resolve these on their own.

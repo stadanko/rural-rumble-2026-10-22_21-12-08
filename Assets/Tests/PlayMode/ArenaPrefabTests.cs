@@ -8,7 +8,7 @@ namespace RuralRumble.Tests.PlayMode
 {
     /// <summary>
     /// ARCHITECTURE 3.1 "Arena rectangles": ArenaObstacleMarkers on the real Arena.prefab produce the
-    /// walkable band and the truck/pool footprints in the table.
+    /// walkable band and the truck/pool footprints in the table (D-048 layout).
     /// </summary>
     public class ArenaPrefabTests
     {
@@ -37,12 +37,14 @@ namespace RuralRumble.Tests.PlayMode
 #endif
         }
 
-        // D-047: a run into the depth the enlarged footprints added (behind the old back edges, and the truck's new
-        // front strip) crashes: Struck + one ObstacleHit, stopped at the obstacle face. Rows just outside still pass.
-        [TestCase(9f, -11.5f, 2f, -10f, -1, TestName = "Truck_RunIntoAddedBackDepth_Crashes")]
-        [TestCase(9f, -13.1f, 2f, -13.5f, -1, TestName = "Truck_RunIntoAddedFrontStrip_Crashes")]
-        [TestCase(17f, -12f, 24f, -10f, 1, TestName = "Pool_RunIntoAddedBackDepth_Crashes")]
-        public void ArenaPrefab_RunIntoEnlargedFootprint_Crashes(float px, float py, float cx, float cy, int dir)
+        // D-048 layout with D-047 depth rules: each footprint covers its sprite's base from the band's back edge (row 735)
+        // down to the truck's front tire (row 833) / the pool's base (row 884). A run into the back or the front strip of
+        // a footprint crashes: Struck + one ObstacleHit, stopped at the obstacle face.
+        [TestCase(10f, -12.4f, 3f, -16f, -1, TestName = "Truck_RunIntoBackOfFootprint_Crashes")]
+        [TestCase(10f, -13.8f, 3f, -16f, -1, TestName = "Truck_RunIntoFrontStrip_Crashes")]
+        [TestCase(24f, -12.4f, 33f, -16f, 1, TestName = "Pool_RunIntoBackOfFootprint_Crashes")]
+        [TestCase(24f, -14.65f, 33f, -16f, 1, TestName = "Pool_RunIntoFrontStrip_Crashes")]
+        public void ArenaPrefab_RunIntoFootprint_Crashes(float px, float py, float cx, float cy, int dir)
         {
             using (var run = new PrefabArenaRun(new Vector2(px, py), new Vector2(cx, cy)))
             {
@@ -55,11 +57,11 @@ namespace RuralRumble.Tests.PlayMode
             }
         }
 
-        // The lanes D-047 keeps open: behind the truck and pool, and in front of the truck. A run there reaches the arena end.
-        [TestCase(9f, -11.0f, 2.5f, -10f, -1, TestName = "Truck_RunBehindIt_Passes")]
-        [TestCase(9f, -13.4f, 2.5f, -13.6f, -1, TestName = "Truck_RunInFrontLane_Passes")]
-        [TestCase(17f, -11.0f, 24.5f, -10f, 1, TestName = "Pool_RunBehindIt_Passes")]
-        public void ArenaPrefab_RunOutsideEnlargedFootprint_Passes(float px, float py, float cx, float cy, int dir)
+        // The lane D-048 leaves open: in front of both obstacles (the footprints reach the band's back edge, so there is
+        // no lane behind them). A run there passes the obstacle face without a crash.
+        [TestCase(10f, -14.0f, 3f, -16.5f, -1, TestName = "Truck_RunInFrontLane_Passes")]
+        [TestCase(24f, -14.9f, 33.5f, -16.5f, 1, TestName = "Pool_RunInFrontLane_Passes")]
+        public void ArenaPrefab_RunOutsideFootprint_Passes(float px, float py, float cx, float cy, int dir)
         {
             using (var run = new PrefabArenaRun(new Vector2(px, py), new Vector2(cx, cy)))
             {
@@ -68,6 +70,26 @@ namespace RuralRumble.Tests.PlayMode
                 run.RunUntil(() => dir < 0 ? run.Match.Player.Position.x < pastFace : run.Match.Player.Position.x > pastFace);
                 Assert.AreEqual(0, run.ObstacleHits, "no crash outside the footprint");
                 Assert.AreEqual(CombatState.Running, run.Match.Player.State, "still running past the obstacle face");
+            }
+        }
+
+        // D-048 walkable band corners (feet x 2.0..34.0 = canvas x 120..2040, rows 735..1040). The front corners are
+        // reachable exactly; the back corners lie inside the truck / pool footprints, so walking toward them stops on the
+        // band's back edge at the obstacle face.
+        [TestCase(4f, -16f, -1f, -1f, 2.0f, -17.3333f, TestName = "Band_FrontLeftCorner")]
+        [TestCase(32f, -16f, 1f, -1f, 34.0f, -17.3333f, TestName = "Band_FrontRightCorner")]
+        [TestCase(10f, -13f, -1f, 1f, 6.1f, -12.25f, TestName = "Band_BackLeft_StopsAtTruck")]
+        [TestCase(26f, -13f, 1f, 1f, 29.4f, -12.25f, TestName = "Band_BackRight_StopsAtPool")]
+        public void ArenaPrefab_WalkToBandCorner(float px, float py, float sx, float sy, float ex, float ey)
+        {
+            using (var run = new PrefabArenaRun(new Vector2(px, py), new Vector2(18f, -15f)))
+            {
+                var walk = new WrestlerIntent(new Vector2(sx, sy).normalized, ButtonState.None, ButtonState.None, ButtonState.None);
+                for (float t = 0f; t < 8f; t += 0.01f)
+                    run.Match.Tick(0.01f, walk, WrestlerIntent.None);
+                Assert.AreEqual(ex, run.Match.Player.Position.x, 0.01f, "corner x");
+                Assert.AreEqual(ey, run.Match.Player.Position.y, 0.01f, "corner y");
+                Assert.AreEqual(0, run.ObstacleHits, "walking never crashes");
             }
         }
 
@@ -114,16 +136,18 @@ namespace RuralRumble.Tests.PlayMode
             }
         }
 
-        /// <summary>Values typed in from the ARCHITECTURE 3.1 table (world units).</summary>
+        /// <summary>Values typed in from the ARCHITECTURE 3.1 table (world units, D-048 layout).</summary>
         public static void AssertMatchesTable(ArenaGeometry g)
         {
-            AssertRect("walkable band", g.Bounds, 1.5f, -13.6667f, 25.1667f, -9.6667f); // D-027 narrowed band (ARCHITECTURE 3.1)
+            // Feet rows 735 (bottom of the porch steps) to 1040, canvas x 90..2070 (feet x 120..2040 with feetHalfWidth 0.5).
+            AssertRect("walkable band", g.Bounds, 1.5f, -17.3333f, 34.5f, -12.25f);
             Assert.AreEqual(2, g.Obstacles.Count);
             ArenaRect truck = g.Obstacles.OrderBy(o => o.XMin).First();
             ArenaRect pool = g.Obstacles.OrderBy(o => o.XMin).Last();
-            // D-035 designer positions (truck (-2, -13), pool (21, -14)); D-047 enlarged depths (rows 790-680 and 840-680).
-            AssertRect("truck footprint", truck, -2f, -13.1667f, 6.3667f, -11.3333f);
-            AssertRect("pool footprint", pool, 21f, -14f, 30.3333f, -11.3333f);
+            // Truck at (-2.7667, -13.7167) (canvas x -166, base row 823): rows 735-833. Pool at (29.9, -14.7333)
+            // (canvas x 1794, base row 884): rows 735-884.
+            AssertRect("truck footprint", truck, -2.7667f, -13.8834f, 5.6f, -12.25f);
+            AssertRect("pool footprint", pool, 29.9f, -14.7333f, 39.2333f, -12.25f);
         }
 
         private static void AssertRect(string name, ArenaRect r, float xMin, float yMin, float xMax, float yMax)

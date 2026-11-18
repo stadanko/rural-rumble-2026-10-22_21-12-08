@@ -45,18 +45,19 @@ Last run: 2026-10-31 (with the combat-core slice; see that section). Movement te
 
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
-| M2.1 | Feet stay inside the walkable band on all four sides, minus the feet box. The real band is x 1.5–25.1667, y −13.6667 to −9.6667 (D-027 narrowed the ends) | 3.1 rect table, D-027 | Clamping rule: `WalkingTests.Walk_ClampsTo{Left,Right,Front}Edge`, `Walk_ClampsToBackWall`, `Walk_DiagonalIntoCorner_*` (on the movement-slice band fixture `SliceArena`, x 0–26.6667); band numbers: M2.7 | Auto |
+| M2.1 | Feet stay inside the walkable band on all four sides, minus the feet box. The real band is x 1.5–34.5, y −17.3333 to −12.25 (D-048 layout; D-027 inset of the ends kept) | 3.1 rect table, D-027 | Clamping rule: `WalkingTests.Walk_ClampsTo{Left,Right,Front}Edge`, `Walk_ClampsToBackWall`, `Walk_DiagonalIntoCorner_*` (on the movement-slice band fixture `SliceArena`, x 0–26.6667); band numbers: M2.7; corners on the real prefab: M2.13 | Auto |
 | M2.2 | Truck footprint blocks walking from its reachable sides (right, front) | 3.1 | `ObstacleTests.Truck_BlocksFromTheRight`, `Truck_BlocksFromTheFront` | Auto |
 | M2.3 | Pool footprint blocks walking from its reachable sides (left, front) | 3.1 | `ObstacleTests.Pool_BlocksFromTheLeft`, `Pool_BlocksFromTheFront` | Auto |
 | M2.4 | Walking along or diagonally into a face slides without snagging, including at the corners; the feet never enter an obstacle | 3.1 | `ObstacleTests.*Slide*`, `*Diagonal*`, `Truck_DiagonalStraightAtCorner_*` (checked every tick) | Auto |
 | M2.5 | Blocking still works with a non-zero feet depth | D-005 tuning | `ObstacleTests.Obstacles_WithFeetDepth_StillBlockAndSlide` | Auto |
 | M2.6 | Pushing into a wall keeps the wrestler Walking in place | implementation | `WalkingTests.Walk_PushingIntoWall_StaysWalkingInPlace` | Auto, **Gap** |
-| M2.7 | `Arena.prefab` markers produce exactly the 3.1 rects (one band at x 1.5–25.1667; truck y −13.1667 to −11.3333 and pool y −14 to −11.3333 since D-047) | 3.1, D-027, D-047 | `ArenaPrefabTests.ArenaPrefab_MarkersBuildTheDocumentedRects`; also checked from the live scene in `MovementSliceSceneTests.Match_Builds*` | Auto |
+| M2.7 | `Arena.prefab` markers produce exactly the 3.1 rects (D-048: one band at x 1.5–34.5, y −17.3333 to −12.25; truck x −2.7667–5.6, y −13.8834 to −12.25; pool x 29.9–39.2333, y −14.7333 to −12.25) | 3.1, D-027, D-047, D-048 | `ArenaPrefabTests.ArenaPrefab_MarkersBuildTheDocumentedRects`; also checked from the live scene in `MovementSliceSceneTests.Match_Builds*` | Auto |
 | M2.8 | A huge `dt` is clamped to `maxTickStep`; even a raised clamp cannot tunnel through the truck or pool | D-021 Tick | `TickStepTests.*` | Auto |
-| M2.9 | The truck and pool footprint depths match where the art reads as solid (feet don't overlap or float off the sprites); since D-047 a run toward the truck's grille or the pool's wall at about their sprites' height crashes, and the lanes behind both and in front of the truck still feel usable | 3.1 ("playtesting should confirm"), D-047 | none | **Human** |
+| M2.9 | The truck and pool footprint depths match where the art reads as solid (feet don't overlap or float off the sprites); since D-047 a run toward the truck's grille or the pool's wall at about their sprites' height crashes. D-048: both footprints now fill the band from the back wall to the truck's front tire / the pool's base, so there is no lane behind either; the lanes in front (2.9 units at the truck, 2.1 at the pool) feel usable | 3.1 ("playtesting should confirm"), D-047, D-048 | none | **Human** |
 | M2.10 | Edge behavior looks right: wrestlers stop at the trailer, front edge and sides without looking cut off or stuck | 3.1 | none | **Human** |
 | M2.11 | Depth sorting: a wrestler in front of or behind the truck or pool draws on the correct side of it | 3.1, 4.2 Depth sorting | none | **Human** |
-| M2.12 | On the real `Arena.prefab` geometry, a run into the depth D-047 added (behind the old back edges, and the truck's new front strip) crashes (Struck, one `ObstacleHit`, stopped at the face); runs behind both obstacles and in the lane in front of the truck pass | D-047, D-027 | `ArenaPrefabTests.Truck_RunIntoAddedBackDepth_Crashes`, `Truck_RunIntoAddedFrontStrip_Crashes`, `Pool_RunIntoAddedBackDepth_Crashes`, `Truck_RunBehindIt_Passes`, `Truck_RunInFrontLane_Passes`, `Pool_RunBehindIt_Passes` | Auto |
+| M2.12 | On the real `Arena.prefab` geometry (D-048 layout, D-047 depth rule), a run into the back or the front strip of the truck or pool footprint crashes (Struck, one `ObstacleHit`, stopped at the face); runs in the lane in front of each pass | D-047, D-048, D-027 | `ArenaPrefabTests.Truck_RunIntoBackOfFootprint_Crashes`, `Truck_RunIntoFrontStrip_Crashes`, `Pool_RunIntoBackOfFootprint_Crashes`, `Pool_RunIntoFrontStrip_Crashes`, `Truck_RunInFrontLane_Passes`, `Pool_RunInFrontLane_Passes` | Auto |
+| M2.13 | On the real prefab, walking into each band corner ends at the corner: front-left (2.0, −17.3333) and front-right (34.0, −17.3333) exactly; the back corners lie inside the truck / pool footprints, so the walk stops on the back wall at the obstacle face (6.1 / 29.4, −12.25), without a crash | D-048, D-027 | `ArenaPrefabTests.Band_FrontLeftCorner`, `Band_FrontRightCorner`, `Band_BackLeft_StopsAtTruck`, `Band_BackRight_StopsAtPool` | Auto |
 
 ### M3. Press-once running (D-020, COMBAT_SPEC Running, CONTROLS Running)
 
@@ -108,33 +109,34 @@ Last run: 2026-10-31 (with the combat-core slice; see that section). Movement te
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
 | M7.1 | Loading `Match.unity` with no GameSession setup builds a match from roster entries 0 and 1 with no console errors | 4.4 | `MovementSliceSceneTests`, `CombatSceneTests` (any logged error fails the test) | Auto |
-| M7.2 | The wrestlers spawn at the feet points (9.0, −11.6667) and (17.6667, −11.6667); the roots follow `IWrestlerView.Position` | 4.4 | `Match_BuildsTwoWrestlersAtSpawnPoints_AndBindsViewsAndCamera` (CPU silenced so the brain doesn't walk it off its spawn before the check) | Auto |
+| M7.2 | The wrestlers spawn at the feet points (13.6667, −15) and (22.3333, −15) (D-048, mid-yard either side of x 18); the roots follow `IWrestlerView.Position` | 4.4 | `Match_BuildsTwoWrestlersAtSpawnPoints_AndBindsViewsAndCamera` (CPU silenced so the brain doesn't walk it off its spawn before the check) | Auto |
+| M7.5 | The spawn points are valid on the real arena: inside the band (with the feet box), outside both footprints, apart, centered on the yard | D-048 | `MovementSliceSceneTests.Match_SpawnPoints_AreValidOnTheArena` | Auto |
 | M7.3 | Each `WrestlerView` is bound to its own wrestler, and `MatchBootstrap` adds `PlayerInputSource` | 4.4 | same test, plus `PlayerInput_Keyboard_WalksAndRuns` | Auto |
 | M7.4 | Player input moves only the player | 4.1 | `PlayerInput_Keyboard_WalksAndRuns` (CPU silenced) | Auto |
 
 "CPU silenced": the test's `MatchSceneLoader` calls the public `CombatMatchRunner.Configure(null, null, null, IdleInput.Instance)` in `SceneManager.sceneLoaded` (after Awake, before Start), so the runner reads `IdleInput` instead of the brain. No production change; `MatchBootstrap` still creates and exposes `CpuBrain`.
 
-### M8. Match camera (D-017, ARCHITECTURE 3.1)
+### M8. Match camera (D-017 behaviour, D-048 numbers, ARCHITECTURE 3.1)
 
 | # | Criterion | Source | Test(s) | Type |
 |---|---|---|---|---|
-| M8.1 | Default orthographic size is 4.5 at 16:9 (60% of the arena width); the maximum is 7.5 (whole arena) | D-017, 3.1 | `PresentationTests.MatchCamera_DefaultSize_ZoomsOutAndBackIn`; also in the live scene | Auto |
-| M8.2 | The camera centers on the wrestlers' midpoint; the default view is centered on canvas row 570 | 3.1 | `MovementSliceSceneTests.Match_Builds*` | Auto |
-| M8.3 | It zooms out as the wrestlers separate (size = (half separation + edgeMargin) / aspect), keeps both on screen, and caps at the whole arena | D-017 | `MatchCamera_DefaultSize_ZoomsOutAndBackIn` | Auto |
+| M8.1 | Default orthographic size is 4.5 at 16:9 (960×540 native, unchanged by D-048); the maximum is `maxZoomOut` 1.45 × the default (6.525), well short of the whole 2160×1080 arena | D-017, D-048, 3.1 | `PresentationTests.MatchCamera_DefaultSize_ZoomsOutAndBackIn`; also in the live scene | Auto |
+| M8.2 | The camera centers on the wrestlers' midpoint; vertically it frames their bodies (feet − 0.6 to feet + 4.6), y −13 at the spawns, and scrolls up/down over the deeper yard keeping heads and feet in view | 3.1, D-048 | `MovementSliceSceneTests.Match_Builds*`, `PresentationTests.MatchCamera_ScrollsVertically_KeepsBodiesInView` | Auto |
+| M8.3 | It zooms out as the wrestlers separate (size = (half separation + edgeMargin) / aspect), keeps both on screen, and caps at `maxZoomOut`; past the cap the player (first target) stays on screen | D-017, D-048 | `MatchCamera_DefaultSize_ZoomsOutAndBackIn` | Auto |
 | M8.4 | It eases back to exactly the default size when they close in, and the position snaps to 1/60 unit at the default zoom | D-017, 3.1 | same test | Auto |
-| M8.5 | The view never leaves the arena art | 3.1 | `MatchCamera_NeverShowsOutsideTheArena` | Auto |
-| M8.6 | Zoom and follow feel smooth (no jitter, pumping or lag); pixels look crisp at the default zoom at 1920×1080 | D-017 | none | **Human** |
+| M8.5 | The view never shows past the backdrop's edges, at every band corner, at the default zoom and at the max zoom-out, checked every frame while easing | 3.1, D-048 | `PresentationTests.MatchCamera_NeverShowsPastTheBackdrop` | Auto |
+| M8.6 | Zoom and follow feel smooth (no jitter, pumping or lag), including the D-048 vertical scrolling; pixels look crisp at the default zoom at 1920×1080; at the 1.45× cap the wrestlers are readable, and losing the CPU off screen when far apart is acceptable | D-017, D-048 | none | **Human** |
 
 ### Movement Slice: human playtest checklist
 
 1. Walk all 8 directions with the keyboard (WASD), the left stick and the D-pad. Since D-037 the flip and front/back clip follow the opponent (Focus), not the walk direction: see the Focus checklist (M1.7, M4.7, F7).
 2. Speeds: horizontal 3.0, depth 2.0, diagonal 3.6, run 7.0 u/s (D-029). Are these OK? (M1.4, M1.8, M3.9)
 3. Deadzone 0.3: does a resting or worn stick drift? Do small pushes register when they should? (M1.8)
-4. Truck and pool footprint depths against the art: walk along each front face and around each corner. Since D-047 both reach back to row 680 (y −11.3333) and the truck's front to row 790: run at the truck's grille and the pool's wall from several depths. Is the crash area now right, and do the 0.5-unit lane in front of the truck and the 1.67-unit lanes behind both still feel fair? (M2.9)
+4. Truck and pool footprint depths against the art (D-048 layout): walk along each front face and around each corner. Both footprints run from the back wall (row 735) to the truck's front tire (row 833) / the pool's base (row 884), so there is no lane behind either: run at the truck's grille and the pool's wall from several depths. Is the crash area right, does it look right that you can't get behind them, and do the lanes in front (2.9 units at the truck, 2.1 at the pool) feel fair? (M2.9)
 5. Edges: trailer back wall, front edge, left and right sides. Does the wrestler stop in a believable place? (M2.10)
 6. Depth sorting with the truck and pool (M2.11).
 7. Runs: tap B or Space with left, right, up, down and nothing held. Does stopping dead at edges and obstacles feel right? Does the run go the expected way (held left/right, else toward the opponent, D-037)? (M3.9, F7.4)
-8. Camera: the CPU now approaches, so run away from it in both directions (or knock it down first). Check zoom-out smoothness, the zoom-in return, and pixel crispness at the default zoom (M8.6).
+8. Camera: the CPU now approaches, so run away from it in both directions (or knock it down first), and walk to the back wall and the front edge. Check zoom-out smoothness, the 1.45× cap, vertical scrolling, the zoom-in return, and pixel crispness at the default zoom (M8.6).
 9. Edit `CombatTuning.asset` during Play Mode and confirm the change applies at once (M6.5).
 
 ---
@@ -672,3 +674,48 @@ Note (TH3.2): the collector that fills `TickEvents` is private to the `CombatThe
 13. Pushback feel: does the 0.2-unit pushback make hits feel stronger without the combo whiffing? Does the 0.4-unit crash pushback off the truck and pool look right? (TH1.1, TH1.3, TH1.4)
 14. CPU difficulty with pushback: does the CPU still land its combos and approach sensibly, or is it noticeably easier or harder? (TH1.3)
 15. Bodyslam throw at 1.25×: do landings near the arena ends, truck and pool stop short more often, and does that look acceptable? (TH1.7, T1.8, T1.9)
+
+## Footsteps (D-049): foot-contact signal
+
+The presentation half of D-049 (ARCHITECTURE 4.8): each wrestler's walk and run clips raise one `FootContactEvents` contact on every frame where a foot meets the ground; Juice turns it into a sound (its rows are Juice's). Contact frames per clip are in ARCHITECTURE 4.8 "Contact frames (built)". **Status: signal built (Unity Animation & Tooling, 2026-11-18).** Last run 2026-11-18: EditMode 630/631 (only the known C1.4 `ComboTimingTests` failure; `SurfaceMapTests` 26/26, `FootContactEventsTests` 6/6), PlayMode 70/71 (`FootContactPresentationTests` 11/11; `CombatSceneTests.CpuBrain_ApproachesIdlePlayer_AndLandsAStrike` failed once and passed twice alone and in the run before, see report).
+
+Test files: `Assets/Tests/PlayMode/FootContactPresentationTests.cs`, `Assets/Tests/EditMode/Footsteps/FootContactEventsTests.cs` (channel plumbing, Architect).
+
+### FC1. Foot contacts (ARCHITECTURE 4.8, D-049)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| FC1.1 | `{Name}_WalkFront`, `{Name}_WalkBack` and `{Name}_Run` (Barry and Peaux) carry one `OnFootContact` AnimationEvent per contact frame read from the art, at that sprite's start time from the FrameTiming holds, `intParameter` = foot; a rebuild keeps them | 4.8, D-049 | `FootContactPresentationTests.Walking_RaisesWalkContacts_AtContactFrames`, `Running_RaisesRunContacts` (check each clip's events against the 4.8 table) | Auto |
+| FC1.2 | Walking N seconds (front and back, both wrestlers) raises exactly the contacts the clip owes for the clip time played, each on its contact frame's time (±1 frame), with Gait Walk, the foot from the event, the bound wrestler id and Position = the root feet point; the zero-weight clip of the Walking front/back blend raises nothing | 4.8 | `FootContactPresentationTests.Walking_RaisesWalkContacts_AtContactFrames` (4 cases) | Auto |
+| FC1.3 | Running raises Run contacts on the run clip's contact frames (both wrestlers) | 4.8 | `FootContactPresentationTests.Running_RaisesRunContacts` | Auto |
+| FC1.4 | Nothing while the Animator is paused (hitstop, `Animator.speed` 0); no repeat of the contact the pause landed on when playback resumes; under slow motion (0.25×) one contact per contact frame at the slowed rate | 4.8, D-046 | `FootContactPresentationTests.Hitstop_NoContactsWhilePaused_NoDuplicateOnResume` | Auto |
+| FC1.5 | Nothing while Standing, Striking or in the Recovering walk; steps resume when Walking again | 4.8 | `FootContactPresentationTests.NoContacts_WhileStandingStrikingOrRecoveringWalk` | Auto |
+| FC1.6 | Gait comes only from the layer-0 Walking / Running state that fired (any other state raises nothing); the loop an event belongs to is found even when the state info was read after the frame crossed the loop wrap | 4.8 | `FootContactPresentationTests.GaitFromState_And_EventLoop` | Auto |
+| FC1.7 | Footsteps line up with the visible steps in game for both wrestlers, walking front and back and running, at walk and run speed. Uneven walk cadence in Barry's front and back walk and Peaux's front walk (from the art, see 4.8) is acceptable or needs retimed holds / new art | D-049 | none (contact sheets `footcontact_*.png` from the build) | **Human** |
+
+## Footsteps (D-049): footstep player (Juice)
+
+The Juice half of D-049 (ARCHITECTURE 4.8 "Footstep player"): `FootstepAudio` turns each foot contact into a step sound for the surface under the foot and the gait. **Status: built (Juice, 2026-11-18); wired into Match.unity by the Architect (2026-11-18): one `FootstepAudio` prefab instance at the scene root, no overrides, and `MatchBootstrap.surfaceMap` set to the Arena's `ArenaSurfaceMap`.** Architect run 2026-11-18 after wiring: EditMode 664/665 (only the known C1.4 `ComboTimingTests` failure), PlayMode 72/72 (including `CombatSceneTests.CpuBrain_ApproachesIdlePlayer_AndLandsAStrike`). Architect play check 2026-11-18 (saved Match.unity, Peaux as player vs Barry; scripted walk/run routes over grass, dirt and all three puddles for 16 s, then the player handed to a second `OpponentBrain` and fought brain vs brain to the knockout, 134 s): 209 contacts, 209 steps; all 12 wrestler × surface × gait sets heard; every step's set matched the surface map under its contact; no immediate variant repeats; step volumes 0.32–0.97 (none capped); 0 contacts or steps during hitstop (3086 frames at combat time scale 0, 47 hits) and none after the match ended; no Console errors or warnings. Last run 2026-11-18: EditMode 663/664 (only the known C1.4 `ComboTimingTests` failure; `FootstepRulesTests` 33/33), PlayMode 71/71. Play check 2026-11-18 (runtime instance of the prefab, unsaved scene, scripted walk/run routes for both wrestlers): 57 contacts, 57 steps, each on its contact's frame; all six sets heard from both wrestlers at the expected places; no variant repeats; none during three 0.4 s hitstops; no Console errors.
+
+Test files: `Assets/Tests/EditMode/Juice/FootstepRulesTests.cs`, `Assets/Tests/EditMode/Footsteps/MatchFootstepWiringTests.cs`, `Assets/Tests/PlayMode/FootstepSceneTests.cs`.
+
+### FS1. Footstep player (ARCHITECTURE 4.8, D-049)
+
+| # | Criterion | Source | Test(s) | Type |
+|---|---|---|---|---|
+| FS1.1 | The set follows the surface under the planted foot and the gait: Dirt/Grass/Puddle × Walk/Run; any other surface value is Dirt | D-049 Surface map, 4.8 | `FootstepRulesTests.SetFor_SurfaceAndGait` (6 cases), `SetFor_UnknownSurface_IsDirt`, `Settings_SetFor_ReturnsEachField` | Auto |
+| FS1.2 | A random variant with no immediate repeat per set; two-variant sets alternate strictly; one variant repeats | D-049 Sounds | `FootstepRulesTests.Picker_NeverRepeatsAndCoversAllVariants`, `Picker_TwoVariants_StrictlyAlternate`, `Picker_OneVariant_Repeats`, `Picker_RollEdges_StayInRange` | Auto |
+| FS1.3 | Missing clips (git-ignored store audio absent) are skipped silently: only variants with a clip are picked, a set with none plays nothing, no errors | D-034 amendment, 4.6 | `FootstepRulesTests.Picker_SkipsMissingClips`, `Picker_OnlyOnePresent_PlaysIt_AndNoneMeansMinusOne`, `Picker_LastVariantGoneMissing_StillPicks`, `Set_IsPlayable_FalseForNullOrEmptyEntries` | Auto |
+| FS1.4 | Level = clamp01(master × 10^((set trim + clip gain ± variation) / 20)); the project asset's clip gains equal the registry values; at the default master (0.6) and ±1 dB no step is capped | D-049 Mix, 4.8 | `FootstepRulesTests.DbToLinear_KnownValues`, `JitterDb_SpreadsEvenly`, `Volume_IsMasterTimesSummedDb`, `Volume_PositiveGainUnderHeadroom_IsNotClamped`, `Volume_ClampsToZeroOne`, `MaxRawVolume_FlagsClipping`, `ProjectSettings_MatchRegistryGains_AndNeverClamp`, `ProjectSettings_ClipsThatArePresent_AreInTheRightFolder` | Auto |
+| FS1.5 | The prefab carries `FootstepAudio` with the settings asset assigned | 4.8 | `FootstepRulesTests.Prefab_HasFootstepAudio_WithSettingsAssigned` | Auto |
+| FS1.6 | In a running match each contact plays its sound in the same frame, for both wrestlers, on the right set at each place (grass, dirt, each puddle), with overlapping steps not cutting each other off; nothing during hitstop or after the match ends | 4.8 | `FootstepSceneTests.Match_WalkingPlayer_RaisesContacts_AndPlaysWalkSteps` (PlayMode: one enabled FootstepAudio, SurfaceMap is the Arena's, a walking player raises Walk contacts and plays walk steps on the mapped set; the playback half is skipped with Ignore when the store audio is absent); play check 2026-11-18 (see status) for both wrestlers, every surface, hitstop and match end | Auto + Play check |
+| FS1.7 | Steps sound right: each surface reads as itself (grass, gravelly dirt, splashy puddle), walk and run levels balanced against each other, steps well under hits and voices, no audible machine-gun effect from the two-clip sets' alternation | D-049 | none | **Human** |
+| FS1.8 | The saved Match.unity has exactly one enabled `FootstepAudio` (prefab instance, at the root, settings assigned, separate from `CombatAudio`) and `MatchBootstrap.surfaceMap` set explicitly to the Arena's `ArenaSurfaceMap` | 4.6, 4.8 | `MatchFootstepWiringTests.MatchScene_HasOneEnabledFootstepAudioAtRoot_AndBootstrapSurfaceMapIsSet` (EditMode, preview scene) | Auto |
+
+### Footsteps: human playtest checklist
+
+1. Walk and run across the left grass, the yard dirt and each of the three puddles with each wrestler. Does each surface sound right where the art shows it (FS1.6, FS1.7)?
+2. Level: are steps clearly under hits, grunts and the knockout groan, but still audible during a fight? Master 0.6 puts them about 4.4 dB under the D-049 starting levels (FS1.4).
+3. Grass and puddle sets have only two clips each, so they alternate. Does that sound mechanical, especially when running (four steps a second)? If so, try pitch variation 0.02–0.03 in `FootstepSettings` (FS1.2).
+4. Two wrestlers walking at once: does it get cluttered? (FS1.6)
+5. Run levels: the running sets measure about 3 dB louder than walking by design. Does a run feel heavier without being too loud?

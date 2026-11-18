@@ -14,7 +14,10 @@ namespace RuralRumble.Tests.PlayMode
     /// </summary>
     public class PresentationTests
     {
-        private const float ArenaWidth = 1600f / 60f;
+        // D-048 arena art: 2160x1080 native px = 36x18 world units; walkable feet band x 2..34, y -17.3333..-12.25.
+        private const float ArenaWidth = 2160f / 60f;
+        private const float ArenaHeight = 1080f / 60f;
+        private const float BandBack = -12.25f, BandFront = -17.3333f;
         private GameObject rig;
         private GameObject a;
         private GameObject b;
@@ -47,56 +50,116 @@ namespace RuralRumble.Tests.PlayMode
             Assert.That(Mathf.Abs(t.position.x - cam.transform.position.x), Is.LessThanOrEqualTo(halfW + 1e-3f), $"{name} is off screen");
         }
 
-        // D-017 / ARCHITECTURE 3.1: default 4.5 at 16:9 (60% of the arena), zoom out up to 7.5 (whole arena)
-        // when the wrestlers separate, ease back to exactly the default when they close in.
+        private static void AssertInsideArt(Camera cam, string when)
+        {
+            float halfW = cam.orthographicSize * cam.aspect, halfH = cam.orthographicSize;
+            Vector3 c = cam.transform.position;
+            Assert.GreaterOrEqual(c.x - halfW, -1e-3f, $"{when}: view past the art's left edge");
+            Assert.LessOrEqual(c.x + halfW, ArenaWidth + 1e-3f, $"{when}: view past the art's right edge");
+            Assert.LessOrEqual(c.y + halfH, 1e-3f, $"{when}: view above the art");
+            Assert.GreaterOrEqual(c.y - halfH, -ArenaHeight - 1e-3f, $"{when}: view below the art");
+        }
+
+        // D-017 behaviour with D-048 numbers: default 4.5 at 16:9 (960x540 native), zoom out up to 1.45x the default
+        // (6.525) when the wrestlers separate, ease back to exactly the default when they close in.
         [UnityTest]
         public IEnumerator MatchCamera_DefaultSize_ZoomsOutAndBackIn()
         {
             MatchCamera mc = MakeCamera(out Camera cam);
             a = new GameObject("QA Target A"); b = new GameObject("QA Target B");
-            a.transform.position = new Vector3(12f, -11.6667f); b.transform.position = new Vector3(14f, -11.6667f);
+            a.transform.position = new Vector3(17f, -15f); b.transform.position = new Vector3(19f, -15f);
             mc.SetTargets(a.transform, b.transform);
 
             Assert.AreEqual(4.5f, mc.DefaultOrthographicSize, 1e-3f);
-            Assert.AreEqual(7.5f, mc.MaxOrthographicSize, 1e-3f);
+            Assert.AreEqual(4.5f * 1.45f, mc.MaxOrthographicSize, 1e-3f);
             Assert.AreEqual(4.5f, cam.orthographicSize, 1e-3f, "starts at the default zoom");
-            Assert.AreEqual(0.6f * ArenaWidth, 2f * cam.orthographicSize * cam.aspect, 1e-2f, "default view = 60% of arena width");
+            Assert.AreEqual(960f / 60f, 2f * cam.orthographicSize * cam.aspect, 1e-2f, "default view = 960 native px wide");
+            Assert.Less(mc.MaxOrthographicSize * cam.aspect * 2f, ArenaWidth * 0.75f, "max zoom-out well short of the whole arena");
             yield return null;
             float px = cam.transform.position.x * 60f;
             Assert.AreEqual(Mathf.Round(px), px, 1e-2f, "pixel-snapped to 1/60 unit at default zoom");
+            Assert.AreEqual(18f, cam.transform.position.x, 0.02f, "centered on the midpoint");
 
-            // Apart: 20 units. Required half-width = 10 + edgeMargin.
-            a.transform.position = new Vector3(3.5f, -11.6667f); b.transform.position = new Vector3(23.5f, -11.6667f);
+            // Apart: 16 units. Required half-width = 8 + edgeMargin.
+            a.transform.position = new Vector3(10f, -15f); b.transform.position = new Vector3(26f, -15f);
             yield return new WaitForSecondsRealtime(2.5f);
-            float expected = (10f + EdgeMargin(mc)) / cam.aspect;
-            Assert.AreEqual(Mathf.Clamp(expected, 4.5f, 7.5f), cam.orthographicSize, 0.05f, "zoomed out to keep both in view");
+            float expected = (8f + EdgeMargin(mc)) / cam.aspect;
+            Assert.AreEqual(Mathf.Clamp(expected, 4.5f, mc.MaxOrthographicSize), cam.orthographicSize, 0.05f, "zoomed out to keep both in view");
             AssertInView(cam, a.transform, "A"); AssertInView(cam, b.transform, "B");
 
-            // Full width: capped at the whole arena.
-            a.transform.position = new Vector3(0.5f, -11.6667f); b.transform.position = new Vector3(26.1667f, -11.6667f);
+            // Full band width: capped at the max zoom-out; the first target (the player) stays on screen.
+            a.transform.position = new Vector3(2f, -15f); b.transform.position = new Vector3(34f, -15f);
             yield return new WaitForSecondsRealtime(2.5f);
-            Assert.AreEqual(7.5f, cam.orthographicSize, 0.02f, "max zoom-out = whole arena");
-            Assert.LessOrEqual(cam.orthographicSize, 7.5f + 1e-4f);
-            Assert.AreEqual(ArenaWidth * 0.5f, cam.transform.position.x, 0.05f, "whole arena centered");
+            Assert.AreEqual(mc.MaxOrthographicSize, cam.orthographicSize, 0.02f, "capped at the max zoom-out");
+            AssertInView(cam, a.transform, "A (player) past the cap");
+            AssertInsideArt(cam, "max zoom");
 
             // Back together: returns exactly to the default.
-            a.transform.position = new Vector3(12f, -11.6667f); b.transform.position = new Vector3(14f, -11.6667f);
+            a.transform.position = new Vector3(17f, -15f); b.transform.position = new Vector3(19f, -15f);
             yield return new WaitForSecondsRealtime(3f);
             Assert.AreEqual(4.5f, cam.orthographicSize, 1e-4f, "eased back to the default zoom");
         }
 
+        // D-048: the camera scrolls vertically to keep the wrestlers' bodies in view across the deeper band.
         [UnityTest]
-        public IEnumerator MatchCamera_NeverShowsOutsideTheArena()
+        public IEnumerator MatchCamera_ScrollsVertically_KeepsBodiesInView()
         {
             MatchCamera mc = MakeCamera(out Camera cam);
             a = new GameObject("QA Target A"); b = new GameObject("QA Target B");
-            a.transform.position = new Vector3(0.5f, -13.6f); b.transform.position = new Vector3(1.5f, -13.6f);
+            a.transform.position = new Vector3(17f, BandBack); b.transform.position = new Vector3(19f, BandBack);
             mc.SetTargets(a.transform, b.transform);
-            yield return new WaitForSecondsRealtime(1f);
-            float halfW = cam.orthographicSize * cam.aspect;
-            Assert.GreaterOrEqual(cam.transform.position.x - halfW, -1e-3f, "view past the arena's left edge");
-            Assert.GreaterOrEqual(cam.transform.position.y - cam.orthographicSize, -15f - 1e-3f, "view below the arena art");
-            Assert.LessOrEqual(cam.transform.position.y + cam.orthographicSize, 1e-3f, "view above the arena art");
+            yield return new WaitForSecondsRealtime(1.5f);
+            float backY = cam.transform.position.y;
+            Assert.GreaterOrEqual(backY + cam.orthographicSize, BandBack + 4.0f, "head of a wrestler at the back edge in view");
+            Assert.LessOrEqual(backY - cam.orthographicSize, BandBack, "feet at the back edge in view");
+
+            a.transform.position = new Vector3(17f, BandFront); b.transform.position = new Vector3(19f, BandFront);
+            yield return new WaitForSecondsRealtime(1.5f);
+            float frontY = cam.transform.position.y;
+            Assert.Less(frontY, backY - 1f, "camera scrolled down toward the front of the yard");
+            Assert.LessOrEqual(frontY - cam.orthographicSize, BandFront, "feet at the front edge in view");
+            Assert.GreaterOrEqual(frontY + cam.orthographicSize, BandFront + 4.0f, "head at the front edge in view");
+            Assert.AreEqual(4.5f, cam.orthographicSize, 1e-3f, "same depth: no zoom");
+
+            // One at the back, one at the front: zooms out just enough to keep both bodies.
+            a.transform.position = new Vector3(17f, BandBack); b.transform.position = new Vector3(19f, BandFront);
+            yield return new WaitForSecondsRealtime(2f);
+            Assert.GreaterOrEqual(cam.transform.position.y + cam.orthographicSize, BandBack + 4.0f - 0.02f, "back wrestler's head in view");
+            Assert.LessOrEqual(cam.transform.position.y - cam.orthographicSize, BandFront + 0.02f, "front wrestler's feet in view");
+            AssertInsideArt(cam, "back/front split");
+        }
+
+        // D-048: at every band corner, at the default zoom and at the max zoom-out, the view never shows past the
+        // backdrop's edges (checked every frame while the rig eases).
+        [UnityTest]
+        public IEnumerator MatchCamera_NeverShowsPastTheBackdrop()
+        {
+            MatchCamera mc = MakeCamera(out Camera cam);
+            a = new GameObject("QA Target A"); b = new GameObject("QA Target B");
+            var poses = new (Vector2 a, Vector2 b, bool max, string name)[]
+            {
+                (new Vector2(2f, BandBack), new Vector2(3f, BandBack), false, "default, back-left corner"),
+                (new Vector2(33f, BandBack), new Vector2(34f, BandBack), false, "default, back-right corner"),
+                (new Vector2(2f, BandFront), new Vector2(3f, BandFront), false, "default, front-left corner"),
+                (new Vector2(33f, BandFront), new Vector2(34f, BandFront), false, "default, front-right corner"),
+                (new Vector2(2f, BandBack), new Vector2(34f, BandFront), true, "max zoom, back-left to front-right"),
+                (new Vector2(34f, BandBack), new Vector2(2f, BandFront), true, "max zoom, back-right to front-left"),
+                (new Vector2(2f, BandFront), new Vector2(34f, BandFront), true, "max zoom, front edge"),
+                (new Vector2(2f, BandBack), new Vector2(34f, BandBack), true, "max zoom, back edge"),
+            };
+            a.transform.position = poses[0].a; b.transform.position = poses[0].b;
+            mc.SetTargets(a.transform, b.transform);
+            foreach (var p in poses)
+            {
+                a.transform.position = p.a; b.transform.position = p.b;
+                float end = Time.realtimeSinceStartup + 1.5f;
+                while (Time.realtimeSinceStartup < end)
+                {
+                    yield return null;
+                    AssertInsideArt(cam, p.name);
+                }
+                Assert.AreEqual(p.max ? mc.MaxOrthographicSize : 4.5f, cam.orthographicSize, 0.05f, $"{p.name}: zoom");
+            }
         }
 
         // ARCHITECTURE 4.2: presentation derives the flip from HorizontalFacing and drives the Animator State

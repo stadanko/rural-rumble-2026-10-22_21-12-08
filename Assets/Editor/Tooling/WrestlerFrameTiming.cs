@@ -43,6 +43,18 @@ namespace RuralRumble.EditorTooling
             public float BuiltInHoldMs;
         }
 
+        /// <summary>One foot-contact frame (D-049): step index, foot, and the event time it was built with.</summary>
+        [Serializable]
+        public sealed class FootContactMark
+        {
+            [Tooltip("Step (sprite) index where the foot meets the ground.")]
+            public int Step;
+            [Tooltip("Which foot (the AnimationEvent's intParameter: 0 left, 1 right).")]
+            public RuralRumble.Core.Foot Foot;
+            [Tooltip("Event time in the clip at native speed, ms (written by the last rebuild; read-only).")]
+            public float TimeMs;
+        }
+
         [Serializable]
         public sealed class ClipTiming
         {
@@ -58,6 +70,19 @@ namespace RuralRumble.EditorTooling
                      "them instead of refreshing them from the builder's built-in timing.")]
             public bool CustomDefaults;
             public List<Step> Steps = new List<Step>();
+            [Tooltip("D-049 foot-contact frames of a walk / run clip: the step where a foot meets the ground and which foot. " +
+                     "Set by WrestlerAnimationBuilder from the art (read-only here); the AnimationEvent goes at that step's " +
+                     "start, so it follows Hold (ms) edits on rebuild.")]
+            public List<FootContactMark> FootContacts = new List<FootContactMark>();
+
+            /// <summary>The foot contact on a step, or null.</summary>
+            public FootContactMark FootContactAt(int step)
+            {
+                if (FootContacts == null) return null;
+                foreach (FootContactMark m in FootContacts)
+                    if (m.Step == step) return m;
+                return null;
+            }
 
             /// <summary>Total clip length at native speed, in ms.</summary>
             public float TotalMs

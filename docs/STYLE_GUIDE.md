@@ -66,7 +66,7 @@
 - Trailers should have old TV antennas or direct TV style dishes attached to some of the roofs.
 - Feels like in the middle of the woods, not a busy city.
 - **Chosen look (D-016):** Arena 4's layout and pixel style in late-afternoon golden-hour light: warm orange sky behind the pines, long shadows across the dirt, trailer along the back, truck on the left, pool on the right.
-- **Arena size and camera (D-017):** the arena is wider than the screen. About 60% of its width is on screen at once, and the camera scrolls to follow the wrestlers. When they split toward opposite screen edges, the camera zooms out smoothly to show more of the arena (up to all of it), and zooms back in as they close the distance. These values are adjustable in the Unity Inspector.
+- **Arena size and camera (D-017, resized by D-048):** the arena is larger than the screen in both directions: the backdrop is 2160×1080 native px (drawn at 1 native px per art pixel, like the wrestlers), and the default 960×540 view shows a bit under half its width and half its height. The camera scrolls left/right and up/down to follow the wrestlers. When they split toward opposite screen edges, the camera zooms out smoothly to show more of the arena (capped at about 1.45× the default view, well short of the whole arena, so the wrestlers stay readable), and zooms back in as they close the distance. These values are adjustable in the Unity Inspector.
 - Props must be drawn to scale with the 240-px wrestlers: a single-wide trailer stands roughly twice Barry's height.
 
 ![](images/style-guide-04.jpg) ![](images/style-guide-05.jpg) ![](images/style-guide-06.png) ![](images/style-guide-07.jpg)

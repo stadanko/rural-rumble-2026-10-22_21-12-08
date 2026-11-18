@@ -138,6 +138,22 @@ namespace RuralRumble.EditorTooling
             public float ContactTime => KeyFrames[ContactIndex] / SourceFps;
         }
 
+        /// <summary>
+        /// One foot-contact frame of a walk / run clip (D-049): the sprite index where a foot meets the ground, read from the
+        /// art (the frame where the foot reaches the ground line after being lifted, or the heel strike), and which foot.
+        /// The builder puts an AnimationEvent (<see cref="WrestlerAnimationEventRelay.FootContactFunction"/>, intParameter =
+        /// foot) at that sprite's start time from the FrameTiming holds, so it follows Hold (ms) edits on rebuild.
+        /// </summary>
+        public readonly struct FootContactKey
+        {
+            public readonly int Sprite;
+            public readonly Foot Foot;
+            public FootContactKey(int sprite, Foot foot) { Sprite = sprite; Foot = foot; }
+        }
+
+        private static FootContactKey L(int sprite) => new FootContactKey(sprite, Foot.Left);
+        private static FootContactKey R(int sprite) => new FootContactKey(sprite, Foot.Right);
+
         /// <summary>One wrestler's art for this slice. Null back-facing art = placeholder built from the front art.</summary>
         public sealed class WrestlerArtSpec
         {
@@ -154,6 +170,10 @@ namespace RuralRumble.EditorTooling
             public Sprite[] Run;                     // null -> placeholder (WalkFront at double speed)
             public int[] RunKeyFrames;
             public int RunLoopFrames;
+            // D-049 foot-contact frames (sprite index + foot), from the art. Empty = no footsteps from that clip.
+            public FootContactKey[] WalkFrontFootContacts;
+            public FootContactKey[] WalkBackFootContacts;
+            public FootContactKey[] RunFootContacts;
             public MoveClipSpec Strike1;             // right punch; null -> placeholder (StandFront pose)
             public MoveClipSpec Strike2;             // left punch; null -> placeholder
             public MoveClipSpec Strike3;             // combo finisher; null -> placeholder
@@ -226,6 +246,16 @@ namespace RuralRumble.EditorTooling
                 // (last sprite held 3 frames, the others 2); 12 would make it even. Not retimed without a designer call.
                 RunKeyFrames = new[] { 0, 2, 4, 6, 8, 10 },
                 RunLoopFrames = 13,
+                // D-049 foot contacts, read from the sprites (contact sheets footcontact_Barry_*.png):
+                //  WalkFront: f0 the trailing boot comes down beside the planted one (lifted 11 px in f7); f5 the front boot
+                //  lands far forward (6 px up in f4). The 3/4 front view does not show which leg is which: alternated.
+                //  Uneven in the art (f0 to f5 625 ms, f5 to f0 375 ms at the even 125 ms holds).
+                WalkFrontFootContacts = new[] { L(0), R(5) },
+                //  WalkBack (back view, screen-left boot = his left): f1 left boot planted (14 px up in f0); f7 right boot
+                //  lands after its swing (f4 38 px, f5 25 px, f6 about 18 px up). Uneven in the art (750 / 250 ms).
+                WalkBackFootContacts = new[] { L(1), R(7) },
+                //  Run: f2 and f5, the front boot planted far forward (21 px up in f1, 5 px up in f4). Alternated.
+                RunFootContacts = new[] { L(2), R(5) },
                 // Designer timing (game speed) 130/100/130 ms, contact = frame 3. Rounded per frame to 24 fps:
                 // 3/2/3 samples = 125/83.3/125 ms, 333 ms total; contact at sample 5 (208.3 ms).
                 Strike1 = new MoveClipSpec
@@ -314,6 +344,15 @@ namespace RuralRumble.EditorTooling
                 // 0.5 s. Barry's run keeps a legacy 13-frame loop (see BuildBarry); Peaux uses the source period.
                 RunKeyFrames = new[] { 0, 2, 4, 6, 8, 10 },
                 RunLoopFrames = 12,
+                // D-049 foot contacts, read from the sprites (contact sheets footcontact_Peaux_*.png):
+                //  WalkFront: f1 the front boot lands after its swing (f6-f7 lifted, 7 px up in f0); f3 the rear boot (heel
+                //  up in f2) steps up flat beside it. 3/4 front view: alternated. Uneven in the art (250 / 750 ms).
+                WalkFrontFootContacts = new[] { L(1), R(3) },
+                //  WalkBack (back view, screen-left boot = his left): f0 right boot heel strike (sole up, heel on the ground
+                //  after the f5-f7 swing); f4 left boot flat (8 px up in f2, 4 px in f3). Even (500 / 500 ms).
+                WalkBackFootContacts = new[] { R(0), L(4) },
+                //  Run: f1 and f4, the front boot planted forward (22 px up in f0, 14 px up in f3). Alternated.
+                RunFootContacts = new[] { L(1), R(4) },
                 // Same frame roles and timing as Barry's strikes (designer timing 130/100/130 ms and 130/230 ms,
                 // rounded to 24 fps; D-024 contact 0.208 / 0.208 / 0.125 s). gen-peaux-strike1-3/strike2-3/strike3-2.
                 Strike1 = new MoveClipSpec
@@ -927,16 +966,20 @@ namespace RuralRumble.EditorTooling
             AnimationClip standBack = WriteSpriteClip(
                 $"{folder}/{spec.Name}_StandBack{(standBackPlaceholder ? "_PLACEHOLDER" : "")}.anim",
                 new[] { standBackPlaceholder ? spec.StandFront : spec.StandBack }, new[] { 0 }, 1, loop: true);
+            // D-049: walk and run clips carry the foot-contact AnimationEvents (stand-ins get none).
             AnimationClip walkFront = WriteSpriteClip($"{folder}/{spec.Name}_WalkFront.anim",
-                spec.WalkFront, spec.WalkKeyFrames, spec.WalkLoopFrames, loop: true);
+                spec.WalkFront, spec.WalkKeyFrames, spec.WalkLoopFrames, loop: true,
+                footContacts: spec.WalkFrontFootContacts ?? Array.Empty<FootContactKey>());
             AnimationClip walkBack = walkBackPlaceholder
                 ? WriteSpriteClip($"{folder}/{spec.Name}_WalkBack_PLACEHOLDER.anim",
                     spec.WalkFront, spec.WalkKeyFrames, spec.WalkLoopFrames, loop: true)
                 : WriteSpriteClip($"{folder}/{spec.Name}_WalkBack.anim",
-                    spec.WalkBack, spec.WalkBackKeyFrames, spec.WalkBackLoopFrames, loop: true);
+                    spec.WalkBack, spec.WalkBackKeyFrames, spec.WalkBackLoopFrames, loop: true,
+                    footContacts: spec.WalkBackFootContacts ?? Array.Empty<FootContactKey>());
             AnimationClip run = spec.Run == null
                 ? WriteRunStandIn(spec, folder)
-                : WriteSpriteClip($"{folder}/{spec.Name}_Run.anim", spec.Run, spec.RunKeyFrames, spec.RunLoopFrames, loop: true);
+                : WriteSpriteClip($"{folder}/{spec.Name}_Run.anim", spec.Run, spec.RunKeyFrames, spec.RunLoopFrames, loop: true,
+                    footContacts: spec.RunFootContacts ?? Array.Empty<FootContactKey>());
 
             var bySlot = new Dictionary<string, AnimationClip>
             {
@@ -999,6 +1042,7 @@ namespace RuralRumble.EditorTooling
             // on every rebuild, also when the prefab is otherwise left alone (only downedMirrorShift and the D-044
             // fallLandingShift are written).
             WriteDownedMirrorShift(spec);
+            EnsureAnimationEventRelay(spec);
             AssetDatabase.SaveAssets();
 
             return $"Built {spec.Name}: controller {ControllerPath}, override {AssetDatabase.GetAssetPath(overrides)}, prefab {prefabPath}. " +
@@ -1993,8 +2037,8 @@ namespace RuralRumble.EditorTooling
         }
 
         private static AnimationClip WriteSpriteClip(string path, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop,
-            PoseKey[] poses = null, ClipPlayback playback = ClipPlayback.Native) =>
-            WriteTimedClip(path, sprites, keyFrames, loopFrames, loop, poses, playback, -1).Clip;
+            PoseKey[] poses = null, ClipPlayback playback = ClipPlayback.Native, FootContactKey[] footContacts = null) =>
+            WriteTimedClip(path, sprites, keyFrames, loopFrames, loop, poses, playback, -1, footContacts: footContacts).Clip;
 
         // ---------- designer frame timing (WrestlerFrameTiming) ----------
 
@@ -2129,7 +2173,8 @@ namespace RuralRumble.EditorTooling
         }
 
         private static TimedClip WriteTimedClip(string path, Sprite[] sprites, int[] keyFrames, int loopFrames, bool loop,
-            PoseKey[] poses, ClipPlayback playback, int contactFrame, float[] defaultHoldsMs = null, int turnFrame = -1)
+            PoseKey[] poses, ClipPlayback playback, int contactFrame, float[] defaultHoldsMs = null, int turnFrame = -1,
+            FootContactKey[] footContacts = null)
         {
             string clipName = System.IO.Path.GetFileNameWithoutExtension(path);
             double[] startMs = ResolveStepTimes(clipName, sprites, keyFrames, loopFrames, loop, poses, playback, contactFrame,
@@ -2164,6 +2209,9 @@ namespace RuralRumble.EditorTooling
             AnimationUtility.SetObjectReferenceCurve(clip, SpriteBinding, keys.ToArray());
             WritePoseCurves(clip, poses, frame => MsToSeconds(MsOfFrame(frame)));
             SetLoop(clip, loop);
+            // D-049: null leaves the clip's events alone (no other clip has any); an array (even empty) replaces them.
+            if (footContacts != null)
+                WriteFootContactEvents(clip, clipName, sprites, footContacts, i => MsOfFrame(keyFrames[i]));
 
             if (isNew)
                 AssetDatabase.CreateAsset(clip, path);
@@ -2175,6 +2223,67 @@ namespace RuralRumble.EditorTooling
                 ContactTime = contactFrame >= 0 ? MsToSeconds(MsOfFrame(contactFrame)) : 0f,
                 TurnTime = turnFrame >= 0 ? MsToSeconds(MsOfFrame(turnFrame)) : 0f,
             };
+        }
+
+        /// <summary>
+        /// D-049: one AnimationEvent per foot contact (<see cref="WrestlerAnimationEventRelay.FootContactFunction"/>,
+        /// intParameter = (int)Foot) at the contact sprite's start time, which comes from the FrameTiming holds; also records
+        /// the contacts (step, foot, time) in the wrestler's FrameTiming entry for review.
+        /// </summary>
+        private static void WriteFootContactEvents(AnimationClip clip, string clipName, Sprite[] sprites,
+            FootContactKey[] footContacts, Func<int, double> msOfSprite)
+        {
+            var evs = new List<AnimationEvent>();
+            var marks = new List<WrestlerFrameTiming.FootContactMark>();
+            foreach (FootContactKey k in footContacts.OrderBy(k => k.Sprite))
+            {
+                if (k.Sprite < 0 || k.Sprite >= sprites.Length)
+                    throw new ArgumentException($"{clipName}: foot contact on sprite {k.Sprite}, the clip has {sprites.Length}.");
+                double ms = msOfSprite(k.Sprite);
+                evs.Add(new AnimationEvent
+                {
+                    time = MsToSeconds(ms),
+                    functionName = WrestlerAnimationEventRelay.FootContactFunction,
+                    intParameter = (int)k.Foot,
+                    messageOptions = SendMessageOptions.DontRequireReceiver,
+                });
+                // Steps equal sprites in the walk / run clips (no pose keys).
+                marks.Add(new WrestlerFrameTiming.FootContactMark { Step = k.Sprite, Foot = k.Foot, TimeMs = (float)ms });
+            }
+            AnimationUtility.SetAnimationEvents(clip, evs.ToArray());
+            WrestlerFrameTiming.ClipTiming entry = currentTiming != null ? currentTiming.Find(clipName) : null;
+            if (entry != null)
+            {
+                entry.FootContacts = marks;
+                EditorUtility.SetDirty(currentTiming);
+            }
+        }
+
+        /// <summary>D-049: the wrestler prefab's Animator GameObject carries the AnimationEvent receiver.</summary>
+        private static void EnsureAnimationEventRelay(WrestlerArtSpec spec)
+        {
+            string path = $"{PrefabFolder}/{spec.Name}.prefab";
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab == null)
+                return;
+            var existing = prefab.GetComponentInChildren<Animator>(true);
+            if (existing == null || existing.GetComponent<WrestlerAnimationEventRelay>() != null)
+                return;
+            GameObject contents = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                var animator = contents.GetComponentInChildren<Animator>(true);
+                if (animator == null)
+                    return;
+                animator.gameObject.AddComponent<WrestlerAnimationEventRelay>();
+                PrefabUtility.SaveAsPrefabAsset(contents, path, out bool ok);
+                if (!ok)
+                    Debug.LogError($"WrestlerAnimationBuilder: could not save {path}.");
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(contents);
+            }
         }
 
         private static void SetLoop(AnimationClip clip, bool loop)

@@ -195,8 +195,8 @@ Transform:
   m_GameObject: {fileID: 277077616}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0.46174863, w: 0.8870109}
-  m_LocalPosition: {x: 6, y: 0.5, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 8, y: 0.5, z: 0}
+  m_LocalScale: {x: 1.35, y: 1.35, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2065492948}
@@ -217,9 +217,9 @@ MonoBehaviour:
   m_LightType: 1
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
-  m_Color: {r: 1, g: 0.74, b: 0.42, a: 1}
-  m_Intensity: 0.25
-  m_LightVolumeIntensity: 0.22
+  m_Color: {r: 1, g: 0.86, b: 0.5, a: 1}
+  m_Intensity: 0.18
+  m_LightVolumeIntensity: 0.12
   m_LightVolumeEnabled: 1
   m_ApplyToSortingLayers: 00000000
   m_LightCookieSprite: {fileID: 0}
@@ -279,8 +279,8 @@ Transform:
   m_GameObject: {fileID: 302080420}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0.35836798, w: 0.93358046}
-  m_LocalPosition: {x: 3, y: 0.5, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 4, y: 0.5, z: 0}
+  m_LocalScale: {x: 1.35, y: 1.35, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2065492948}
@@ -301,9 +301,9 @@ MonoBehaviour:
   m_LightType: 1
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
-  m_Color: {r: 1, g: 0.74, b: 0.42, a: 1}
-  m_Intensity: 0.25
-  m_LightVolumeIntensity: 0.22
+  m_Color: {r: 1, g: 0.86, b: 0.5, a: 1}
+  m_Intensity: 0.18
+  m_LightVolumeIntensity: 0.12
   m_LightVolumeEnabled: 1
   m_ApplyToSortingLayers: 00000000
   m_LightCookieSprite: {fileID: 0}
@@ -364,7 +364,7 @@ Transform:
   m_GameObject: {fileID: 309168100}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 13.3, y: -10, z: 0}
+  m_LocalPosition: {x: 18, y: -13.4, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -402,7 +402,7 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.75
   m_Color: {r: 1, g: 0.95, b: 0.9, a: 1}
-  m_Intensity: 0.3
+  m_Intensity: 0.12
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
   m_ApplyToSortingLayers: 00000000
@@ -509,7 +509,7 @@ Transform:
   m_GameObject: {fileID: 471055239}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 13.67, y: -6.5, z: 0}
+  m_LocalPosition: {x: 24.5167, y: -5.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -551,7 +551,7 @@ MonoBehaviour:
   m_LightType: 3
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.6
-  m_Color: {r: 1, g: 0.6, b: 0.26, a: 1}
+  m_Color: {r: 1, g: 0.68, b: 0.3, a: 1}
   m_Intensity: 2
   m_LightVolumeIntensity: 0.5
   m_LightVolumeEnabled: 1
@@ -620,8 +620,8 @@ MonoBehaviour:
   m_LightType: 4
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
-  m_Color: {r: 1, g: 0.86, b: 0.7, a: 1}
-  m_Intensity: 0.7
+  m_Color: {r: 1, g: 0.98, b: 0.78, a: 1}
+  m_Intensity: 0.9
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
   m_ApplyToSortingLayers: 00000000
@@ -1029,7 +1029,7 @@ Transform:
   m_GameObject: {fileID: 916544370}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1, y: -3, z: 0}
+  m_LocalPosition: {x: 1, y: -4, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1051,8 +1051,8 @@ MonoBehaviour:
   m_LightType: 3
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
-  m_Color: {r: 1, g: 0.62, b: 0.3, a: 1}
-  m_Intensity: 1.2
+  m_Color: {r: 1, g: 0.94, b: 0.52, a: 1}
+  m_Intensity: 0.6
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
   m_ApplyToSortingLayers: 00000000
@@ -1076,7 +1076,7 @@ MonoBehaviour:
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 3
-  m_PointLightOuterRadius: 30
+  m_PointLightOuterRadius: 40
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
@@ -1119,10 +1119,11 @@ MonoBehaviour:
   roster: {fileID: 11400000, guid: 46a42c00a5c94e247817c81cb3a4d538, type: 2}
   combatRunner: {fileID: 28872175}
   matchCamera: {fileID: 2090353083}
+  surfaceMap: {fileID: 1110494045}
   directPlaySwapWrestlers: 1
   disableCpuAi: 0
-  playerSpawn: {x: 9, y: -11.6667}
-  cpuSpawn: {x: 17.6667, y: -11.6667}
+  playerSpawn: {x: 13.6667, y: -15}
+  cpuSpawn: {x: 22.3333, y: -15}
 --- !u!4 &982713671
 Transform:
   m_ObjectHideFlags: 0
@@ -1138,6 +1139,63 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1011709280
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 5320415933638654221, guid: 84347f97c8a222b42a745ca3ea1b0c5a, type: 3}
+      propertyPath: m_Name
+      value: FootstepAudio
+      objectReference: {fileID: 0}
+    - target: {fileID: 7913944867351067050, guid: 84347f97c8a222b42a745ca3ea1b0c5a, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7913944867351067050, guid: 84347f97c8a222b42a745ca3ea1b0c5a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7913944867351067050, guid: 84347f97c8a222b42a745ca3ea1b0c5a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7913944867351067050, guid: 84347f97c8a222b42a745ca3ea1b0c5a, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7913944867351067050, guid: 84347f97c8a222b42a745ca3ea1b0c5a, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7913944867351067050, guid: 84347f97c8a222b42a745ca3ea1b0c5a, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7913944867351067050, guid: 84347f97c8a222b42a745ca3ea1b0c5a, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7913944867351067050, guid: 84347f97c8a222b42a745ca3ea1b0c5a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7913944867351067050, guid: 84347f97c8a222b42a745ca3ea1b0c5a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7913944867351067050, guid: 84347f97c8a222b42a745ca3ea1b0c5a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 84347f97c8a222b42a745ca3ea1b0c5a, type: 3}
 --- !u!1001 &1110494041
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1222,6 +1280,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56a1d1518dfd6b94caa616355a8e33e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RuralRumble.Combat::RuralRumble.Combat.ArenaObstacleMarker
+--- !u!114 &1110494045 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5443072961924688138, guid: 6d7357c780084d5428a0a0182c8a984e, type: 3}
+  m_PrefabInstance: {fileID: 1110494041}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f3662315ab4be043a028531e3d1ad02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RuralRumble.Core::RuralRumble.Core.ArenaSurfaceMap
 --- !u!1 &1276685374
 GameObject:
   m_ObjectHideFlags: 0
@@ -1248,7 +1317,7 @@ Transform:
   m_GameObject: {fileID: 1276685374}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 25, y: -12.4, z: 0}
+  m_LocalPosition: {x: 28.3333, y: -15.3333, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1270,7 +1339,7 @@ MonoBehaviour:
   m_LightType: 3
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.7
-  m_Color: {r: 1, g: 0.68, b: 0.4, a: 1}
+  m_Color: {r: 1, g: 0.75, b: 0.44, a: 1}
   m_Intensity: 0.35
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
@@ -1332,7 +1401,7 @@ Transform:
   m_GameObject: {fileID: 1426130359}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 13.3, y: -11.8, z: 0}
+  m_LocalPosition: {x: 18, y: -14.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1466,7 +1535,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0.25881907, w: 0.9659259}
   m_LocalPosition: {x: 0, y: 0.5, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.35, y: 1.35, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2065492948}
@@ -1487,9 +1556,9 @@ MonoBehaviour:
   m_LightType: 1
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
-  m_Color: {r: 1, g: 0.74, b: 0.42, a: 1}
-  m_Intensity: 0.25
-  m_LightVolumeIntensity: 0.22
+  m_Color: {r: 1, g: 0.86, b: 0.5, a: 1}
+  m_Intensity: 0.18
+  m_LightVolumeIntensity: 0.12
   m_LightVolumeEnabled: 1
   m_ApplyToSortingLayers: 00000000
   m_LightCookieSprite: {fileID: 0}
@@ -1631,7 +1700,7 @@ Transform:
   m_GameObject: {fileID: 1808848642}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 13.67, y: -9.3, z: 0}
+  m_LocalPosition: {x: 24.5167, y: -9.4, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1653,7 +1722,7 @@ MonoBehaviour:
   m_LightType: 3
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.7
-  m_Color: {r: 1, g: 0.63, b: 0.3, a: 1}
+  m_Color: {r: 1, g: 0.71, b: 0.34, a: 1}
   m_Intensity: 0.6
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
@@ -1735,7 +1804,7 @@ Transform:
   m_GameObject: {fileID: 1997465667}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.5, y: -11.4, z: 0}
+  m_LocalPosition: {x: 10.3333, y: -13.9167, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1757,7 +1826,7 @@ MonoBehaviour:
   m_LightType: 3
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.7
-  m_Color: {r: 1, g: 0.68, b: 0.4, a: 1}
+  m_Color: {r: 1, g: 0.75, b: 0.44, a: 1}
   m_Intensity: 0.35
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
@@ -1865,15 +1934,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: RuralRumble.Core::RuralRumble.Core.MatchCamera
   targetCamera: {fileID: 723071994}
   arenaLeft: 0
-  arenaRight: 26.666666
+  arenaRight: 36
   arenaTop: 0
-  arenaBottom: -15
-  defaultCenterY: -9.5
-  defaultVisibleWidthFraction: 0.6
-  maxVisibleWidthFraction: 1
+  arenaBottom: -18
+  defaultVisibleWidth: 16
+  maxZoomOut: 1.45
   edgeMargin: 2
+  headroom: 4.6
+  footroom: 0.6
+  keepFirstTargetInView: 1
   zoomSmoothTime: 0.35
   followSmoothTime: 0.2
+  verticalFollowSmoothTime: 0.3
   punchInSmoothTime: 0.12
   minPunchInSizeFraction: 0.5
 --- !u!4 &2090353084
@@ -1885,7 +1957,7 @@ Transform:
   m_GameObject: {fileID: 2090353082}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8, y: -9.5, z: -10}
+  m_LocalPosition: {x: 18, y: -13, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1908,3 +1980,4 @@ SceneRoots:
   - {fileID: 2065492948}
   - {fileID: 1470988304}
   - {fileID: 745330261}
+  - {fileID: 1011709280}

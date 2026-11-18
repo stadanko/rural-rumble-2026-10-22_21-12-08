@@ -66,6 +66,11 @@ namespace RuralRumble.Presentation
     /// is played at its end (Fall / KnockedOut / KnockedDown, normalized time 1: no new fall). Animator bool "StompBounce"
     /// holds off the Any State downed transitions meanwhile. Every stomp restarts it; the get-up crouch always wins.
     ///
+    /// Foot contacts (D-049, ARCHITECTURE 4.8): the walk and run clips carry an AnimationEvent on each foot-contact frame;
+    /// <see cref="WrestlerAnimationEventRelay"/> on the Animator's GameObject forwards it to
+    /// <see cref="HandleFootContactEvent"/>, which raises <see cref="FootContactEvents"/> for the Walking / Running states
+    /// only (never while paused, never twice for one contact). Juice plays the footstep; combat never sees it.
+    ///
     /// Clip offsets and rotations are authored for left-facing art. When the sprite is flipped,
     /// <see cref="LateUpdate"/> mirrors the child sprite's animated x offset and z rotation so a knock-back
     /// or a fall still goes away from the way the wrestler faces.
@@ -374,6 +379,105 @@ namespace RuralRumble.Presentation
 
         private void OnDestroy() => UnbindEvents();
 
+        // ---------- foot contacts (D-049, ARCHITECTURE 4.8) ----------
+
+        /// <summary>Layer-0 Animator states whose clips carry the foot-contact events (built by WrestlerAnimationBuilder).</summary>
+        public const string WalkingStateName = "Walking";
+        public const string RunningStateName = "Running";
+        private static readonly int WalkingStateHash = Animator.StringToHash(WalkingStateName);
+        private static readonly int RunningStateHash = Animator.StringToHash(RunningStateName);
+        /// <summary>A foot-contact event whose clip weight is below this is the other side of a blend or cross-fade.</summary>
+        public const float MinFootContactWeight = 0.5f;
+
+        private int layer0WalkingPath, layer0RunningPath;
+        private bool layer0PathsKnown;
+        // Last contact raised: Animator state, clip, loop and event time (drops the re-fire after a pause or re-entry).
+        private bool hasLastContact;
+        private int lastContactState, lastContactClip, lastContactLoop;
+        private float lastContactTime;
+        private int footContactsRaised;
+
+        /// <summary>Foot contacts this view has raised through <see cref="FootContactEvents"/> (for tests and debugging).</summary>
+        public int FootContactsRaised => footContactsRaised;
+
+        private void Awake()
+        {
+            // AnimationEvents reach only components on the Animator's GameObject. The prefab carries the relay
+            // (WrestlerAnimationBuilder); add it if a prefab predates that, so a foot-contact event never lacks a receiver.
+            if (animator != null && animator.GetComponent<WrestlerAnimationEventRelay>() == null)
+                animator.gameObject.AddComponent<WrestlerAnimationEventRelay>();
+        }
+
+        /// <summary>
+        /// Gait for a foot-contact event fired from an Animator state (layer 0 full-path hashes): Walking = Walk,
+        /// Running = Run, anything else (RecoveringWalk, strikes, falls, paired moves...) = none.
+        /// </summary>
+        public static bool TryGetGait(int stateFullPathHash, int walkingFullPathHash, int runningFullPathHash, out Gait gait)
+        {
+            gait = Gait.Walk;
+            if (stateFullPathHash == walkingFullPathHash) return true;
+            gait = Gait.Run;
+            return stateFullPathHash == runningFullPathHash;
+        }
+
+        /// <summary>
+        /// The loop of a looping clip that an event belongs to: the state's normalized time minus the event's place in the
+        /// clip, rounded. Robust to the state info being read after the frame stepped past the event (even across the loop
+        /// wrap), as long as one frame covers less than half a loop.
+        /// </summary>
+        public static int EventLoop(float normalizedTime, float eventTime, float clipLength) =>
+            clipLength > 0f ? Mathf.RoundToInt(normalizedTime - eventTime / clipLength) : Mathf.FloorToInt(normalizedTime);
+
+        /// <summary>
+        /// Called (through <see cref="WrestlerAnimationEventRelay"/>) for each foot-contact AnimationEvent of the walk and run
+        /// clips. Raises <see cref="FootContactEvents.Raise"/> only for the Walking / Running states on layer 0, with the
+        /// state's gait; drops an event while the Animator is paused (hitstop), one whose clip weight is under 0.5, and a
+        /// repeat of the last contact (same state, clip, loop and event time). Presentation only: never touches combat.
+        /// </summary>
+        public void HandleFootContactEvent(AnimationEvent e)
+        {
+            if (e == null || events == null || animator == null || animator.speed <= 0f)
+                return;
+            if (e.animatorClipInfo.weight < MinFootContactWeight)
+                return;
+            if (!layer0PathsKnown)
+            {
+                string layer = animator.GetLayerName(0);
+                layer0WalkingPath = Animator.StringToHash(layer + "." + WalkingStateName);
+                layer0RunningPath = Animator.StringToHash(layer + "." + RunningStateName);
+                layer0PathsKnown = true;
+            }
+            AnimatorStateInfo state = e.animatorStateInfo;
+            if (!TryGetGait(state.fullPathHash, layer0WalkingPath, layer0RunningPath, out Gait gait))
+                return;
+            AnimationClip clip = e.animatorClipInfo.clip;
+            int clipId = clip != null ? clip.GetInstanceID() : 0;
+            int loop = EventLoop(state.normalizedTime, e.time, clip != null ? clip.length : 0f);
+            if (hasLastContact && lastContactState == state.fullPathHash && lastContactClip == clipId &&
+                lastContactLoop == loop && Mathf.Abs(lastContactTime - e.time) < 1e-4f)
+                return;
+            hasLastContact = true;
+            lastContactState = state.fullPathHash;
+            lastContactClip = clipId;
+            lastContactLoop = loop;
+            lastContactTime = e.time;
+
+            Foot foot = e.intParameter == (int)Foot.Right ? Foot.Right : Foot.Left;
+            Vector3 root = transform.position; // the feet point Combat writes; never a depth offset
+            footContactsRaised++;
+            FootContactEvents.Raise(new FootContact(eventsId, foot, gait, new Vector2(root.x, root.y)));
+        }
+
+        // Once the Animator has left the state of the last contact, a later visit starts its loops at 0 again.
+        private void ForgetLastContactIfStateChanged()
+        {
+            if (!hasLastContact || animator == null || !animator.isActiveAndEnabled || animator.runtimeAnimatorController == null)
+                return;
+            AnimatorStateInfo current = animator.GetCurrentAnimatorStateInfo(0);
+            if (current.fullPathHash != lastContactState)
+                hasLastContact = false;
+        }
+
         private void OnMoveStarted(WrestlerId id, MoveId move, MoveTiming timing)
         {
             if (id != eventsId) return;
@@ -626,6 +730,7 @@ namespace RuralRumble.Presentation
         // the ground the unmirrored one covers.
         private void LateUpdate()
         {
+            ForgetLastContactIfStateChanged();
             if (view == null || spriteRenderer == null)
                 return;
             ApplyWhipperFacing();

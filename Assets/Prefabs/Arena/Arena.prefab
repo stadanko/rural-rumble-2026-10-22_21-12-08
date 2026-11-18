@@ -45,8 +45,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RuralRumble.Combat::RuralRumble.Combat.ArenaObstacleMarker
   role: 0
-  offset: {x: 1.5, y: -13.6667}
-  size: {x: 23.6667, y: 4}
+  offset: {x: 1.5, y: -17.3333}
+  size: {x: 33, y: 5.0833}
 --- !u!1 &3029269792321449489
 GameObject:
   m_ObjectHideFlags: 0
@@ -74,7 +74,7 @@ Transform:
   m_GameObject: {fileID: 3029269792321449489}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2, y: -13, z: 0}
+  m_LocalPosition: {x: -2.7667, y: -13.7167, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -153,7 +153,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: RuralRumble.Combat::RuralRumble.Combat.ArenaObstacleMarker
   role: 1
   offset: {x: 0, y: -0.1667}
-  size: {x: 8.3667, y: 1.8334}
+  size: {x: 8.3667, y: 1.6334}
 --- !u!1 &3613129294597344752
 GameObject:
   m_ObjectHideFlags: 0
@@ -163,6 +163,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1536734218677359298}
+  - component: {fileID: 5443072961924688138}
   m_Layer: 0
   m_Name: Arena
   m_TagString: Untagged
@@ -189,6 +190,22 @@ Transform:
   - {fileID: 4916412741574751008}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5443072961924688138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3613129294597344752}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f3662315ab4be043a028531e3d1ad02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RuralRumble.Core::RuralRumble.Core.ArenaSurfaceMap
+  mask: {fileID: 2800000, guid: e7babf5e3c733c94d93dde5c46880375, type: 3}
+  localTopLeft: {x: 0, y: 0}
+  nativePxPerTexel: 4
+  pixelsPerUnit: 60
 --- !u!1 &6019342990431531202
 GameObject:
   m_ObjectHideFlags: 0
@@ -270,7 +287,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -100
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 359b4e30ef727ad42927f6a5964d25d1, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 270c644c5d9651045b520ac435fdd99d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -307,7 +324,7 @@ Transform:
   m_GameObject: {fileID: 6087756419405553285}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 21, y: -14, z: 0}
+  m_LocalPosition: {x: 29.9, y: -14.7333, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -386,4 +403,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: RuralRumble.Combat::RuralRumble.Combat.ArenaObstacleMarker
   role: 1
   offset: {x: 0, y: 0}
-  size: {x: 9.3333, y: 2.6667}
+  size: {x: 9.3333, y: 2.4833}

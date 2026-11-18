@@ -59,6 +59,13 @@ namespace RuralRumble.Presentation
     /// Animator bool "SlamTail" keeps the Bodyslammed clip (R6, R7, R6) playing to its end before the Knocked Down clip
     /// (the same R6, same orientation). A slam without T (Peaux slams Barry) keeps the D-033/D-038 path unchanged.
     ///
+    /// Stomp bounce (D-047): a HitLanded(Stomp) on this wrestler while he lies down (Knocked Down, not getting up, or
+    /// Knocked Out by that stomp) plays "StompBounce" from its start: R7, the bodyslam's bounce frame (17 px lift baked
+    /// into the art), for its FrameTiming hold. It keeps the lying pose's flip, mirror and shifts (the downed-pose rules
+    /// above), so R7 sits relative to R6 exactly as in the bodyslam tail, mirrored with it. When the clip ends the lying pose
+    /// is played at its end (Fall / KnockedOut / KnockedDown, normalized time 1: no new fall). Animator bool "StompBounce"
+    /// holds off the Any State downed transitions meanwhile. Every stomp restarts it; the get-up crouch always wins.
+    ///
     /// Clip offsets and rotations are authored for left-facing art. When the sprite is flipped,
     /// <see cref="LateUpdate"/> mirrors the child sprite's animated x offset and z rotation so a knock-back
     /// or a fall still goes away from the way the wrestler faces.
@@ -128,6 +135,11 @@ namespace RuralRumble.Presentation
         /// <summary>Animator bool parameter (D-044): a thrown receiver who is already Knocked Down / Knocked Out still plays
         /// the Bodyslammed clip's landing tail (R6, R7, R6); the downed transitions wait for it to be false.</summary>
         public static readonly int SlamTailParam = Animator.StringToHash("SlamTail");
+        /// <summary>Stomp bounce (D-047): R7 held, then back to the lying pose. Plays the slot clip "Slot_StompBounce".</summary>
+        public const string StompBounceStateName = "StompBounce";
+        private static readonly int StompBounceStateHash = Animator.StringToHash(StompBounceStateName);
+        /// <summary>Animator bool parameter (D-047): the stomp bounce is playing; the downed transitions wait for it to be false.</summary>
+        public static readonly int StompBounceParam = Animator.StringToHash("StompBounce");
         private static readonly int BodyslamStateHash = Animator.StringToHash(BodyslamStateName);
         private static readonly int BodyslammedStateHash = Animator.StringToHash(BodyslammedStateName);
 
@@ -263,6 +275,9 @@ namespace RuralRumble.Presentation
         // A receiver knocked down / out by a throw: T, so the landing tail and the downed R6 keep the throw's orientation.
         private int downedThrowDirection;
         private bool slamTail;
+        // Stomp bounce (D-047): a stomp hit this wrestler (queued by HitLanded), and the bounce is playing.
+        private bool pendingStompBounce;
+        private bool stompBouncing;
 
         private float moveSpeed = 1f;
         private CombatState? lastState;
@@ -348,6 +363,7 @@ namespace RuralRumble.Presentation
             events = null;
             pendingMoveRestart = false;
             pendingStruckRestart = false;
+            pendingStompBounce = false;
             showStruckC = false;
             paired = false;
             whipDirection = 0;
@@ -405,6 +421,9 @@ namespace RuralRumble.Presentation
             if (hit.Defender != eventsId) return;
             pendingStruckRestart = true;
             pendingStruckMove = hit.Move;
+            // D-047: only a stomp hits a downed wrestler; Apply plays the bounce if he is still lying down.
+            if (hit.Move == MoveId.Stomp)
+                pendingStompBounce = true;
         }
 
         private void Reset()
@@ -558,9 +577,33 @@ namespace RuralRumble.Presentation
                 // pose it got up from: the end of the Fall clip (downed sprite, latched orientation), not a new fall.
                 else if (state == CombatState.KnockedOut && wasGettingUp && falling)
                     PlayFromStart(FallStateName, 1f);
+
+                // D-047 stomp bounce. Ends when its clip has played out (back to the lying pose at its end, so a fall is not
+                // replayed), when the wrestler stops lying down (the get-up crouch wins), or if something else replaced it.
+                if (stompBouncing)
+                {
+                    AnimatorStateInfo current = animator.GetCurrentAnimatorStateInfo(0);
+                    bool inBounce = current.shortNameHash == StompBounceStateHash;
+                    if (!downed || gettingUp || !inBounce)
+                        stompBouncing = false;
+                    else if (current.normalizedTime >= 1f)
+                    {
+                        stompBouncing = false;
+                        PlayFromStart(LyingStateName(state, falling), 1f);
+                    }
+                }
+                // A stomp that landed on a lying wrestler (also the stomp that knocks him out, which wins over the KO jump
+                // above) bounces him from R7's start; a stomp during the get-up (crouch) does not.
+                if (pendingStompBounce && downed && !gettingUp && animator.HasState(0, StompBounceStateHash))
+                {
+                    stompBouncing = true;
+                    PlayFromStart(StompBounceStateName, 0f);
+                }
+                animator.SetBool(StompBounceParam, stompBouncing);
             }
             pendingMoveRestart = false;
             pendingStruckRestart = false;
+            pendingStompBounce = false;
             lastState = state;
 
             if (spriteRenderer != null)
@@ -706,6 +749,16 @@ namespace RuralRumble.Presentation
                 facingFlip = ShouldFlip(WhipperFacing(clipTime, turnTime, view.HorizontalFacing, throwDirection), artFacesLeft);
             spriteRenderer.flipX = facingFlip;
         }
+
+        /// <summary>
+        /// D-047: the Animator state that shows the lying pose after a stomp bounce: the Fall clip (its end = the landed
+        /// downed sprite) for a wrestler who fell, else the Knocked Out / Knocked Down clip (the downed sprite held).
+        /// </summary>
+        public static string LyingStateName(CombatState state, bool fell) =>
+            fell ? FallStateName : state == CombatState.KnockedOut ? KnockedOutStateName : CombatState.KnockedDown.ToString();
+
+        /// <summary>True while the stomp bounce (R7) plays (D-047).</summary>
+        public bool StompBouncing => stompBouncing;
 
         /// <summary>D-044: the throwing slam's clip has reached its turn key (slammer S3 / receiver R4, the release).</summary>
         public static bool ThrowHasReleased(float clipTime, float turnTime) => clipTime >= turnTime - TurnTimeEpsilon;

@@ -84,6 +84,7 @@
 - Wrestlers can't move while Striking (D-024).
 - The "below 30 health" knockdown check happens after the strike's damage is applied (D-029).
 - **Stomp (D-025):** Strike pressed while standing over a Knocked Down opponent performs a Stomp instead of a combo strike. It deals Stomp damage, doesn't change the knockdown timer, and can knock out. No limit per knockdown, but after a stomp ends the wrestler can't stomp again for the Stomp cooldown (1.0 s, tunable).
+    - *Presentation only (D-047):* each stomp that lands on a lying wrestler bounces him off the ground like the end of the bodyslam (the bounce frame, about 150 ms, then the lying pose again). It changes no state, timing, damage or knockdown length. A stomp during the get-up crouch shows no bounce (unless it knocks him out: then he bounces and stays down).
 - Process of striking
     - Wrestler A pushes strike button once
         - Strike 1 animation is triggered

@@ -101,6 +101,14 @@ namespace RuralRumble.EditorTooling
         public const string SlotCrouch = "Slot_" + WrestlerView.CrouchStateName;
         /// <summary>Animator bool parameter: show the crouch (D-043). Set by WrestlerView while the wrestler gets up.</summary>
         public const string CrouchParam = "Crouch";
+        /// <summary>Stomp bounce (D-047): R7 (the bodyslam bounce, baked 17 px lift) held, then back to the lying pose.
+        /// Played by the "StompBounce" state, which WrestlerView starts from HitLanded(Stomp) on a downed wrestler.</summary>
+        public const string SlotStompBounce = "Slot_" + WrestlerView.StompBounceStateName;
+        /// <summary>Animator bool parameter: the stomp bounce is playing (D-047). Set by WrestlerView; the Any State -&gt;
+        /// KnockedDown / KnockedOut / Fall transitions wait for it to be false.</summary>
+        public const string StompBounceParam = "StompBounce";
+        /// <summary>D-047 Starting point: R7 held 150 ms (the bodyslam tail's R7 hold, D-044/D-045). Tunable in FrameTiming.</summary>
+        public const float StompBounceDefaultHoldMs = 150f;
 
         /// <summary>Animator bool parameter: in a paired move (set by WrestlerView from PairedMoveStarted). Tells the
         /// Lock Up hold from a whiff, which share State = LockUp and Move = LockUp.</summary>
@@ -160,6 +168,7 @@ namespace RuralRumble.EditorTooling
             public MoveClipSpec IrishWhip;           // Irish Whip whipper (A, Grappling, D-039); contact = release (f4); turn = f2; null -> LockUp hold stand-in
             public MoveClipSpec Fall;                // Falling Down (D-041): struck_a, fall2, fall3, downed; turn = downed (landing); null -> downed-only PLACEHOLDER
             public Sprite Crouch;                    // Crouch (D-043), the get-up; null -> PLACEHOLDER (StandFront pose)
+            public Sprite StompBounce;               // Stomp bounce (D-047): R7 of the bodyslam; null -> PLACEHOLDER (downed sprite)
             /// <summary>D-044: the downed sprite's pivot is the body centre (Peaux's v5 R6), not a bodyslam pair root, so
             /// after a fall it is moved toward the fall side until its feet end meets fall3's (WrestlerView
             /// fallLandingShift). False keeps the accepted D-041 landing (Barry): shift 0.</summary>
@@ -265,6 +274,8 @@ namespace RuralRumble.EditorTooling
             spec.Fall = FallSpec(art, "barry", spec);
             // D-043: barry_crouch.png (186x175, root at (93,175) = Bottom Center), drawn at the root.
             spec.Crouch = CrouchSprite(art + "barry_crouch.png");
+            // D-047: barry_bodyslammed5_7.png (R7, the bounce), same import / pivot as his downed R6.
+            spec.StompBounce = ThrowSprite(BarryThrowSlammedArt, 7);
             return Build(spec, writePrefab);
         }
 
@@ -349,6 +360,8 @@ namespace RuralRumble.EditorTooling
             spec.Fall = FallSpec(art, "peaux", spec);
             // D-043: peaux_crouch.png (192x145, root at (96,145) = Bottom Center), drawn at the root.
             spec.Crouch = CrouchSprite(art + "peaux_crouch.png");
+            // D-047: peaux_bodyslammed5_7.png (R7, the bounce), same import / pivot as his downed R6.
+            spec.StompBounce = ThrowSprite(PeauxThrowSlammedArt, 7);
             return Build(spec, writePrefab);
         }
 
@@ -975,6 +988,8 @@ namespace RuralRumble.EditorTooling
                 : WriteSpriteClip($"{folder}/{spec.Name}_{WrestlerView.CrouchStateName}_PLACEHOLDER.anim", new[] { spec.StandFront }, new[] { 0 }, 6, loop: false);
             if (spec.Crouch == null)
                 standIns += " Crouch";
+            if (!WriteStompBounceClip(spec, folder, bySlot))
+                standIns += " StompBounce(=downed)";
             EditorUtility.SetDirty(table);
 
             AnimatorOverrideController overrides = WriteOverride($"{folder}/{spec.Name}.overrideController", controller, bySlot);
@@ -1014,6 +1029,28 @@ namespace RuralRumble.EditorTooling
             Sprite downed = spec.Bodyslammed.Sprites[spec.Bodyslammed.Sprites.Length - 1];
             bySlot[SlotFall] = WriteSpriteClip($"{folder}/{spec.Name}_{WrestlerView.FallStateName}_PLACEHOLDER.anim",
                 new[] { downed }, new[] { 0 }, 12, loop: false);
+            return false;
+        }
+
+        /// <summary>
+        /// Stomp bounce (D-047): {Name}_StompBounce.anim = R7 (the bodyslam bounce, its 17 px lift baked into the art) held
+        /// for its FrameTiming Hold (default <see cref="StompBounceDefaultHoldMs"/>), played once at native speed, rest pose
+        /// (no child offset, rotation or tint: WrestlerView applies the downed pose's flip / mirror shift, so R7 sits where it
+        /// does in the bodyslam tail relative to R6). No table entry. At the clip's end WrestlerView returns to the lying
+        /// pose. Without R7 the PLACEHOLDER holds the downed sprite (no visible bounce). Returns false for the placeholder.
+        /// </summary>
+        private static bool WriteStompBounceClip(WrestlerArtSpec spec, string folder, Dictionary<string, AnimationClip> bySlot)
+        {
+            if (spec.StompBounce != null)
+            {
+                bySlot[SlotStompBounce] = WriteTimedClip($"{folder}/{spec.Name}_{WrestlerView.StompBounceStateName}.anim",
+                    new[] { spec.StompBounce }, new[] { 0 }, 1, false, null, ClipPlayback.Native, -1,
+                    new[] { StompBounceDefaultHoldMs }).Clip;
+                return true;
+            }
+            Sprite downed = spec.Bodyslammed.Sprites[spec.Bodyslammed.Sprites.Length - 1];
+            bySlot[SlotStompBounce] = WriteTimedClip($"{folder}/{spec.Name}_{WrestlerView.StompBounceStateName}_PLACEHOLDER.anim",
+                new[] { downed }, new[] { 0 }, 1, false, null, ClipPlayback.Native, -1, new[] { StompBounceDefaultHoldMs }).Clip;
             return false;
         }
 
@@ -1428,6 +1465,7 @@ namespace RuralRumble.EditorTooling
             changed |= EnsureFallState(controller);
             changed |= EnsureCrouchState(controller);
             changed |= EnsureSlamTail(controller);
+            changed |= EnsureStompBounceState(controller);
 
             if (changed)
             {
@@ -1658,6 +1696,44 @@ namespace RuralRumble.EditorTooling
                 if (t.conditions.Any(c => c.parameter == SlamTailParam))
                     continue;
                 t.AddCondition(AnimatorConditionMode.IfNot, 0f, SlamTailParam);
+                changed = true;
+            }
+            return changed;
+        }
+
+        /// <summary>
+        /// Stomp bounce (D-047): parameter StompBounce (bool, set by WrestlerView); state "StompBounce" playing
+        /// Slot_StompBounce once at 1x (Animator speed still follows the hitstop / slow-mo hook). It has no Any State
+        /// transition: WrestlerView plays it from its start on HitLanded(Stomp) for a downed wrestler, and plays the lying
+        /// pose (Fall / KnockedOut / KnockedDown at its end) when the clip ends. The Any State -&gt; KnockedDown / KnockedOut /
+        /// Fall transitions get "StompBounce false" so they don't cut it short. The Crouch transition is left alone (the
+        /// D-043 get-up always wins). Adds only what is missing.
+        /// </summary>
+        public static bool EnsureStompBounceState(AnimatorController controller)
+        {
+            bool changed = false;
+            if (controller.parameters.All(p => p.name != StompBounceParam))
+            {
+                controller.AddParameter(StompBounceParam, AnimatorControllerParameterType.Bool);
+                changed = true;
+            }
+            AnimatorStateMachine sm = controller.layers[0].stateMachine;
+            foreach (AnimatorStateTransition t in sm.anyStateTransitions)
+            {
+                string dest = t.destinationState != null ? t.destinationState.name : null;
+                if (dest != CombatState.KnockedDown.ToString() && dest != CombatState.KnockedOut.ToString() &&
+                    dest != WrestlerView.FallStateName)
+                    continue;
+                if (t.conditions.Any(c => c.parameter == StompBounceParam))
+                    continue;
+                t.AddCondition(AnimatorConditionMode.IfNot, 0f, StompBounceParam);
+                changed = true;
+            }
+            if (sm.states.All(s => s.state.name != WrestlerView.StompBounceStateName))
+            {
+                AnimatorState state = sm.AddState(WrestlerView.StompBounceStateName, new Vector3(40, 520));
+                state.motion = WriteSlotClip(SlotStompBounce, loop: false);
+                state.writeDefaultValues = false;
                 changed = true;
             }
             return changed;

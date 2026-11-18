@@ -152,8 +152,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RuralRumble.Combat::RuralRumble.Combat.ArenaObstacleMarker
   role: 1
-  offset: {x: 0, y: 0}
-  size: {x: 8.3667, y: 1.1667}
+  offset: {x: 0, y: -0.1667}
+  size: {x: 8.3667, y: 1.8334}
 --- !u!1 &3613129294597344752
 GameObject:
   m_ObjectHideFlags: 0
@@ -386,4 +386,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: RuralRumble.Combat::RuralRumble.Combat.ArenaObstacleMarker
   role: 1
   offset: {x: 0, y: 0}
-  size: {x: 9.3333, y: 1}
+  size: {x: 9.3333, y: 2.6667}

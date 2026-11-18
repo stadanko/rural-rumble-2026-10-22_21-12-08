@@ -522,6 +522,18 @@ Agents: read this before starting work. If a task conflicts with a decision here
 
 ---
 
+## D-047: Stomp bounce; larger truck and pool collision areas
+
+- **Date:** 2026-11-17
+- **Decided by:** Designer; sizes and timing marked **Starting point** are set by the agents.
+- **Decision:**
+  - **Stomp bounce:** when a stomp lands on a downed wrestler, the wrestler bounces off the ground the way a slammed wrestler does at the end of the bodyslam (R6 impact → R7 bounce → R6 held). The downed pose is already R6 (D-045), so the stomp plays R7, then returns to R6. Uses each wrestler's existing `*_bodyslammed5_7` sprite with the same flip/mirror rules as the downed pose. No new sprites. Presentation only: Combat state, timing, damage and knockdown length are unchanged. **Starting point:** R7 held 150 ms (matches D-044/D-045).
+  - **Obstacle collision:** the truck and pool collision areas (`ArenaObstacleMarker` footprints) are enlarged in depth (y) so they extend further toward the top and bottom of each sprite. A wrestler can run into a larger part of each obstacle. This is designer feedback that the current area is too small. **Starting point:** chosen by the Architect against the sprites; stays within the walkable band.
+- **Why:** Designer playtest feedback (2026-11-17).
+- **Affects:** presentation (WrestlerView / WrestlerAnimationBuilder, StompBounce clips), Assets/Prefabs/Arena/Arena.prefab (Truck and Pool markers), docs/ARCHITECTURE.md §3.1, docs/COMBAT_SPEC.md, docs/ACCEPTANCE_TESTS.md.
+
+---
+
 ## Open Questions
 
 Not yet decided. Agents must not resolve these on their own.

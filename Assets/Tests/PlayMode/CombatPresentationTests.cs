@@ -257,15 +257,31 @@ namespace RuralRumble.Tests.PlayMode
             TickUntil(() => match.IsOver);
             Assert.AreEqual(CombatState.KnockedOut, match.Cpu.State);
             Assert.AreEqual(0, match.Cpu.FallSide, "setup: a stomp KO while down reports no fall side");
-            for (int f = 0; f < 30; f++)
+            // D-047: the KO stomp bounces him (R7) first, then he stays down in the same lying pose.
+            int bounceFrames = 0, lyingFrames = 0;
+            for (int f = 0; f < 45; f++)
             {
                 yield return new WaitForEndOfFrame();
-                Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.FallStateName), "the lying pose is kept (no new fall, no switch)");
-                Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, "the downed sprite is held");
-                Assert.AreEqual(lyingFlip, cpuView.SpriteRenderer.flipX, "the downed sprite keeps its flip");
-                Assert.AreEqual(lyingPos.x, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f, "the downed sprite keeps its offset");
+                Assert.AreEqual(lyingFlip, cpuView.SpriteRenderer.flipX, $"frame {f}: keeps the lying flip");
+                Assert.AreEqual(lyingPos.x, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f, $"frame {f}: keeps the lying offset");
                 Assert.AreEqual(side, cpuView.DownedFallSide, "the latched fall side is kept");
+                if (cpuView.SpriteRenderer.sprite == BarryBounceSprite())
+                {
+                    Assert.AreEqual(0, lyingFrames, $"frame {f}: the bounce plays once, right after the stomp");
+                    bounceFrames++;
+                    continue;
+                }
+                Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, $"frame {f}: the downed sprite (no new fall)");
+                if (bounceFrames > 0)
+                {
+                    Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.FallStateName), "back in the lying pose (no new fall, no switch)");
+                    lyingFrames++;
+                }
+                else
+                    Assert.Less(f, 2, "the bounce starts on the next frame");
             }
+            Assert.That(bounceFrames, Is.InRange(8, 12), "R7 shows about 150 ms");
+            Assert.Greater(lyingFrames, 20, "then stays down");
         }
 
         // D-041: knocked out from standing plays the whole fall from its start (struck_a, fall2, fall3, downed).
@@ -675,16 +691,143 @@ namespace RuralRumble.Tests.PlayMode
             playerInput.PressStrikeAt(0); // stomp
             TickUntil(() => match.IsOver);
             Assert.AreEqual(CombatState.KnockedOut, match.Cpu.State, "setup: the stomp knocks out during the get-up");
-            for (int f = 0; f < 30; f++)
+            // D-047: back to the lying pose by way of the stomp bounce (R7, same flip and offset), then R6 held.
+            int bounceFrames = 0;
+            for (int f = 0; f < 40; f++)
             {
                 yield return new WaitForEndOfFrame();
                 if (f < 2) continue; // the view applies the KO on the next Update
-                Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.FallStateName), $"frame {f}: back in the lying pose");
-                Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, $"frame {f}: the downed sprite, no new fall");
                 Assert.AreEqual(lyingFlip, cpuView.SpriteRenderer.flipX, "same flip as before the get-up");
                 Assert.AreEqual(lyingX, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f, "same offset, no slide");
                 Assert.IsFalse(cpuView.ShowingGetUp);
+                if (cpuView.SpriteRenderer.sprite == BarryBounceSprite())
+                {
+                    Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.StompBounceStateName), $"frame {f}: the bounce");
+                    bounceFrames++;
+                    continue;
+                }
+                Assert.Greater(bounceFrames, 0, $"frame {f}: the bounce comes first");
+                Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.FallStateName), $"frame {f}: back in the lying pose");
+                Assert.AreEqual(BarryDownedSprite(), cpuView.SpriteRenderer.sprite, $"frame {f}: the downed sprite, no new fall");
             }
+            Assert.That(bounceFrames, Is.InRange(7, 12), "R7 shows about 150 ms");
+        }
+
+        // ------------------------------------------------------------------ D-047 stomp bounce
+
+        /// <summary>Barry's stomp-bounce sprite: R7 of his bodyslam (barry_bodyslammed5_7).</summary>
+        private static Sprite BarryBounceSprite() => OnlySprite("Assets/Art/Wrestlers/Barry/barry_bodyslammed5_7.png");
+
+        // D-047: a stomp that lands on a downed wrestler shows R7 (the bodyslam bounce) for about 150 ms, then R6 again, with
+        // the lying pose's flip and child offset (downedMirrorShift + fallLandingShift) on every frame, so R7 never jumps
+        // sideways; the fall is not replayed. A second stomp bounces him again. Both wrestlers, both fall sides.
+        [UnityTest]
+        public IEnumerator StompBounce_Barry_FellTowardPlusX() => StompBounce(BarryPrefab, "Barry", true);
+
+        [UnityTest]
+        public IEnumerator StompBounce_Barry_FellTowardMinusX() => StompBounce(BarryPrefab, "Barry", false);
+
+        [UnityTest]
+        public IEnumerator StompBounce_Peaux_FellTowardPlusX() => StompBounce(PeauxPrefab, "Peaux", true);
+
+        [UnityTest]
+        public IEnumerator StompBounce_Peaux_FellTowardMinusX() => StompBounce(PeauxPrefab, "Peaux", false);
+
+        private IEnumerator StompBounce(string cpuPrefab, string wrestler, bool cpuOnRight)
+        {
+            Vector2 left = new Vector2(10f, -12f), right = new Vector2(12f, -12f);
+            Build(cpuOnRight ? left : right, cpuOnRight ? right : left, t =>
+            {
+                t.maxHealth = 32f; t.minKnockdownTime = 20f; t.maxKnockdownTime = 20f; t.stompDamage = 1f;
+                t.stompCooldown = 0f; // D-025 cooldown off: stomp again as soon as the first one ends
+                t.knockdownSlideDistance = 0f; // the player stays in stomp range
+            }, cpuPrefab);
+            yield return null;
+            string art = "Assets/Art/Wrestlers/" + wrestler + "/" + wrestler.ToLowerInvariant() + "_bodyslammed5_";
+            Sprite r6 = OnlySprite(art + "6.png"), r7 = OnlySprite(art + "7.png");
+            Assert.IsNotNull(r7, "setup: R7 sprite");
+            var stomps = new List<HitInfo>();
+            match.Events.HitLanded += h => { if (h.Defender == WrestlerId.Cpu && h.Move == MoveId.Stomp) stomps.Add(h); };
+
+            playerInput.PressStrikeAt(0);
+            TickUntil(() => match.Cpu.State == CombatState.KnockedDown);
+            Assert.AreEqual(cpuOnRight ? 1 : -1, match.Cpu.FallSide, "setup: falls away from the attacker");
+            TickUntil(() => match.Player.State == CombatState.Standing);
+            yield return Settle();
+            yield return new WaitForSeconds(0.6f); // the fall lands (0.35 s)
+            Assert.AreEqual(r6, cpuView.SpriteRenderer.sprite, "setup: lying on R6");
+            bool lyingFlip = cpuView.SpriteRenderer.flipX;
+            float lyingX = cpuView.SpriteRenderer.transform.localPosition.x;
+
+            for (int stomp = 1; stomp <= 2; stomp++)
+            {
+                playerInput.PressStrikeAt(0);
+                TickUntil(() => stomps.Count == stomp);
+                Assert.AreEqual(CombatState.KnockedDown, match.Cpu.State, "setup: the stomp leaves him down");
+                int bounceFrames = 0, after = 0;
+                string trace = "";
+                for (int f = 0; f < 30; f++)
+                {
+                    yield return new WaitForEndOfFrame();
+                    Sprite shown = cpuView.SpriteRenderer.sprite;
+                    trace += f + ":" + shown.name + " ";
+                    Assert.AreEqual(lyingFlip, cpuView.SpriteRenderer.flipX, $"stomp {stomp} frame {f}: the lying flip\n{trace}");
+                    Assert.AreEqual(lyingX, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f,
+                        $"stomp {stomp} frame {f}: the lying offset (no sideways jump)\n{trace}");
+                    if (shown == r7)
+                    {
+                        Assert.AreEqual(0, after, $"stomp {stomp}: one bounce\n{trace}");
+                        Assert.IsTrue(cpuView.StompBouncing);
+                        Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.StompBounceStateName));
+                        bounceFrames++;
+                        continue;
+                    }
+                    Assert.AreEqual(r6, shown, $"stomp {stomp} frame {f}: R6 around the bounce (no fall replay)\n{trace}");
+                    if (bounceFrames > 0)
+                    {
+                        Assert.IsFalse(cpuView.StompBouncing);
+                        Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.FallStateName), "back in the landed Fall state");
+                        after++;
+                    }
+                    else
+                        Assert.Less(f, 2, $"stomp {stomp}: the bounce starts on the next frame\n{trace}");
+                }
+                Assert.That(bounceFrames, Is.InRange(8, 12), $"stomp {stomp}: R7 shows about 150 ms\n{trace}");
+                Assert.Greater(after, 10, $"stomp {stomp}: then R6 again\n{trace}");
+                TickUntil(() => match.Player.State == CombatState.Standing);
+            }
+        }
+
+        // D-047 / D-043: the get-up starting while the bounce plays wins at once: the crouch at the root, no bounce left over.
+        [UnityTest]
+        public IEnumerator StompBounce_GetUpRightAfter_ShowsTheCrouch()
+        {
+            Build(new Vector2(10f, -12f), new Vector2(12f, -12f), t =>
+            {
+                t.maxHealth = 32f; t.minKnockdownTime = 1.5f; t.maxKnockdownTime = 1.5f; t.getUpTime = 0.25f; t.stompDamage = 1f;
+                t.knockdownSlideDistance = 0f;
+            });
+            yield return null;
+            var stomps = new List<HitInfo>();
+            match.Events.HitLanded += h => { if (h.Defender == WrestlerId.Cpu && h.Move == MoveId.Stomp) stomps.Add(h); };
+            playerInput.PressStrikeAt(0);
+            TickUntil(() => match.Cpu.State == CombatState.KnockedDown);
+            TickUntil(() => match.Player.State == CombatState.Standing);
+            playerInput.PressStrikeAt(0); // stomp
+            TickUntil(() => stomps.Count == 1);
+            Assert.IsFalse(match.Cpu.IsGettingUp, "setup: still lying when the stomp lands");
+            yield return Settle();
+            Assert.AreEqual(BarryBounceSprite(), cpuView.SpriteRenderer.sprite, "setup: the bounce is showing");
+            Assert.IsTrue(cpuView.StompBouncing);
+
+            TickUntil(() => match.Cpu.IsGettingUp); // no frames rendered: the get-up starts mid-bounce
+            yield return Settle();
+            Assert.IsFalse(cpuView.StompBouncing, "the get-up ends the bounce");
+            Assert.IsTrue(StateOf(cpuView).IsName(WrestlerView.CrouchStateName), "the crouch shows");
+            Assert.AreEqual(OnlySprite(BarryCrouch), cpuView.SpriteRenderer.sprite);
+            Assert.AreEqual(0f, cpuView.SpriteRenderer.transform.localPosition.x, 1e-4f, "the crouch at the root");
+            Assert.AreEqual(WrestlerView.ShouldFlip(match.Cpu.HorizontalFacing, true), cpuView.SpriteRenderer.flipX,
+                "the crouch is drawn by the combat facing");
         }
 
         /// <summary>Barry's downed sprite: the last sprite of Barry_Bodyslammed, his throw R6 (Peaux slams Barry, 2026-11-17).</summary>

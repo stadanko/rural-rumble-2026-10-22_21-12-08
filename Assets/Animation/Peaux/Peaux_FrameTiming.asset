@@ -824,3 +824,14 @@ MonoBehaviour:
       HoldMs: 250
       DefaultHoldMs: 250
       BuiltInHoldMs: 250
+  - ClipName: Peaux_StompBounce
+    Loops: 0
+    Playback: 0
+    ContactStep: -1
+    CustomDefaults: 0
+    Steps:
+    - Sprite: {fileID: -174912956629112325, guid: ced8792bbb575054287e116eba9d577c, type: 3}
+      PoseOnly: 0
+      HoldMs: 150
+      DefaultHoldMs: 150
+      BuiltInHoldMs: 150

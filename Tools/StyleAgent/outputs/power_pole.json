@@ -1,0 +1,93 @@
+{
+  "id": "power_pole",
+  "kind": "art_brief",
+  "subject": "Rotted wooden utility pole with sagging power lines, Duckville trailer park background prop",
+  "prompt": "Early-90s arcade pixel art, crisp hand-placed pixels at 1 native pixel per art pixel, in the style of WWF WrestleFest, Final Fight and Streets of Rage backgrounds, limited palette, hard pixel edges, dithering only for shading, no smooth gradients, no anti-aliasing. A single tall weathered wooden electric utility pole of a rundown North Louisiana trailer park, seen straight-on from the side, on a transparent background. Pole shaft in dark brown #795037 with darker cracked grain lines in #17243A and #10151A, leaning slightly off vertical. A wooden crossarm near the top with three grey-green glass insulators (#657A3B, #35523A tint) and a second shorter crossarm below, one end hanging cracked and drooping. Rusty orange-red steel bolts and a rusted transformer can (#A74727, #D26938) strapped halfway up. Faded, peeling staples and scraps of old paper flyers in #E6DFCC, loose wire tails hanging down, a tangle of dead vines (#35523A, #25372C) crawling up the base, weeds and dirt mound at the foot, a rotted splintered base with a diagonal wooden brace stick. Four sagging power lines in #10151A swoop in deep drooping catenary curves off both left and right edges of the sprite, one line hanging lower and frayed with a loose end. Late-afternoon golden-hour light from the low left: warm orange #E19A36 and yellow #FFD65A highlights on the left side of the pole and crossarm, cool shadow side in #17243A, long shadow cast to the right across the dirt at the base. Palette strictly: #10151A #17243A #25372C #35523A #657A3B #795037 #A74727 #D26938 #E19A36 #FFD65A #E6DFCC. Background-layer prop, sprite only, no scenery behind it.",
+  "negative_prompt": "3D render, photorealistic, photo, vector art, anime, painterly, smooth gradients, blur, anti-aliasing, soft glow, high-resolution modern look, clean new pole, metal or concrete pole, city, skyline, highway, street lights, neon signs, crowds, buildings, mountains, hills, cliffs, midday sun, night, overcast, blue sky, text, watermark, characters, cars, off-palette colours",
+  "palette": [
+    "#10151A",
+    "#17243A",
+    "#25372C",
+    "#35523A",
+    "#657A3B",
+    "#795037",
+    "#A74727",
+    "#D26938",
+    "#E19A36",
+    "#FFD65A",
+    "#E6DFCC"
+  ],
+  "lighting": "Late-afternoon golden hour: low warm orange sun from the left, yellow-orange rim highlights on the pole's left side, cool dark blue-green shadow side, long shadow stretching to the right across the dirt.",
+  "details": "Disrepair: pole leans and is cracked and splintered, wood grey-brown and weathered; rusted transformer and bolts; cracked, drooping lower crossarm; frayed, deeply sagging lines with a loose dangling end; peeling faded flyers and stapled scraps; dead vines and weeds at the base; propped with a rotting brace stick. Only elements from the arena whitelist (electric pole, dirt/grass ground at base) appear.",
+  "size_px": {
+    "width": 420,
+    "height": 720
+  },
+  "scale_note": "Barry is 240 px tall standing. The pole is 720 px tall, 3x Barry, taller than a single-wide trailer (about 480 px, 2x Barry) as a real utility pole would be, about 30 ft against a 14 ft trailer. Width 420 px includes the sagging line stubs, and the shaft itself is about 28 px wide. Drawn at 1 art pixel per native pixel like the wrestlers.",
+  "layer": "background (mid-ground, between the pines and the trailers)",
+  "style_score": {
+    "total": 86.9,
+    "threshold": 85,
+    "rules": {
+      "A-01": {
+        "score": 9,
+        "reason": "The prompt asks for crisp hand-placed pixel art at 1 native px per art pixel, names WrestleFest, Final Fight and Streets of Rage, and the negative prompt rules out 3D, vector, anime and painterly looks. The small gap is that the catenary lines and the dithering note are not tied to a specific arcade reference. [check] 3/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game)"
+      },
+      "A-02": {
+        "score": 8,
+        "reason": "The prompt names the hex colours and mostly keeps to the palette. It lists only 11 of the 14 colours, leaving out #2872B8, #7435A8 and #C7352C, and doesn't say why. It also uses an off-palette 'grey-green' insulator described as '#35523A tint', and the details say 'grey-brown' wood, which is vague. [check] 11/11 hex colours are on the Style Guide palette"
+      },
+      "A-03": {
+        "score": 9,
+        "reason": "The lighting is golden hour with low warm sun, orange and yellow highlights and a long shadow to the right across the dirt. This matches D-016. The transparent sprite has no sky, so the warm orange sky is not shown. [check] 4/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows)"
+      },
+      "A-04": {
+        "score": 9,
+        "reason": "The brief covers only an electric pole, its lines, and dirt and weeds at the base, and the negative prompt excludes mountains, hills, cliffs and buildings. The details also state the whitelist. The vines, flyers and brace stick are small invented extras, but they stay within a pole prop. [check] No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt."
+      },
+      "A-05": {
+        "score": 8,
+        "reason": "The negative prompt excludes city, skyline, highway, street lights and neon, and the pole is placed 'between the pines and the trailers' in a rundown North Louisiana trailer park. But the transparent sprite shows no woods itself, so the deep-woods feel rests on the layer note and not on the prompt. [check] No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt."
+      },
+      "A-06": {
+        "score": 10,
+        "reason": "The disrepair details are concrete and visible: a leaning, cracked pole, a drooping cracked crossarm, a rusted transformer, frayed sagging lines with a loose end, peeling flyers, dead vines, weeds and a rotted base with a brace stick. [check] 12 distinct neglect details (cracked, faded, leaning, leans, peeling, rotted, rotting, rusted, rusty, sagging, weathered, weeds)"
+      },
+      "A-08": {
+        "score": 7,
+        "reason": "The brief gives a size in native px against Barry's 240 px and does the maths. But the Style Guide's only stated scale is the single-wide trailer at about twice Barry's height, so the 720 px pole is 3x Barry, which is the draft's own real-world estimate and not in the docs. The 28 px shaft width is also thin for a 720 px tall pole, and the prompt itself never gives the pixel size, so the image model isn't told the scale. [check] height 720px vs target 480-1080px (taller than a single-wide trailer (about 480 px), no taller than the 1080-px backdrop)"
+      }
+    }
+  },
+  "provenance": {
+    "origin": "AI-generated",
+    "generator": "Tools/StyleAgent (Assignment #06)",
+    "model": "claude-sonnet-5-5",
+    "run_id": "2026-11-22T204039Z",
+    "iterations": 1,
+    "score_trajectory": [
+      86.9
+    ],
+    "docs_read": [
+      {
+        "path": "docs/STYLE_GUIDE.md",
+        "sha256": "f8fafab43f35e23524f217f2e7b25c38e72b2d46b1ae43b600d960ea256473fd",
+        "sections": [
+          "Overall Game Style",
+          "Sprite Scale",
+          "Arena",
+          "Color Palette"
+        ]
+      },
+      {
+        "path": "docs/GDD.md",
+        "sha256": "ccbcd64c23f541b1ee8f2150add724c13ccc319eb5f1db51f520a175942d1116",
+        "sections": [
+          "Setting & World",
+          "Tone & Aesthetics"
+        ]
+      }
+    ],
+    "review_status": "AI-generated placeholder; pending designer review"
+  }
+}

@@ -1,0 +1,281 @@
+{
+  "_about": "Rural Rumble style rulebook for the Style Guide Agent (Assignment #06). Every rule is pulled from docs/STYLE_GUIDE.md or docs/GDD.md: `source.quotes` are verbatim doc text, and rules.py refuses to load if any quote is missing from the cited section. `weight` (1-3) sets the rule's share of the 0-100 score. A `hard` rule must score at least 7/10 on its own, whatever the total. `checker` names a deterministic check in checks.py that scores the rule alongside the LLM Evaluator; the lower of the two scores counts.",
+  "rules": [
+    {
+      "id": "A-01",
+      "domain": "aesthetic",
+      "title": "Early-90s arcade pixel art at native scale",
+      "rule": "The asset is crisp hand-placed pixel art in the style of early-90s Technos Japan / Capcom / SNK arcade games (WrestleFest, Final Fight, Streets of Rage), drawn at 1 native pixel per art pixel like the wrestlers. No 3D render, photorealism, vector art, anime, painterly or smooth-gradient looks.",
+      "weight": 3,
+      "hard": true,
+      "checker": "pixel_style",
+      "source": {
+        "path": "docs/STYLE_GUIDE.md",
+        "section": "Overall Game Style",
+        "quotes": [
+          "The look/style of the game should be patterned after Early 90s arcade games from Technos Japan, Capcom, and SNK.",
+          "Game examples are WWF Wrestlefest, WWF Superstars, Final Fight, Street Fighter II, Streets of Rage Series, Fatal Fury, 3 Count Bout"
+        ]
+      },
+      "also_source": {
+        "path": "docs/STYLE_GUIDE.md",
+        "section": "Arena",
+        "quotes": ["drawn at 1 native px per art pixel, like the wrestlers"]
+      }
+    },
+    {
+      "id": "A-02",
+      "domain": "aesthetic",
+      "title": "Rural Rumble 14-colour palette",
+      "rule": "The brief's palette is built from the Style Guide's 14 hex colours, and the prompt names them. Any off-palette colour must be justified (the guide's only named exception is skin tones, which props do not have).",
+      "weight": 2,
+      "hard": true,
+      "checker": "palette",
+      "source": {
+        "path": "docs/STYLE_GUIDE.md",
+        "section": "Color Palette",
+        "quotes": ["The palette guides the game's overall look, but not every color has to come from it. Skin tones are the main exception."]
+      }
+    },
+    {
+      "id": "A-03",
+      "domain": "aesthetic",
+      "title": "Late-afternoon golden-hour light (D-016)",
+      "rule": "Light matches the chosen arena look: late-afternoon golden hour, warm orange sky, long shadows falling across the dirt. Not midday, night, overcast, or neon.",
+      "weight": 2,
+      "hard": false,
+      "checker": "golden_hour",
+      "source": {
+        "path": "docs/STYLE_GUIDE.md",
+        "section": "Arena",
+        "quotes": ["Arena 4's layout and pixel style in late-afternoon golden-hour light: warm orange sky behind the pines, long shadows across the dirt, trailer along the back, truck on the left, pool on the right."]
+      }
+    },
+    {
+      "id": "A-04",
+      "domain": "aesthetic",
+      "title": "Background whitelist: trees, skies, electric poles, trailers",
+      "rule": "Nothing in the scene beyond what the guide allows in the background: pine trees, sky, electric poles, trailers (plus the arena's own dirt, gravel and grass). No mountains, large hills, cliffs, or other landmarks.",
+      "weight": 2,
+      "hard": true,
+      "checker": "banned_scenery",
+      "source": {
+        "path": "docs/STYLE_GUIDE.md",
+        "section": "Arena",
+        "quotes": ["The background should not include mountains or large hills. Just trees, skies, electric poles, and trailers."]
+      }
+    },
+    {
+      "id": "A-05",
+      "domain": "aesthetic",
+      "title": "Deep woods, not a city",
+      "rule": "The place reads as a trailer park in the middle of the woods. No city, skyline, highway, neon signage, crowds, or suburban polish.",
+      "weight": 2,
+      "hard": true,
+      "checker": "banned_scenery",
+      "source": {
+        "path": "docs/STYLE_GUIDE.md",
+        "section": "Arena",
+        "quotes": [
+          "Feels like in the middle of the woods, not a busy city.",
+          "There should be thick North Louisiana Pine Trees as part of the background."
+        ]
+      }
+    },
+    {
+      "id": "A-06",
+      "domain": "aesthetic",
+      "title": "Disrepair: nothing has been kept up",
+      "rule": "The subject shows years of neglect with concrete, visible details (rust, sagging, patched, faded, missing parts, weeds). It is not clean, new, or merely 'old'.",
+      "weight": 3,
+      "hard": false,
+      "checker": "disrepair",
+      "source": {
+        "path": "docs/STYLE_GUIDE.md",
+        "section": "Arena",
+        "quotes": ["The general feeling of the trailer park should be disrepair. It has not been kept up with over the years."]
+      },
+      "also_source": {
+        "path": "docs/GDD.md",
+        "section": "Tone & Aesthetics",
+        "quotes": ["Environments will contrast the absurdity of the characters with rundown trailers, dirt lots, swampy landscapes, and a generally rough, lived-in Southern aesthetic."]
+      }
+    },
+    {
+      "id": "A-07",
+      "domain": "aesthetic",
+      "title": "Trailer roofs carry old TV antennas or satellite dishes",
+      "rule": "A trailer asset has an old rooftop TV antenna or a DirecTV-style dish on its roof.",
+      "weight": 2,
+      "hard": false,
+      "checker": "roof_antenna",
+      "source": {
+        "path": "docs/STYLE_GUIDE.md",
+        "section": "Arena",
+        "quotes": ["Trailers should have old TV antennas or direct TV style dishes attached to some of the roofs."]
+      }
+    },
+    {
+      "id": "A-08",
+      "domain": "aesthetic",
+      "title": "Drawn to scale with the 240-px wrestlers",
+      "rule": "The brief states the asset's size in native pixels against Barry's 240-px standing sprite. A single-wide trailer stands roughly twice Barry's height (about 480 px).",
+      "weight": 2,
+      "hard": true,
+      "checker": "scale",
+      "source": {
+        "path": "docs/STYLE_GUIDE.md",
+        "section": "Arena",
+        "quotes": ["Props must be drawn to scale with the 240-px wrestlers: a single-wide trailer stands roughly twice Barry's height."]
+      },
+      "also_source": {
+        "path": "docs/STYLE_GUIDE.md",
+        "section": "Sprite Scale",
+        "quotes": ["Barry is 240 pixels tall in his standing sprite."]
+      }
+    },
+    {
+      "id": "N-01",
+      "domain": "narrative",
+      "title": "Only the two GDD wrestlers, named as the GDD names them",
+      "rule": "The only speakers are Barry \"Hot Potato\" Lankford and Peaux Strange, with names and nickname exactly as in the GDD. No other wrestlers, real or invented, and no new named characters.",
+      "weight": 2,
+      "hard": true,
+      "checker": "names",
+      "source": {
+        "path": "docs/GDD.md",
+        "section": "Narrative",
+        "quotes": ["The initial version of *Rural Rumble* will feature minimal narrative, focusing primarily on the rivalry between its two playable wrestlers."]
+      }
+    },
+    {
+      "id": "N-02",
+      "domain": "narrative",
+      "title": "Knockout is the only way to win",
+      "rule": "Any talk of winning or losing is about a knockout. No pinfalls, three-counts, submissions, titles, belts, tag teams, tournaments, or other match types.",
+      "weight": 3,
+      "hard": true,
+      "checker": "mvp_mechanics",
+      "source": {
+        "path": "docs/GDD.md",
+        "section": "Executive Summary",
+        "quotes": ["The objective is to score a knockout (KO), ending the match and triggering a victory screen."]
+      },
+      "also_source": {
+        "path": "docs/GDD.md",
+        "section": "MVP Scope",
+        "quotes": ["**Stretch Goals:** Pinfall and three-count mechanics, additional moves, two additional wrestlers, character entrances, and tag-team matches."]
+      }
+    },
+    {
+      "id": "N-03",
+      "domain": "narrative",
+      "title": "Only moves that exist in the MVP",
+      "rule": "Threats and boasts reference only moves the game has: the punch/kick combination, the standing lock-up, the bodyslam, the Irish Whip, and stomping a downed opponent. No suplexes, piledrivers, DDTs, finishers or signature moves.",
+      "weight": 2,
+      "hard": true,
+      "checker": "mvp_moves",
+      "source": {
+        "path": "docs/GDD.md",
+        "section": "Design Pillars: What is Central to the Experience?",
+        "quotes": ["Every punch, bodyslam, and Irish Whip should capture the humor and chaotic energy of an unsanctioned backyard wrestling match."]
+      },
+      "also_source": {
+        "path": "docs/GDD.md",
+        "section": "MVP Scope",
+        "quotes": ["**Grappling:** One standing lock-up, one bodyslam, and one Irish Whip."]
+      }
+    },
+    {
+      "id": "N-04",
+      "domain": "narrative",
+      "title": "Barry sounds like Barry",
+      "rule": "Barry's lines come from his GDD profile and look: a stubborn, retired long-haul trucker who runs a dirt track in Hoon, beats up punks who won't pick up their cigarette butts, with a trucker hat, Wild Bill mustache and beer gut. Blunt, older, country.",
+      "weight": 3,
+      "hard": false,
+      "checker": "doc_facts_barry",
+      "source": {
+        "path": "docs/GDD.md",
+        "section": "Character Designs",
+        "quotes": [
+          "known for his stubborn temperament and questionable lifestyle choices",
+          "His favorite pastime is beating up the neighborhood punks who refuse to pick up their cigarette butts."
+        ]
+      },
+      "also_source": {
+        "path": "docs/STYLE_GUIDE.md",
+        "section": "Characters",
+        "quotes": ["Wild Bill Mustache", "Beer gut/spare tire"]
+      }
+    },
+    {
+      "id": "N-05",
+      "domain": "narrative",
+      "title": "Peaux sounds like Peaux",
+      "rule": "Peaux's lines come from his GDD profile and look: a late-teens trailer-park goth, expelled at sixteen, toughened by his older football-playing brothers, eyeliner over eye black, no patience for loudmouthed rednecks. Sullen, cutting, young.",
+      "weight": 3,
+      "hard": false,
+      "checker": "doc_facts_peaux",
+      "source": {
+        "path": "docs/GDD.md",
+        "section": "Character Designs",
+        "quotes": [
+          "A trailer-park goth with a troubled past",
+          "Peaux has little patience for the loudmouthed rednecks who dominate his neighborhood."
+        ]
+      },
+      "also_source": {
+        "path": "docs/STYLE_GUIDE.md",
+        "section": "Characters",
+        "quotes": ["Black lipstick & eyeliner", "Late teens"]
+      }
+    },
+    {
+      "id": "N-06",
+      "domain": "narrative",
+      "title": "Rooted in Duckville",
+      "rule": "The exchange is set in Duckville's trailer park (gravel, trailers, driveways, dirt lots) and treats the two as neighbours who can't stand each other. No arenas, crowds, promotions, or TV events.",
+      "weight": 2,
+      "hard": false,
+      "checker": "setting_anchor",
+      "source": {
+        "path": "docs/GDD.md",
+        "section": "Setting & World",
+        "quotes": ["The initial game takes place in Duckville, a rundown community on the outskirts of West McRae."]
+      },
+      "also_source": {
+        "path": "docs/GDD.md",
+        "section": "Narrative",
+        "quotes": ["Barry \"Hot Potato\" Lankford and Peaux Strange live in the same trailer park but represent very different personalities and lifestyles."]
+      }
+    },
+    {
+      "id": "N-07",
+      "domain": "narrative",
+      "title": "Dark Southern humor",
+      "rule": "The humor is dark, blunt, irreverent and Southern (Squidbillies, Trailer Park Boys, Beavis and Butt-Head, Eastbound & Down). Not wholesome, not generic sports-movie bravado, not a stock wrestling promo.",
+      "weight": 3,
+      "hard": false,
+      "checker": null,
+      "source": {
+        "path": "docs/GDD.md",
+        "section": "Tone & Aesthetics",
+        "quotes": ["*Rural Rumble* combines dark Southern humor with exaggerated, retro-inspired arcade visuals."]
+      }
+    },
+    {
+      "id": "N-08",
+      "domain": "narrative",
+      "title": "Short enough not to interrupt the arcade action",
+      "rule": "Exactly four lines, speakers alternating, each line at most 90 characters, so the exchange fits a pre-match beat without slowing the game down.",
+      "weight": 1,
+      "hard": false,
+      "checker": "line_format",
+      "source": {
+        "path": "docs/GDD.md",
+        "section": "Narrative",
+        "quotes": ["Character backgrounds and the setting provide context and humor without interrupting the arcade-style gameplay."]
+      }
+    }
+  ]
+}

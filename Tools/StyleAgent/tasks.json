@@ -1,0 +1,48 @@
+{
+  "_about": "Content the Style Guide Agent produces. Each task names its content kind, the brief the Generator gets, the rules it is scored on (ids in style_rules.json), and the doc sections every stage reads.",
+  "tasks": [
+    {
+      "id": "trailer_backdrop",
+      "kind": "art_brief",
+      "brief": "An image-generation brief for one single-wide trailer for the back row of the Duckville arena backdrop (the 'trailer along the back' in the chosen arena look). The Art Wrangler would feed the prompt to an image model to make a placeholder sprite.",
+      "rules": ["A-01", "A-02", "A-03", "A-04", "A-05", "A-06", "A-07", "A-08"],
+      "scale_px": {"height_min": 430, "height_max": 530, "basis": "a single-wide trailer stands roughly twice Barry's 240-px height"},
+      "docs": "art"
+    },
+    {
+      "id": "power_pole",
+      "kind": "art_brief",
+      "brief": "An image-generation brief for a wooden electric pole with sagging power lines, to stand in the arena background between the pines and the trailers.",
+      "rules": ["A-01", "A-02", "A-03", "A-04", "A-05", "A-06", "A-08"],
+      "scale_px": {"height_min": 480, "height_max": 1080, "basis": "taller than a single-wide trailer (about 480 px), no taller than the 1080-px backdrop"},
+      "docs": "art"
+    },
+    {
+      "id": "trash_talk_prematch",
+      "kind": "trash_talk",
+      "brief": "A four-line pre-match trash-talk exchange between Barry and Peaux, spoken in the trailer park just before the bell. Candidate flavour text for the moment before the versus text; it is not wired into the game.",
+      "rules": ["N-01", "N-02", "N-03", "N-04", "N-05", "N-06", "N-07", "N-08"],
+      "docs": "narrative"
+    }
+  ],
+  "doc_sections": {
+    "art": [
+      ["docs/STYLE_GUIDE.md", "Overall Game Style"],
+      ["docs/STYLE_GUIDE.md", "Sprite Scale"],
+      ["docs/STYLE_GUIDE.md", "Arena"],
+      ["docs/STYLE_GUIDE.md", "Color Palette"],
+      ["docs/GDD.md", "Setting & World"],
+      ["docs/GDD.md", "Tone & Aesthetics"]
+    ],
+    "narrative": [
+      ["docs/GDD.md", "Executive Summary"],
+      ["docs/GDD.md", "Design Pillars: What is Central to the Experience?"],
+      ["docs/GDD.md", "MVP Scope"],
+      ["docs/GDD.md", "Character Designs"],
+      ["docs/GDD.md", "Setting & World"],
+      ["docs/GDD.md", "Tone & Aesthetics"],
+      ["docs/GDD.md", "Narrative"],
+      ["docs/STYLE_GUIDE.md", "Characters"]
+    ]
+  }
+}

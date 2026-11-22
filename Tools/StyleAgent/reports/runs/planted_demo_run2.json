@@ -1,0 +1,1600 @@
+{
+  "run_id": "2026-11-22T203746Z",
+  "model": "claude-sonnet-5-5",
+  "threshold": 85,
+  "hard_floor": 7,
+  "soft_floor": 6,
+  "max_refinements": 3,
+  "note": "**Planted-violation demo.** Iteration 0 of each task is a hand-written, deliberately off-style draft from `fixtures/`, not Generator output. Everything after it is the agent working alone.",
+  "estimated_cost_usd": 0.467,
+  "tasks": [
+    {
+      "task_id": "trailer_backdrop",
+      "kind": "art_brief",
+      "brief": "An image-generation brief for one single-wide trailer for the back row of the Duckville arena backdrop (the 'trailer along the back' in the chosen arena look). The Art Wrangler would feed the prompt to an image model to make a placeholder sprite.",
+      "status": "approved",
+      "final_iteration": 1,
+      "final_score": 86.7,
+      "score_trajectory": [
+        1.1,
+        86.7
+      ],
+      "final_draft": {
+        "subject": "A single-wide rundown trailer for the back row of the Duckville arena backdrop, in a clearing among thick North Louisiana pines",
+        "prompt": "Crisp hand-placed early-90s arcade pixel art, 16-bit style like WWF WrestleFest, Final Fight and Streets of Rage, drawn at 1 native pixel per art pixel with hard pixel edges and limited shading ramps. Side view of one single-wide trailer, about 480 px tall, parked in a dirt and gravel clearing with weeds, thick North Louisiana pine trees, a warm orange sky and an electric pole behind it. Late-afternoon golden hour, warm orange light from the west, long shadows falling across the dirt. The trailer is in long-neglected disrepair: rusted, streaked, faded siding, a sagging roof patched with a blue tarp, a missing skirting panel showing dark space underneath, a cracked window with a torn curtain, a dented door hanging crooked, weeds growing around stacked cinder blocks. A bent old rooftop TV antenna and a rusty DirecTV-style satellite dish are attached to the roof. Palette: #10151A #17243A #25372C #35523A #657A3B #795037 #A74727 #D26938 #E19A36 #FFD65A #2872B8 #7435A8 #C7352C #E6DFCC",
+        "negative_prompt": "3D render, photorealistic, photograph, vector art, anime, painterly, smooth gradients, blur, anti-aliasing, mountains, hills, cliffs, city, skyline, neon, highway, crowds, snow, night, overcast, new, clean, freshly painted, solar panels, manicured lawn, text, watermark",
+        "palette": [
+          "#10151A",
+          "#17243A",
+          "#25372C",
+          "#35523A",
+          "#657A3B",
+          "#795037",
+          "#A74727",
+          "#D26938",
+          "#E19A36",
+          "#FFD65A",
+          "#2872B8",
+          "#7435A8",
+          "#C7352C",
+          "#E6DFCC"
+        ],
+        "lighting": "Late-afternoon golden hour: warm orange sky, warm orange and yellow highlights on the trailer's west side, long shadows falling across the dirt",
+        "details": "Rusted, streaked, faded siding; sagging roof with a blue tarp patch; missing skirting panel; cracked window with a torn curtain; crooked dented door; weeds around cinder blocks; bent rooftop TV antenna and a rusty DirecTV-style dish on the roof; pines and an electric pole behind.",
+        "size_px": {
+          "width": 960,
+          "height": 480
+        },
+        "scale_note": "Single-wide trailer is 480 px tall, about 2x Barry's 240-px standing sprite (Peaux is 215 px), at 1 native px per art pixel in the 960x540 native view.",
+        "layer": "background"
+      },
+      "iterations": [
+        {
+          "iteration": 0,
+          "made_by": "seed",
+          "draft": {
+            "subject": "A sleek modern mobile home in a city trailer lot",
+            "prompt": "Photorealistic 3D render of a brand-new silver mobile home, freshly painted and spotless, parked in an urban lot at night with neon signs, a glowing city skyline and snowy mountains behind it, smooth gradients, cinematic 8k lighting, palette #00FFFF #FF00FF #FFFFFF #1A1A1A",
+            "negative_prompt": "pixel art, low resolution",
+            "palette": [
+              "#00FFFF",
+              "#FF00FF",
+              "#FFFFFF",
+              "#1A1A1A"
+            ],
+            "lighting": "Night, cool blue moonlight with pink neon glow",
+            "details": "Clean siding, manicured lawn, modern solar panels on the roof.",
+            "size_px": {
+              "width": 1200,
+              "height": 260
+            },
+            "scale_note": "Fits the screen nicely.",
+            "layer": "background"
+          },
+          "scorecard": {
+            "total": 1.1,
+            "threshold": 85,
+            "hard_floor": 7,
+            "soft_floor": 6,
+            "passed": false,
+            "hard_failures": [
+              "A-01",
+              "A-02",
+              "A-04",
+              "A-05",
+              "A-08"
+            ],
+            "floor_failures": [
+              "A-03",
+              "A-06",
+              "A-07"
+            ],
+            "rules": [
+              {
+                "rule_id": "A-01",
+                "title": "Early-90s arcade pixel art at native scale",
+                "domain": "aesthetic",
+                "weight": 3,
+                "hard": true,
+                "score": 0,
+                "reason": "The prompt asks for a photorealistic 3D render with smooth gradients and 8k cinematic lighting, which is the opposite of early-90s arcade pixel art. The negative prompt also bans pixel art. [check] 0/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game); off-style terms: \"3D\" (3D render), \"Photorealistic\" (photorealism), \"8k\" (photorealism), \"smooth gradients\" (painterly/smooth)",
+                "llm": {
+                  "rule_id": "A-01",
+                  "score": 0,
+                  "reason": "The prompt asks for a photorealistic 3D render with smooth gradients and 8k cinematic lighting, which is the opposite of early-90s arcade pixel art. The negative prompt also bans pixel art.",
+                  "evidence": "Photorealistic 3D render of a brand-new silver mobile home ... smooth gradients, cinematic 8k lighting; negative_prompt: \"pixel art, low resolution\"",
+                  "fix": "Ask for crisp hand-placed early-90s arcade pixel art in the style of WrestleFest, Final Fight and Streets of Rage, at 1 native px per art pixel. Remove the 3D, photoreal and gradient wording. Take pixel art out of the negative prompt and put 3D, photoreal, vector and smooth-gradient there."
+                },
+                "check": {
+                  "score": 0,
+                  "reason": "0/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game); off-style terms: \"3D\" (3D render), \"Photorealistic\" (photorealism), \"8k\" (photorealism), \"smooth gradients\" (painterly/smooth)",
+                  "evidence": [
+                    "3D",
+                    "Photorealistic",
+                    "8k",
+                    "smooth gradients"
+                  ]
+                }
+              },
+              {
+                "rule_id": "A-02",
+                "title": "Rural Rumble 14-colour palette",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 0,
+                "reason": "The palette is four neon and white colours, and none of them is from the Style Guide's 14 hex colours. No off-palette colour is justified. [check] 0/4 hex colours are on the Style Guide palette; off-palette: #00FFFF, #FF00FF, #FFFFFF, #1A1A1A; only 0 palette colours used (need at least 4 for shading ramps)",
+                "llm": {
+                  "rule_id": "A-02",
+                  "score": 0,
+                  "reason": "The palette is four neon and white colours, and none of them is from the Style Guide's 14 hex colours. No off-palette colour is justified.",
+                  "evidence": "palette #00FFFF #FF00FF #FFFFFF #1A1A1A",
+                  "fix": "Replace the palette with the 14 guide colours (#10151A #17243A #25372C #35523A #657A3B #795037 #A74727 #D26938 #E19A36 #FFD65A #2872B8 #7435A8 #C7352C #E6DFCC) and name them in the prompt."
+                },
+                "check": {
+                  "score": 0,
+                  "reason": "0/4 hex colours are on the Style Guide palette; off-palette: #00FFFF, #FF00FF, #FFFFFF, #1A1A1A; only 0 palette colours used (need at least 4 for shading ramps)",
+                  "evidence": [
+                    "#00FFFF",
+                    "#FF00FF",
+                    "#FFFFFF",
+                    "#1A1A1A"
+                  ]
+                }
+              },
+              {
+                "rule_id": "A-03",
+                "title": "Late-afternoon golden-hour light (D-016)",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": false,
+                "score": 0,
+                "reason": "The lighting is night with moonlight and neon glow. The guide calls for late-afternoon golden hour, a warm orange sky and long shadows. [check] 0/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows); conflicting light: \"night\", \"Night\"",
+                "llm": {
+                  "rule_id": "A-03",
+                  "score": 0,
+                  "reason": "The lighting is night with moonlight and neon glow. The guide calls for late-afternoon golden hour, a warm orange sky and long shadows.",
+                  "evidence": "Night, cool blue moonlight with pink neon glow",
+                  "fix": "Set the lighting to late-afternoon golden hour: warm orange light, long shadows across the dirt, and warm highlights on the trailer's west side."
+                },
+                "check": {
+                  "score": 0,
+                  "reason": "0/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows); conflicting light: \"night\", \"Night\"",
+                  "evidence": [
+                    "night",
+                    "Night"
+                  ]
+                }
+              },
+              {
+                "rule_id": "A-04",
+                "title": "Background whitelist: trees, skies, electric poles, trailers",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 0,
+                "reason": "The scene has snowy mountains, a city skyline and neon signs, all of which the guide excludes. Mountains are named outright as banned. [check] Banned scenery in the prompt: \"mountains\" (mountains), \"city\" (city), \"urban\" (city), \"city\" (city), \"skyline\" (city), \"neon\" (city fixtures), \"neon\" (city fixtures), \"snowy\" (wrong biome/genre)",
+                "llm": {
+                  "rule_id": "A-04",
+                  "score": 0,
+                  "reason": "The scene has snowy mountains, a city skyline and neon signs, all of which the guide excludes. Mountains are named outright as banned.",
+                  "evidence": "a glowing city skyline and snowy mountains behind it",
+                  "fix": "Limit the scene to the trailer, North Louisiana pines, sky, electric poles and dirt/gravel/grass. Remove the mountains and skyline."
+                },
+                "check": {
+                  "score": 0,
+                  "reason": "Banned scenery in the prompt: \"mountains\" (mountains), \"city\" (city), \"urban\" (city), \"city\" (city), \"skyline\" (city), \"neon\" (city fixtures), \"neon\" (city fixtures), \"snowy\" (wrong biome/genre)",
+                  "evidence": [
+                    "mountains",
+                    "city",
+                    "urban",
+                    "city",
+                    "skyline",
+                    "neon",
+                    "neon",
+                    "snowy"
+                  ]
+                }
+              },
+              {
+                "rule_id": "A-05",
+                "title": "Deep woods, not a city",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 0,
+                "reason": "The setting is an urban lot with a skyline and neon signs, so it reads as a city. It does not read as a trailer park in the woods. [check] Banned scenery in the prompt: \"mountains\" (mountains), \"city\" (city), \"urban\" (city), \"city\" (city), \"skyline\" (city), \"neon\" (city fixtures), \"neon\" (city fixtures), \"snowy\" (wrong biome/genre)",
+                "llm": {
+                  "rule_id": "A-05",
+                  "score": 0,
+                  "reason": "The setting is an urban lot with a skyline and neon signs, so it reads as a city. It does not read as a trailer park in the woods.",
+                  "evidence": "parked in an urban lot at night with neon signs, a glowing city skyline",
+                  "fix": "Place the trailer in a clearing among thick pine woods in rural Duckville. Remove all urban and neon elements."
+                },
+                "check": {
+                  "score": 0,
+                  "reason": "Banned scenery in the prompt: \"mountains\" (mountains), \"city\" (city), \"urban\" (city), \"city\" (city), \"skyline\" (city), \"neon\" (city fixtures), \"neon\" (city fixtures), \"snowy\" (wrong biome/genre)",
+                  "evidence": [
+                    "mountains",
+                    "city",
+                    "urban",
+                    "city",
+                    "skyline",
+                    "neon",
+                    "neon",
+                    "snowy"
+                  ]
+                }
+              },
+              {
+                "rule_id": "A-06",
+                "title": "Disrepair: nothing has been kept up",
+                "domain": "aesthetic",
+                "weight": 3,
+                "hard": false,
+                "score": 0,
+                "reason": "The brief asks for the opposite of disrepair: it is brand-new, spotless, with a manicured lawn. [check] 0 distinct neglect details (none); contradicting kept-up wording: \"brand-new\", \"freshly painted\", \"spotless\", \"manicured\"",
+                "llm": {
+                  "rule_id": "A-06",
+                  "score": 0,
+                  "reason": "The brief asks for the opposite of disrepair: it is brand-new, spotless, with a manicured lawn.",
+                  "evidence": "brand-new silver mobile home, freshly painted and spotless; \"Clean siding, manicured lawn\"",
+                  "fix": "Describe specific neglect: rusted and streaked siding, a sagging roof patch with a tarp, faded paint, a missing skirting panel, a cracked window, and weeds growing around the cinder blocks."
+                },
+                "check": {
+                  "score": 0,
+                  "reason": "0 distinct neglect details (none); contradicting kept-up wording: \"brand-new\", \"freshly painted\", \"spotless\", \"manicured\"",
+                  "evidence": [
+                    "brand-new",
+                    "freshly painted",
+                    "spotless",
+                    "manicured"
+                  ]
+                }
+              },
+              {
+                "rule_id": "A-07",
+                "title": "Trailer roofs carry old TV antennas or satellite dishes",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": false,
+                "score": 0,
+                "reason": "The roof has solar panels, which are modern. It has no old TV antenna or DirecTV-style dish as the guide requires. [check] No old TV antenna or satellite dish on the trailer roof.",
+                "llm": {
+                  "rule_id": "A-07",
+                  "score": 1,
+                  "reason": "The roof has solar panels, which are modern. It has no old TV antenna or DirecTV-style dish as the guide requires.",
+                  "evidence": "modern solar panels on the roof",
+                  "fix": "Replace the solar panels with a bent rooftop TV antenna and/or a rusty DirecTV-style dish on the roof."
+                },
+                "check": {
+                  "score": 0,
+                  "reason": "No old TV antenna or satellite dish on the trailer roof.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-08",
+                "title": "Drawn to scale with the 240-px wrestlers",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 1,
+                "reason": "The size is 1200×260 px, which is wide and short and is not tied to Barry's 240 px. A single-wide should be about 480 px tall. The scale note gives no pixel comparison. [check] height 260px vs target 430-530px (a single-wide trailer stands roughly twice Barry's 240-px height); scale_note does not tie the size to the 240-px wrestlers",
+                "llm": {
+                  "rule_id": "A-08",
+                  "score": 1,
+                  "reason": "The size is 1200×260 px, which is wide and short and is not tied to Barry's 240 px. A single-wide should be about 480 px tall. The scale note gives no pixel comparison.",
+                  "evidence": "\"size_px\": {\"width\": 1200, \"height\": 260}; \"scale_note\": \"Fits the screen nicely.\"",
+                  "fix": "Set the height to about 480 px (twice Barry's 240 px), with a plausible width. Write a scale note such as: single-wide trailer is about 2× Barry's 240-px standing sprite, at 1 native px per art pixel."
+                },
+                "check": {
+                  "score": 1,
+                  "reason": "height 260px vs target 430-530px (a single-wide trailer stands roughly twice Barry's 240-px height); scale_note does not tie the size to the 240-px wrestlers",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "The draft contradicts the Style Guide on every rule: it asks for a photorealistic neon city night scene with a brand-new trailer, and the guide wants golden-hour pixel art of a decaying trailer in the woods."
+          },
+          "refined_from_iteration": 0,
+          "refiner_changes": [
+            {
+              "rule_id": "A-01",
+              "change": "Rewrote the prompt as crisp early-90s arcade pixel art at 1 native px per art pixel, naming WrestleFest, Final Fight and Streets of Rage. Moved 3D, photoreal, vector and gradients to the negative prompt and removed pixel art from it."
+            },
+            {
+              "rule_id": "A-02",
+              "change": "Palette is now the 14 Style Guide hex colours, named in the prompt."
+            },
+            {
+              "rule_id": "A-03",
+              "change": "Lighting is now late-afternoon golden hour with a warm orange sky and long shadows."
+            },
+            {
+              "rule_id": "A-04",
+              "change": "Removed mountains, skyline and neon. The scene is limited to the trailer, pines, sky, an electric pole and dirt, gravel and weeds."
+            },
+            {
+              "rule_id": "A-05",
+              "change": "Placed the trailer in a clearing among thick pines. Urban elements are gone from the prompt and banned in the negative prompt."
+            },
+            {
+              "rule_id": "A-06",
+              "change": "Added specific neglect details: rust, a tarp-patched sagging roof, a missing skirting panel, a cracked window, a crooked door and weeds."
+            },
+            {
+              "rule_id": "A-07",
+              "change": "Replaced the solar panels with a bent TV antenna and a rusty DirecTV-style dish on the roof."
+            },
+            {
+              "rule_id": "A-08",
+              "change": "Set the size to 960x480 px and wrote a scale note tying it to Barry's 240-px sprite (about 2x)."
+            }
+          ]
+        },
+        {
+          "iteration": 1,
+          "made_by": "refiner",
+          "draft": {
+            "subject": "A single-wide rundown trailer for the back row of the Duckville arena backdrop, in a clearing among thick North Louisiana pines",
+            "prompt": "Crisp hand-placed early-90s arcade pixel art, 16-bit style like WWF WrestleFest, Final Fight and Streets of Rage, drawn at 1 native pixel per art pixel with hard pixel edges and limited shading ramps. Side view of one single-wide trailer, about 480 px tall, parked in a dirt and gravel clearing with weeds, thick North Louisiana pine trees, a warm orange sky and an electric pole behind it. Late-afternoon golden hour, warm orange light from the west, long shadows falling across the dirt. The trailer is in long-neglected disrepair: rusted, streaked, faded siding, a sagging roof patched with a blue tarp, a missing skirting panel showing dark space underneath, a cracked window with a torn curtain, a dented door hanging crooked, weeds growing around stacked cinder blocks. A bent old rooftop TV antenna and a rusty DirecTV-style satellite dish are attached to the roof. Palette: #10151A #17243A #25372C #35523A #657A3B #795037 #A74727 #D26938 #E19A36 #FFD65A #2872B8 #7435A8 #C7352C #E6DFCC",
+            "negative_prompt": "3D render, photorealistic, photograph, vector art, anime, painterly, smooth gradients, blur, anti-aliasing, mountains, hills, cliffs, city, skyline, neon, highway, crowds, snow, night, overcast, new, clean, freshly painted, solar panels, manicured lawn, text, watermark",
+            "palette": [
+              "#10151A",
+              "#17243A",
+              "#25372C",
+              "#35523A",
+              "#657A3B",
+              "#795037",
+              "#A74727",
+              "#D26938",
+              "#E19A36",
+              "#FFD65A",
+              "#2872B8",
+              "#7435A8",
+              "#C7352C",
+              "#E6DFCC"
+            ],
+            "lighting": "Late-afternoon golden hour: warm orange sky, warm orange and yellow highlights on the trailer's west side, long shadows falling across the dirt",
+            "details": "Rusted, streaked, faded siding; sagging roof with a blue tarp patch; missing skirting panel; cracked window with a torn curtain; crooked dented door; weeds around cinder blocks; bent rooftop TV antenna and a rusty DirecTV-style dish on the roof; pines and an electric pole behind.",
+            "size_px": {
+              "width": 960,
+              "height": 480
+            },
+            "scale_note": "Single-wide trailer is 480 px tall, about 2x Barry's 240-px standing sprite (Peaux is 215 px), at 1 native px per art pixel in the 960x540 native view.",
+            "layer": "background"
+          },
+          "scorecard": {
+            "total": 86.7,
+            "threshold": 85,
+            "hard_floor": 7,
+            "soft_floor": 6,
+            "passed": true,
+            "hard_failures": [],
+            "floor_failures": [],
+            "rules": [
+              {
+                "rule_id": "A-01",
+                "title": "Early-90s arcade pixel art at native scale",
+                "domain": "aesthetic",
+                "weight": 3,
+                "hard": true,
+                "score": 9,
+                "reason": "Prompt names the right arcade references, 1 native px per art pixel, hard edges, and the negative prompt blocks 3D, photo, vector, anime, painterly and gradients. Small gap: it does not name Technos Japan, Capcom or SNK, and it sets no pixel-density or outline convention. [check] 3/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game)",
+                "llm": {
+                  "rule_id": "A-01",
+                  "score": 9,
+                  "reason": "Prompt names the right arcade references, 1 native px per art pixel, hard edges, and the negative prompt blocks 3D, photo, vector, anime, painterly and gradients. Small gap: it does not name Technos Japan, Capcom or SNK, and it sets no pixel-density or outline convention.",
+                  "evidence": "Crisp hand-placed early-90s arcade pixel art, 16-bit style like WWF WrestleFest, Final Fight and Streets of Rage, drawn at 1 native pixel per art pixel with hard pixel edges and limited shading ramps.",
+                  "fix": "Name Technos Japan, Capcom and SNK, and add a note on dark outlines and dithering-style shading, as in the 90s arcade sprites."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "3/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-02",
+                "title": "Rural Rumble 14-colour palette",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 9,
+                "reason": "All 14 Style Guide hexes are in the prompt and in the palette field, so the palette is fully on-guide with no off-palette colours. Small gap: the prompt lists the hexes without saying which colour goes where, and the blue tarp only loosely maps to #2872B8. [check] 14/14 hex colours are on the Style Guide palette",
+                "llm": {
+                  "rule_id": "A-02",
+                  "score": 9,
+                  "reason": "All 14 Style Guide hexes are in the prompt and in the palette field, so the palette is fully on-guide with no off-palette colours. Small gap: the prompt lists the hexes without saying which colour goes where, and the blue tarp only loosely maps to #2872B8.",
+                  "evidence": "Palette: #10151A #17243A #25372C #35523A #657A3B #795037 #A74727 #D26938 #E19A36 #FFD65A #2872B8 #7435A8 #C7352C #E6DFCC",
+                  "fix": "Add a role for each hex, for example #795037 for siding, #2872B8 for the tarp and #E19A36 for the highlights, and say to use only these colours."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "14/14 hex colours are on the Style Guide palette",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-03",
+                "title": "Late-afternoon golden-hour light (D-016)",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": false,
+                "score": 9,
+                "reason": "Golden hour is stated in the prompt and in the lighting field, with a warm orange sky, western light and long shadows across the dirt, which matches D-016. Small gap: the trailer is a side view, so it is unclear how shadows would fall in a flat sprite. [check] 4/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows)",
+                "llm": {
+                  "rule_id": "A-03",
+                  "score": 9,
+                  "reason": "Golden hour is stated in the prompt and in the lighting field, with a warm orange sky, western light and long shadows across the dirt, which matches D-016. Small gap: the trailer is a side view, so it is unclear how shadows would fall in a flat sprite.",
+                  "evidence": "Late-afternoon golden hour, warm orange light from the west, long shadows falling across the dirt.",
+                  "fix": "Say which way the shadow falls, for example to the right and across the dirt, and that the sprite faces the same light as the rest of the backdrop."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "4/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-04",
+                "title": "Background whitelist: trees, skies, electric poles, trailers",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 8,
+                "reason": "The scene holds only trailer, pines, sky, an electric pole and dirt, gravel and weeds. Mountains, hills and cliffs are named in the negative prompt. Small gap: the blue tarp, cinder blocks and cracked-window details are fine, but the prompt never limits the scene to the whitelist, and the pole is placed behind a single trailer. [check] No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                "llm": {
+                  "rule_id": "A-04",
+                  "score": 8,
+                  "reason": "The scene holds only trailer, pines, sky, an electric pole and dirt, gravel and weeds. Mountains, hills and cliffs are named in the negative prompt. Small gap: the blue tarp, cinder blocks and cracked-window details are fine, but the prompt never limits the scene to the whitelist, and the pole is placed behind a single trailer.",
+                  "evidence": "parked in a dirt and gravel clearing with weeds, thick North Louisiana pine trees, a warm orange sky and an electric pole behind it",
+                  "fix": "State that the background holds only pines, sky, an electric pole and the trailer, and add vehicles, signs and fences to the negative prompt."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-05",
+                "title": "Deep woods, not a city",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 8,
+                "reason": "Thick pines and a clearing give a woods setting, and the negative prompt blocks city, skyline, neon, highway and crowds. Small gap: nothing says the place is remote or lacks suburban polish. [check] No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                "llm": {
+                  "rule_id": "A-05",
+                  "score": 8,
+                  "reason": "Thick pines and a clearing give a woods setting, and the negative prompt blocks city, skyline, neon, highway and crowds. Small gap: nothing says the place is remote or lacks suburban polish.",
+                  "evidence": "thick North Louisiana pine trees ... city, skyline, neon, highway, crowds",
+                  "fix": "Add a phrase like 'middle of the woods, remote, no paved roads or streetlights', and add suburban and paved road to the negative prompt."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-06",
+                "title": "Disrepair: nothing has been kept up",
+                "domain": "aesthetic",
+                "weight": 3,
+                "hard": false,
+                "score": 9,
+                "reason": "The prompt lists many concrete neglect details: rust, streaks, faded siding, a sagging patched roof, a missing skirting panel, a cracked window, a crooked door and weeds. The negative prompt blocks new and clean. The detail is strong but fairly generic, since it could describe any run-down trailer. [check] 12 distinct neglect details (bent, cracked, dented, faded, missing, patch, patched, rusted, rusty, sagging, tarp, weeds)",
+                "llm": {
+                  "rule_id": "A-06",
+                  "score": 9,
+                  "reason": "The prompt lists many concrete neglect details: rust, streaks, faded siding, a sagging patched roof, a missing skirting panel, a cracked window, a crooked door and weeds. The negative prompt blocks new and clean. The detail is strong but fairly generic, since it could describe any run-down trailer.",
+                  "evidence": "rusted, streaked, faded siding, a sagging roof patched with a blue tarp, a missing skirting panel showing dark space underneath, a cracked window with a torn curtain, a dented door hanging crooked",
+                  "fix": "Add a detail only Rural Rumble would have, such as a leaning pine or a faded Duckville marking, to tie the neglect to the game."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "12 distinct neglect details (bent, cracked, dented, faded, missing, patch, patched, rusted, rusty, sagging, tarp, weeds)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-07",
+                "title": "Trailer roofs carry old TV antennas or satellite dishes",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": false,
+                "score": 10,
+                "reason": "The prompt and details both put a bent old rooftop TV antenna and a rusty DirecTV-style dish on the roof, as the guide asks. [check] Roof carries a TV antenna or satellite dish.",
+                "llm": {
+                  "rule_id": "A-07",
+                  "score": 10,
+                  "reason": "The prompt and details both put a bent old rooftop TV antenna and a rusty DirecTV-style dish on the roof, as the guide asks.",
+                  "evidence": "A bent old rooftop TV antenna and a rusty DirecTV-style satellite dish are attached to the roof.",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Roof carries a TV antenna or satellite dish.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-08",
+                "title": "Drawn to scale with the 240-px wrestlers",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 7,
+                "reason": "The brief gives 480 px tall, twice Barry's 240 px, and the Peaux comparison, so the scale is correct. The size_px field says 960 wide by 480 tall. The prompt adds an electric pole, pines and sky behind the trailer, so a 480 px canvas cannot hold both the trailer and the backdrop, and the trailer will not read as 480 px. [check] height 480px vs target 430-530px (a single-wide trailer stands roughly twice Barry's 240-px height)",
+                "llm": {
+                  "rule_id": "A-08",
+                  "score": 7,
+                  "reason": "The brief gives 480 px tall, twice Barry's 240 px, and the Peaux comparison, so the scale is correct. The size_px field says 960 wide by 480 tall. The prompt adds an electric pole, pines and sky behind the trailer, so a 480 px canvas cannot hold both the trailer and the backdrop, and the trailer will not read as 480 px.",
+                  "evidence": "\"size_px\": {\"width\": 960, \"height\": 480} ... about 480 px tall, parked in a dirt and gravel clearing ... pine trees, a warm orange sky and an electric pole behind it",
+                  "fix": "Make the trailer the only subject on a transparent or flat background and keep it 480 px tall, or enlarge the canvas to hold the surroundings and say the trailer takes up 480 px of it. Say the width explicitly."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "height 480px vs target 430-530px (a single-wide trailer stands roughly twice Barry's 240-px height)",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "The size and scale are ambiguous: the canvas is 480 px tall yet the prompt adds a pole, pines and sky around a trailer that must itself be 480 px tall."
+          }
+        }
+      ],
+      "calls": [
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "c4a05468-02cd-4426-b6bc-8830733bbf66",
+          "cost_usd": 0.048049800000000004,
+          "duration_ms": 9876
+        },
+        {
+          "backend": "claude-cli",
+          "role": "refiner",
+          "model": "claude-sonnet-5-5",
+          "session_id": "4097a877-312b-4459-997e-5fb13ad2f58f",
+          "cost_usd": 0.05507480000000001,
+          "duration_ms": 9514
+        },
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "fed9d013-f34f-4019-be90-3e0cfe9c2df1",
+          "cost_usd": 0.0513419,
+          "duration_ms": 13048
+        }
+      ],
+      "docs_read": [
+        {
+          "path": "docs/STYLE_GUIDE.md",
+          "sha256": "f8fafab43f35e23524f217f2e7b25c38e72b2d46b1ae43b600d960ea256473fd",
+          "sections": [
+            "Overall Game Style",
+            "Sprite Scale",
+            "Arena",
+            "Color Palette"
+          ]
+        },
+        {
+          "path": "docs/GDD.md",
+          "sha256": "ccbcd64c23f541b1ee8f2150add724c13ccc319eb5f1db51f520a175942d1116",
+          "sections": [
+            "Setting & World",
+            "Tone & Aesthetics"
+          ]
+        }
+      ]
+    },
+    {
+      "task_id": "trash_talk_prematch",
+      "kind": "trash_talk",
+      "brief": "A four-line pre-match trash-talk exchange between Barry and Peaux, spoken in the trailer park just before the bell. Candidate flavour text for the moment before the versus text; it is not wired into the game.",
+      "status": "rejected",
+      "final_iteration": 3,
+      "final_score": 78.9,
+      "score_trajectory": [
+        11.1,
+        77.9,
+        77.9,
+        78.9
+      ],
+      "final_draft": {
+        "lines": [
+          {
+            "speaker": "barry",
+            "text": "Duckville's got one rule, boy: pick up your cigarette butts or I'll bodyslam you."
+          },
+          {
+            "speaker": "peaux",
+            "text": "Four football brothers beat me daily, old man. Your mustache wrestling won't scare me."
+          },
+          {
+            "speaker": "barry",
+            "text": "Thirty years hauling freight and running Hoon dirt. Your eyeliner's gonna run too."
+          },
+          {
+            "speaker": "peaux",
+            "text": "Keep yapping, redneck. I'll knock you out cold in your own gravel driveway."
+          }
+        ]
+      },
+      "iterations": [
+        {
+          "iteration": 0,
+          "made_by": "seed",
+          "draft": {
+            "lines": [
+              {
+                "speaker": "barry",
+                "text": "Tonight at the arena I'm gonna pin you one-two-three and take the world championship belt, kid!"
+              },
+              {
+                "speaker": "peaux",
+                "text": "Not before my piledriver and a steel chair put you through the announce table, old man."
+              },
+              {
+                "speaker": "barry",
+                "text": "The crowd came to see \"The Hammer\" win, and the Hammer always wins!"
+              },
+              {
+                "speaker": "barry",
+                "text": "Hulk Hogan taught me everything. Let's give the fans a great show and shake hands after."
+              }
+            ]
+          },
+          "scorecard": {
+            "total": 11.1,
+            "threshold": 85,
+            "hard_floor": 7,
+            "soft_floor": 6,
+            "passed": false,
+            "hard_failures": [
+              "N-01",
+              "N-02",
+              "N-03"
+            ],
+            "floor_failures": [
+              "N-04",
+              "N-05",
+              "N-06",
+              "N-07",
+              "N-08"
+            ],
+            "rules": [
+              {
+                "rule_id": "N-01",
+                "title": "Only the two GDD wrestlers, named as the GDD names them",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 0,
+                "reason": "Speakers are Barry and Peaux, but Barry names himself \"The Hammer\", an invented nickname replacing \"Hot Potato\", and Hulk Hogan, a real wrestler, is referenced. The rule bans real wrestlers and new names. [check] other wrestlers named: ['Hogan', 'Hulk']; nicknames not in the GDD: ['The Hammer']",
+                "llm": {
+                  "rule_id": "N-01",
+                  "score": 2,
+                  "reason": "Speakers are Barry and Peaux, but Barry names himself \"The Hammer\", an invented nickname replacing \"Hot Potato\", and Hulk Hogan, a real wrestler, is referenced. The rule bans real wrestlers and new names.",
+                  "evidence": "The crowd came to see \"The Hammer\" win, and the Hammer always wins! / Hulk Hogan taught me everything.",
+                  "fix": "Remove Hulk Hogan and \"The Hammer\". If a nickname is used, use \"Hot Potato\" exactly."
+                },
+                "check": {
+                  "score": 0,
+                  "reason": "other wrestlers named: ['Hogan', 'Hulk']; nicknames not in the GDD: ['The Hammer']",
+                  "evidence": [
+                    "Hogan",
+                    "Hulk",
+                    "The Hammer"
+                  ]
+                }
+              },
+              {
+                "rule_id": "N-02",
+                "title": "Knockout is the only way to win",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": true,
+                "score": 0,
+                "reason": "The draft is about pinfalls and a championship belt, both explicitly excluded. The only way to win in the docs is a KO. [check] Non-MVP mechanics mentioned: \"championship\" (title/belt), \"belt\" (title/belt), \"pin\" (pinfall), \"one-two-three\" (pinfall)",
+                "llm": {
+                  "rule_id": "N-02",
+                  "score": 0,
+                  "reason": "The draft is about pinfalls and a championship belt, both explicitly excluded. The only way to win in the docs is a KO.",
+                  "evidence": "I'm gonna pin you one-two-three and take the world championship belt, kid!",
+                  "fix": "Replace pin and belt talk with threats of knocking the other out cold."
+                },
+                "check": {
+                  "score": 0,
+                  "reason": "Non-MVP mechanics mentioned: \"championship\" (title/belt), \"belt\" (title/belt), \"pin\" (pinfall), \"one-two-three\" (pinfall)",
+                  "evidence": [
+                    "championship",
+                    "belt",
+                    "pin",
+                    "one-two-three"
+                  ]
+                }
+              },
+              {
+                "rule_id": "N-03",
+                "title": "Only moves that exist in the MVP",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 0,
+                "reason": "Peaux threatens a piledriver, which is not in the MVP. The steel chair and announce table are also outside the move set. [check] Moves the game doesn't have: \"piledriver\", \"steel chair\", \"table\"",
+                "llm": {
+                  "rule_id": "N-03",
+                  "score": 0,
+                  "reason": "Peaux threatens a piledriver, which is not in the MVP. The steel chair and announce table are also outside the move set.",
+                  "evidence": "Not before my piledriver and a steel chair put you through the announce table, old man.",
+                  "fix": "Use only the punch/kick combo, lock-up, bodyslam, Irish Whip or stomping a downed opponent."
+                },
+                "check": {
+                  "score": 0,
+                  "reason": "Moves the game doesn't have: \"piledriver\", \"steel chair\", \"table\"",
+                  "evidence": [
+                    "piledriver",
+                    "steel chair",
+                    "table"
+                  ]
+                }
+              },
+              {
+                "rule_id": "N-04",
+                "title": "Barry sounds like Barry",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 2,
+                "reason": "Barry sounds like a generic wrestling promo. He has no trucker, Hoon dirt track, cigarette butt or mustache details, and the final line is soft and friendly, which contradicts his stubborn, punk-beating profile.",
+                "llm": {
+                  "rule_id": "N-04",
+                  "score": 2,
+                  "reason": "Barry sounds like a generic wrestling promo. He has no trucker, Hoon dirt track, cigarette butt or mustache details, and the final line is soft and friendly, which contradicts his stubborn, punk-beating profile.",
+                  "evidence": "Let's give the fans a great show and shake hands after.",
+                  "fix": "Give Barry blunt country lines about the cigarette butts, his truck or dirt track, or his gut. Cut the handshake."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-05",
+                "title": "Peaux sounds like Peaux",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 2,
+                "reason": "Peaux's line is generic wrestling bravado. It has no goth, eyeliner, brothers or rednecks angle. \"Old man\" is the only nod to his youth.",
+                "llm": {
+                  "rule_id": "N-05",
+                  "score": 2,
+                  "reason": "Peaux's line is generic wrestling bravado. It has no goth, eyeliner, brothers or rednecks angle. \"Old man\" is the only nod to his youth.",
+                  "evidence": "Not before my piledriver and a steel chair put you through the announce table, old man.",
+                  "fix": "Make Peaux sullen and cutting. Reference eyeliner, his football-playing brothers or his contempt for loudmouthed rednecks."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-06",
+                "title": "Rooted in Duckville",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": false,
+                "score": 0,
+                "reason": "The setting is an arena with a crowd, fans and an announce table, which the rule forbids. There is no Duckville, trailer or gravel, and the two do not read as neighbours. [check] place names: none; trailer-park details: none",
+                "llm": {
+                  "rule_id": "N-06",
+                  "score": 1,
+                  "reason": "The setting is an arena with a crowd, fans and an announce table, which the rule forbids. There is no Duckville, trailer or gravel, and the two do not read as neighbours.",
+                  "evidence": "Tonight at the arena ... The crowd came to see ... the fans",
+                  "fix": "Set it in the Duckville trailer park with gravel, trailers and driveways, and make them neighbours who can't stand each other."
+                },
+                "check": {
+                  "score": 0,
+                  "reason": "place names: none; trailer-park details: none",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-07",
+                "title": "Dark Southern humor",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 2,
+                "reason": "This is stock wrestling-promo bravado. The closing sportsmanship line is wholesome. There is no dark, blunt Southern humor in the Squidbillies or Eastbound & Down vein.",
+                "llm": {
+                  "rule_id": "N-07",
+                  "score": 2,
+                  "reason": "This is stock wrestling-promo bravado. The closing sportsmanship line is wholesome. There is no dark, blunt Southern humor in the Squidbillies or Eastbound & Down vein.",
+                  "evidence": "Let's give the fans a great show and shake hands after.",
+                  "fix": "Rewrite with dark, irreverent trailer-park jabs and a bleak punchline."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-08",
+                "title": "Short enough not to interrupt the arcade action",
+                "domain": "narrative",
+                "weight": 1,
+                "hard": false,
+                "score": 3,
+                "reason": "There are four lines, but the speakers don't alternate (Barry speaks twice in a row at the end). Lines 1 and 2 exceed 90 characters, at about 97 and 88. Check: line 2 is about 88 characters, so only line 1 is clearly over, and line 4 is about 87. [check] speakers don't alternate; 1 line(s) over 90 characters ([95])",
+                "llm": {
+                  "rule_id": "N-08",
+                  "score": 3,
+                  "reason": "There are four lines, but the speakers don't alternate (Barry speaks twice in a row at the end). Lines 1 and 2 exceed 90 characters, at about 97 and 88. Check: line 2 is about 88 characters, so only line 1 is clearly over, and line 4 is about 87.",
+                  "evidence": "barry, peaux, barry, barry; \"Tonight at the arena I'm gonna pin you one-two-three and take the world championship belt, kid!\"",
+                  "fix": "Alternate Barry, Peaux, Barry, Peaux, and keep every line at 90 characters or fewer."
+                },
+                "check": {
+                  "score": 5,
+                  "reason": "speakers don't alternate; 1 line(s) over 90 characters ([95])",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "The draft is a generic arena wrestling promo that violates the KO-only, MVP-moves, no-real-wrestlers and Duckville rules, and it doesn't sound like either character."
+          },
+          "refined_from_iteration": 0,
+          "refiner_changes": [
+            {
+              "rule_id": "N-02",
+              "change": "Removed pin, belt and championship talk; the stakes are now getting knocked out cold."
+            },
+            {
+              "rule_id": "N-01",
+              "change": "Removed Hulk Hogan and 'The Hammer'; Barry uses 'Hot Potato' exactly."
+            },
+            {
+              "rule_id": "N-03",
+              "change": "Removed piledriver, steel chair and table; only bodyslam, Irish Whip and stomping appear."
+            },
+            {
+              "rule_id": "N-06",
+              "change": "Moved the exchange to the Duckville trailer park (gravel, trailer, driveway) and made them neighbours. Removed arena, crowd and fans."
+            },
+            {
+              "rule_id": "N-04",
+              "change": "Barry is now blunt and country, with cigarette butts, diesel and his trailer. Cut the handshake."
+            },
+            {
+              "rule_id": "N-05",
+              "change": "Peaux is now sullen and cutting, with his brothers, eyeliner and 'old man'."
+            },
+            {
+              "rule_id": "N-07",
+              "change": "Rewrote with dark, irreverent trailer-park jabs, not a stock promo."
+            },
+            {
+              "rule_id": "N-08",
+              "change": "Four lines alternating Barry/Peaux/Barry/Peaux, each under 90 characters."
+            }
+          ]
+        },
+        {
+          "iteration": 1,
+          "made_by": "refiner",
+          "draft": {
+            "lines": [
+              {
+                "speaker": "barry",
+                "text": "Pick up your cigarette butts, boy, or I'll bodyslam you into the gravel by my trailer."
+              },
+              {
+                "speaker": "peaux",
+                "text": "My brothers hit harder than you, and they didn't smell like diesel and regret."
+              },
+              {
+                "speaker": "barry",
+                "text": "Hot Potato's gonna Irish Whip that eyeliner clean off your face, kid."
+              },
+              {
+                "speaker": "peaux",
+                "text": "Swing, old man. I'll stomp you out cold and cut through your driveway."
+              }
+            ]
+          },
+          "scorecard": {
+            "total": 77.9,
+            "threshold": 85,
+            "hard_floor": 7,
+            "soft_floor": 6,
+            "passed": false,
+            "hard_failures": [],
+            "floor_failures": [
+              "N-06"
+            ],
+            "rules": [
+              {
+                "rule_id": "N-01",
+                "title": "Only the two GDD wrestlers, named as the GDD names them",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 9,
+                "reason": "Only Barry and Peaux speak, and Barry's 'Hot Potato' nickname is used correctly. The brothers are mentioned but not named, so no new character is introduced. [check] Only Barry and Peaux speak; no other wrestlers or invented nicknames.",
+                "llm": {
+                  "rule_id": "N-01",
+                  "score": 9,
+                  "reason": "Only Barry and Peaux speak, and Barry's 'Hot Potato' nickname is used correctly. The brothers are mentioned but not named, so no new character is introduced.",
+                  "evidence": "\"Hot Potato's gonna Irish Whip that eyeliner clean off your face, kid.\"",
+                  "fix": "Optionally use the full name 'Barry \"Hot Potato\" Lankford' somewhere or keep the speaker labels exactly as the GDD names them."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Only Barry and Peaux speak; no other wrestlers or invented nicknames.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-02",
+                "title": "Knockout is the only way to win",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": true,
+                "score": 9,
+                "reason": "The only win talk is 'stomp you out cold', which is a knockout. There are no pinfalls, belts or other match types. [check] No non-MVP win conditions (pinfall, submission, titles, tag team, rings/ropes).",
+                "llm": {
+                  "rule_id": "N-02",
+                  "score": 9,
+                  "reason": "The only win talk is 'stomp you out cold', which is a knockout. There are no pinfalls, belts or other match types.",
+                  "evidence": "\"I'll stomp you out cold\"",
+                  "fix": "Make the KO framing a little more explicit, e.g. 'I'll knock you out cold'."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No non-MVP win conditions (pinfall, submission, titles, tag team, rings/ropes).",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-03",
+                "title": "Only moves that exist in the MVP",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 10,
+                "reason": "Every move named (bodyslam, Irish Whip, stomp) exists in the MVP. No invented finishers. [check] Only MVP moves referenced (punch/kick, lock-up, bodyslam, Irish Whip, stomp) or none.",
+                "llm": {
+                  "rule_id": "N-03",
+                  "score": 10,
+                  "reason": "Every move named (bodyslam, Irish Whip, stomp) exists in the MVP. No invented finishers.",
+                  "evidence": "\"bodyslam\", \"Irish Whip\", \"stomp\"",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Only MVP moves referenced (punch/kick, lock-up, bodyslam, Irish Whip, stomp) or none.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-04",
+                "title": "Barry sounds like Barry",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 7,
+                "reason": "The cigarette butts, trailer and Hot Potato nickname are right, and the tone is blunt. The long-haul trucker, Hoon dirt track, Wild Bill mustache and beer gut never appear, and line 3 could be any tough guy.",
+                "llm": {
+                  "rule_id": "N-04",
+                  "score": 7,
+                  "reason": "The cigarette butts, trailer and Hot Potato nickname are right, and the tone is blunt. The long-haul trucker, Hoon dirt track, Wild Bill mustache and beer gut never appear, and line 3 could be any tough guy.",
+                  "evidence": "\"Hot Potato's gonna Irish Whip that eyeliner clean off your face, kid.\"",
+                  "fix": "Give Barry a line that uses his trucker or dirt-track life, e.g. a Hoon dirt track or mustache/gut reference, in place of the generic line 3 threat."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-05",
+                "title": "Peaux sounds like Peaux",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 7,
+                "reason": "The older football-playing brothers and the cutting, sullen tone fit Peaux. Nothing hits the goth look, the school expulsion or his contempt for loudmouthed rednecks, and 'cut through your driveway' is muddled.",
+                "llm": {
+                  "rule_id": "N-05",
+                  "score": 7,
+                  "reason": "The older football-playing brothers and the cutting, sullen tone fit Peaux. Nothing hits the goth look, the school expulsion or his contempt for loudmouthed rednecks, and 'cut through your driveway' is muddled.",
+                  "evidence": "\"My brothers hit harder than you, and they didn't smell like diesel and regret.\" / \"cut through your driveway\"",
+                  "fix": "Replace the driveway clause with a jab at Barry as a loudmouthed redneck, or a goth and eyeliner-over-eye-black quip. Reference the football brothers more specifically."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-06",
+                "title": "Rooted in Duckville",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": false,
+                "score": 5,
+                "reason": "Gravel, trailer and driveway place it in the trailer park, and the two read as hostile neighbours. Duckville is never named, and nothing ties it to this specific park. [check] place names: none; trailer-park details: ['cigarette butts', 'driveway', 'gravel', 'trailer']",
+                "llm": {
+                  "rule_id": "N-06",
+                  "score": 8,
+                  "reason": "Gravel, trailer and driveway place it in the trailer park, and the two read as hostile neighbours. Duckville is never named, and nothing ties it to this specific park.",
+                  "evidence": "\"into the gravel by my trailer\" / \"cut through your driveway\"",
+                  "fix": "Name Duckville or another park detail such as a dirt lot, and make the neighbour grievance explicit."
+                },
+                "check": {
+                  "score": 5,
+                  "reason": "place names: none; trailer-park details: ['cigarette butts', 'driveway', 'gravel', 'trailer']",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-07",
+                "title": "Dark Southern humor",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 7,
+                "reason": "'diesel and regret' and the cigarette-butt feud have a dark, blunt Southern bite. Lines 3 and 4 fall back on standard wrestling bravado ('Swing, old man').",
+                "llm": {
+                  "rule_id": "N-07",
+                  "score": 7,
+                  "reason": "'diesel and regret' and the cigarette-butt feud have a dark, blunt Southern bite. Lines 3 and 4 fall back on standard wrestling bravado ('Swing, old man').",
+                  "evidence": "\"Swing, old man. I'll stomp you out cold and cut through your driveway.\"",
+                  "fix": "Sharpen lines 3 and 4 with darker, more irreverent Squidbillies- or Eastbound-style jokes instead of stock tough talk."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-08",
+                "title": "Short enough not to interrupt the arcade action",
+                "domain": "narrative",
+                "weight": 1,
+                "hard": false,
+                "score": 10,
+                "reason": "Exactly four lines, speakers alternate, and the longest line is about 86 characters, under the 90 limit. [check] 4 alternating lines, all within 90 characters.",
+                "llm": {
+                  "rule_id": "N-08",
+                  "score": 10,
+                  "reason": "Exactly four lines, speakers alternate, and the longest line is about 86 characters, under the 90 limit.",
+                  "evidence": "\"Pick up your cigarette butts, boy, or I'll bodyslam you into the gravel by my trailer.\"",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "4 alternating lines, all within 90 characters.",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "The exchange is clean on rules and length but thin on Rural Rumble specifics: Barry's trucker and dirt-track side and Peaux's goth and redneck-hating side barely show, Duckville is never named, and lines 3–4 drift toward generic banter."
+          },
+          "refined_from_iteration": 1,
+          "refiner_changes": [
+            {
+              "rule_id": "N-06",
+              "change": "Named Duckville, kept gravel and dirt lot, and made the neighbour grievance explicit."
+            },
+            {
+              "rule_id": "N-04",
+              "change": "Replaced the generic threat with a long-haul trucker line, a Hoon reference and Irish Whip. Kept the cigarette-butt opener."
+            },
+            {
+              "rule_id": "N-05",
+              "change": "Dropped the muddled driveway clause. Peaux now mocks Barry as a loudmouthed redneck in cutoffs and refers to his football-playing brothers."
+            },
+            {
+              "rule_id": "N-07",
+              "change": "Made lines 3 and 4 darker and more irreverent (mudflap whipping, burying him in the dirt lot) in place of stock bravado."
+            },
+            {
+              "rule_id": "N-02",
+              "change": "Made the KO explicit: 'knock you out cold'."
+            },
+            {
+              "rule_id": "N-01",
+              "change": "Kept only the two speakers. Barry's nickname is dropped from the text, and the brothers stay unnamed."
+            }
+          ]
+        },
+        {
+          "iteration": 2,
+          "made_by": "refiner",
+          "draft": {
+            "lines": [
+              {
+                "speaker": "barry",
+                "text": "Pick up your cigarette butts, boy, or I'll bodyslam you into this Duckville gravel."
+              },
+              {
+                "speaker": "peaux",
+                "text": "Four brothers played football on me. You're just a loud redneck in cutoffs."
+              },
+              {
+                "speaker": "barry",
+                "text": "Twenty years hauling freight, and I'll whip that eyeliner off you like a Hoon mudflap."
+              },
+              {
+                "speaker": "peaux",
+                "text": "Cry louder, old man. I'll knock you out cold and bury you in the dirt lot."
+              }
+            ]
+          },
+          "scorecard": {
+            "total": 77.9,
+            "threshold": 85,
+            "hard_floor": 7,
+            "soft_floor": 6,
+            "passed": false,
+            "hard_failures": [],
+            "floor_failures": [
+              "N-04"
+            ],
+            "rules": [
+              {
+                "rule_id": "N-01",
+                "title": "Only the two GDD wrestlers, named as the GDD names them",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 9,
+                "reason": "Only Barry and Peaux speak, and no other wrestlers or named characters appear. The speaker ids are lowercase and the nickname never appears in a line, so the GDD name form isn't shown. [check] Only Barry and Peaux speak; no other wrestlers or invented nicknames.",
+                "llm": {
+                  "rule_id": "N-01",
+                  "score": 9,
+                  "reason": "Only Barry and Peaux speak, and no other wrestlers or named characters appear. The speaker ids are lowercase and the nickname never appears in a line, so the GDD name form isn't shown.",
+                  "evidence": "\"speaker\": \"barry\" / \"speaker\": \"peaux\"",
+                  "fix": "Use the display names exactly as in the GDD (Barry \"Hot Potato\" Lankford, Peaux Strange) in the speaker field or a name map."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Only Barry and Peaux speak; no other wrestlers or invented nicknames.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-02",
+                "title": "Knockout is the only way to win",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": true,
+                "score": 9,
+                "reason": "The only win talk is a knockout. There are no pins, belts or other match types. [check] No non-MVP win conditions (pinfall, submission, titles, tag team, rings/ropes).",
+                "llm": {
+                  "rule_id": "N-02",
+                  "score": 9,
+                  "reason": "The only win talk is a knockout. There are no pins, belts or other match types.",
+                  "evidence": "I'll knock you out cold and bury you in the dirt lot.",
+                  "fix": "Optionally make Barry's threat KO-specific too, e.g. lights-out talk."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No non-MVP win conditions (pinfall, submission, titles, tag team, rings/ropes).",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-03",
+                "title": "Only moves that exist in the MVP",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 9,
+                "reason": "The bodyslam is an MVP move. The \"whip\" line reads as an Irish Whip, though it is mostly figurative. No suplexes or finishers appear. [check] Only MVP moves referenced (punch/kick, lock-up, bodyslam, Irish Whip, stomp) or none.",
+                "llm": {
+                  "rule_id": "N-03",
+                  "score": 9,
+                  "reason": "The bodyslam is an MVP move. The \"whip\" line reads as an Irish Whip, though it is mostly figurative. No suplexes or finishers appear.",
+                  "evidence": "I'll bodyslam you into this Duckville gravel.",
+                  "fix": "Make the whip line explicitly an Irish Whip, e.g. \"Irish Whip you into a trailer\"."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Only MVP moves referenced (punch/kick, lock-up, bodyslam, Irish Whip, stomp) or none.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-04",
+                "title": "Barry sounds like Barry",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 5,
+                "reason": "The cigarette butts, Hoon and the trucker background all fit Barry. But \"Twenty years hauling freight\" contradicts the Style Guide's \"Early Thirties\" and is an invented figure. The GDD only says \"years\". The lines also skip his mustache, beer gut and stubborn streak.",
+                "llm": {
+                  "rule_id": "N-04",
+                  "score": 5,
+                  "reason": "The cigarette butts, Hoon and the trucker background all fit Barry. But \"Twenty years hauling freight\" contradicts the Style Guide's \"Early Thirties\" and is an invented figure. The GDD only says \"years\". The lines also skip his mustache, beer gut and stubborn streak.",
+                  "evidence": "Twenty years hauling freight, and I'll whip that eyeliner off you like a Hoon mudflap.",
+                  "fix": "Drop the number (\"Years hauling freight\"). Add a nod to his mustache or gut, or to his dirt track in Hoon."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-05",
+                "title": "Peaux sounds like Peaux",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 7,
+                "reason": "Peaux's lines use his football-playing brothers, his disdain for rednecks and his cutting tone. But \"Four brothers\" is an invented number, and the football line is garbled. Nothing refers to his expulsion at sixteen. \"Old man\" suits his youth.",
+                "llm": {
+                  "rule_id": "N-05",
+                  "score": 7,
+                  "reason": "Peaux's lines use his football-playing brothers, his disdain for rednecks and his cutting tone. But \"Four brothers\" is an invented number, and the football line is garbled. Nothing refers to his expulsion at sixteen. \"Old man\" suits his youth.",
+                  "evidence": "Four brothers played football on me. You're just a loud redneck in cutoffs.",
+                  "fix": "Change it to \"My older brothers tackled me harder than you ever could.\" Optionally add a sullen goth or expelled-at-sixteen jab."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-06",
+                "title": "Rooted in Duckville",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": false,
+                "score": 9,
+                "reason": "The setting is Duckville gravel and a dirt lot, and the two read as neighbours. There are no crowds or arenas. Hoon is Barry's track town, which is fine. [check] place names: ['duckville', 'hoon']; trailer-park details: ['cigarette butts', 'dirt lot', 'gravel']",
+                "llm": {
+                  "rule_id": "N-06",
+                  "score": 9,
+                  "reason": "The setting is Duckville gravel and a dirt lot, and the two read as neighbours. There are no crowds or arenas. Hoon is Barry's track town, which is fine.",
+                  "evidence": "this Duckville gravel ... bury you in the dirt lot",
+                  "fix": "Add a trailer or driveway detail to show they share a trailer park."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "place names: ['duckville', 'hoon']; trailer-park details: ['cigarette butts', 'dirt lot', 'gravel']",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-07",
+                "title": "Dark Southern humor",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 7,
+                "reason": "\"Bury you in the dirt lot\" is dark and the insults are blunt and Southern. Much of the rest is standard promo-style taunting (\"Cry louder, old man\"). It lacks the absurd Squidbillies or Eastbound & Down bite.",
+                "llm": {
+                  "rule_id": "N-07",
+                  "score": 7,
+                  "reason": "\"Bury you in the dirt lot\" is dark and the insults are blunt and Southern. Much of the rest is standard promo-style taunting (\"Cry louder, old man\"). It lacks the absurd Squidbillies or Eastbound & Down bite.",
+                  "evidence": "Cry louder, old man.",
+                  "fix": "Swap the generic insults for specific, absurd trailer-park jabs, such as cigarette butts in the yard, a missing dog or a dead lawnmower, with a darker punchline."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-08",
+                "title": "Short enough not to interrupt the arcade action",
+                "domain": "narrative",
+                "weight": 1,
+                "hard": false,
+                "score": 10,
+                "reason": "There are exactly four lines and the speakers alternate. All lines are well under 90 characters (the longest is about 86). [check] 4 alternating lines, all within 90 characters.",
+                "llm": {
+                  "rule_id": "N-08",
+                  "score": 10,
+                  "reason": "There are exactly four lines and the speakers alternate. All lines are well under 90 characters (the longest is about 86).",
+                  "evidence": "Twenty years hauling freight, and I'll whip that eyeliner off you like a Hoon mudflap.",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "4 alternating lines, all within 90 characters.",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "Barry's \"Twenty years hauling freight\" contradicts his early-thirties age in the Style Guide, and Peaux's \"Four brothers\" is an invented number."
+          },
+          "refined_from_iteration": 1,
+          "refiner_changes": [
+            {
+              "rule_id": "N-06",
+              "change": "Named Duckville in line 1 and kept gravel, driveway and the neighbour feud over cigarette butts."
+            },
+            {
+              "rule_id": "N-04",
+              "change": "Barry now cites long-haul trucking and Hoon dirt track, and the cigarette-butt grudge."
+            },
+            {
+              "rule_id": "N-05",
+              "change": "Peaux references his football brothers, calls Barry a loudmouthed redneck, removed muddled driveway clause."
+            },
+            {
+              "rule_id": "N-07",
+              "change": "Replaced stock bravado with blunter, darker jokes (mustache, running eyeliner, brothers beating him)."
+            },
+            {
+              "rule_id": "N-02",
+              "change": "Made the win explicit: 'knock you out cold'."
+            },
+            {
+              "rule_id": "N-01",
+              "change": "Still only Barry and Peaux speak; brothers unnamed; no new characters."
+            }
+          ]
+        },
+        {
+          "iteration": 3,
+          "made_by": "refiner",
+          "draft": {
+            "lines": [
+              {
+                "speaker": "barry",
+                "text": "Duckville's got one rule, boy: pick up your cigarette butts or I'll bodyslam you."
+              },
+              {
+                "speaker": "peaux",
+                "text": "Four football brothers beat me daily, old man. Your mustache wrestling won't scare me."
+              },
+              {
+                "speaker": "barry",
+                "text": "Thirty years hauling freight and running Hoon dirt. Your eyeliner's gonna run too."
+              },
+              {
+                "speaker": "peaux",
+                "text": "Keep yapping, redneck. I'll knock you out cold in your own gravel driveway."
+              }
+            ]
+          },
+          "scorecard": {
+            "total": 78.9,
+            "threshold": 85,
+            "hard_floor": 7,
+            "soft_floor": 6,
+            "passed": false,
+            "hard_failures": [],
+            "floor_failures": [
+              "N-04"
+            ],
+            "rules": [
+              {
+                "rule_id": "N-01",
+                "title": "Only the two GDD wrestlers, named as the GDD names them",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 9,
+                "reason": "Only Barry and Peaux speak and no other wrestlers or named characters appear. The speaker tags are lowercase ids rather than the full GDD names, which is a small gap. [check] Only Barry and Peaux speak; no other wrestlers or invented nicknames.",
+                "llm": {
+                  "rule_id": "N-01",
+                  "score": 9,
+                  "reason": "Only Barry and Peaux speak and no other wrestlers or named characters appear. The speaker tags are lowercase ids rather than the full GDD names, which is a small gap.",
+                  "evidence": "\"speaker\": \"barry\" / \"speaker\": \"peaux\"",
+                  "fix": "Make sure the speaker ids map to Barry \"Hot Potato\" Lankford and Peaux Strange in display."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Only Barry and Peaux speak; no other wrestlers or invented nicknames.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-02",
+                "title": "Knockout is the only way to win",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": true,
+                "score": 10,
+                "reason": "The only win or loss talk is a knockout, and there are no pinfalls, titles or other match types. [check] No non-MVP win conditions (pinfall, submission, titles, tag team, rings/ropes).",
+                "llm": {
+                  "rule_id": "N-02",
+                  "score": 10,
+                  "reason": "The only win or loss talk is a knockout, and there are no pinfalls, titles or other match types.",
+                  "evidence": "I'll knock you out cold in your own gravel driveway.",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No non-MVP win conditions (pinfall, submission, titles, tag team, rings/ropes).",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-03",
+                "title": "Only moves that exist in the MVP",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 10,
+                "reason": "The only move named is the bodyslam, which is in the MVP. No invented moves. [check] Only MVP moves referenced (punch/kick, lock-up, bodyslam, Irish Whip, stomp) or none.",
+                "llm": {
+                  "rule_id": "N-03",
+                  "score": 10,
+                  "reason": "The only move named is the bodyslam, which is in the MVP. No invented moves.",
+                  "evidence": "or I'll bodyslam you.",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Only MVP moves referenced (punch/kick, lock-up, bodyslam, Irish Whip, stomp) or none.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-04",
+                "title": "Barry sounds like Barry",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 5,
+                "reason": "Barry's cigarette-butt grudge, Hoon dirt track and trucker background are all from his profile. But \"Thirty years hauling freight\" contradicts the Style Guide's early-thirties age, which caps this rule at 5. His voice is blunt and country, but the mustache and beer gut are not used.",
+                "llm": {
+                  "rule_id": "N-04",
+                  "score": 5,
+                  "reason": "Barry's cigarette-butt grudge, Hoon dirt track and trucker background are all from his profile. But \"Thirty years hauling freight\" contradicts the Style Guide's early-thirties age, which caps this rule at 5. His voice is blunt and country, but the mustache and beer gut are not used.",
+                  "evidence": "Thirty years hauling freight and running Hoon dirt.",
+                  "fix": "Change to a span that fits an early-thirties man, e.g. \"Ten years hauling freight and running Hoon dirt.\" Optionally add a gut or mustache jab."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-05",
+                "title": "Peaux sounds like Peaux",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 7,
+                "reason": "The football brothers, eyeliner and \"redneck\" jab match Peaux's profile and give a young, cutting voice. \"Four\" brothers and \"beat me daily\" are invented details, and the expulsion and sullen goth tone are missing.",
+                "llm": {
+                  "rule_id": "N-05",
+                  "score": 7,
+                  "reason": "The football brothers, eyeliner and \"redneck\" jab match Peaux's profile and give a young, cutting voice. \"Four\" brothers and \"beat me daily\" are invented details, and the expulsion and sullen goth tone are missing.",
+                  "evidence": "Four football brothers beat me daily, old man.",
+                  "fix": "Drop the invented number: \"My football brothers toughened me up, old man.\" Add a goth or expelled-at-sixteen touch."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-06",
+                "title": "Rooted in Duckville",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": false,
+                "score": 9,
+                "reason": "The setting is Duckville, with the gravel driveway and a neighbours-who-hate-each-other feel. There are no arenas or crowds. The lines are a little thin on trailers or dirt-lot detail. [check] place names: ['duckville', 'hoon']; trailer-park details: ['cigarette butts', 'dirt', 'driveway', 'gravel']",
+                "llm": {
+                  "rule_id": "N-06",
+                  "score": 9,
+                  "reason": "The setting is Duckville, with the gravel driveway and a neighbours-who-hate-each-other feel. There are no arenas or crowds. The lines are a little thin on trailers or dirt-lot detail.",
+                  "evidence": "Duckville's got one rule, boy / in your own gravel driveway.",
+                  "fix": "Add a trailer reference, e.g. \"in front of your trailer\"."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "place names: ['duckville', 'hoon']; trailer-park details: ['cigarette butts', 'dirt', 'driveway', 'gravel']",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-07",
+                "title": "Dark Southern humor",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 6,
+                "reason": "The tone is blunt and irreverent, but the jabs (\"mustache wrestling\", \"eyeliner's gonna run\", \"Keep yapping\") are stock trash talk. There is little of the dark, absurd Squidbillies or Eastbound & Down edge.",
+                "llm": {
+                  "rule_id": "N-07",
+                  "score": 6,
+                  "reason": "The tone is blunt and irreverent, but the jabs (\"mustache wrestling\", \"eyeliner's gonna run\", \"Keep yapping\") are stock trash talk. There is little of the dark, absurd Squidbillies or Eastbound & Down edge.",
+                  "evidence": "Your mustache wrestling won't scare me. / Keep yapping, redneck.",
+                  "fix": "Add one darker, more absurd Southern beat, like a grim cigarette-butt punishment or a cutting remark about the trailer park."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-08",
+                "title": "Short enough not to interrupt the arcade action",
+                "domain": "narrative",
+                "weight": 1,
+                "hard": false,
+                "score": 10,
+                "reason": "There are exactly four lines, the speakers alternate, and each line is under 90 characters (the longest is about 87). [check] 4 alternating lines, all within 90 characters.",
+                "llm": {
+                  "rule_id": "N-08",
+                  "score": 10,
+                  "reason": "There are exactly four lines, the speakers alternate, and each line is under 90 characters (the longest is about 87).",
+                  "evidence": "Four football brothers beat me daily, old man. Your mustache wrestling won't scare me.",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "4 alternating lines, all within 90 characters.",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "Barry's \"Thirty years hauling freight\" contradicts his early-thirties age in the Style Guide, and the humor is more generic trash talk than dark Southern comedy."
+          }
+        }
+      ],
+      "calls": [
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "ee367ee0-7739-4371-98c9-37a18061acb7",
+          "cost_usd": 0.0463399,
+          "duration_ms": 9907
+        },
+        {
+          "backend": "claude-cli",
+          "role": "refiner",
+          "model": "claude-sonnet-5-5",
+          "session_id": "d5c4a620-9eab-4fee-8348-6d1eb2ce84bd",
+          "cost_usd": 0.0470588,
+          "duration_ms": 4958
+        },
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "51c04f97-797f-45f0-8c8e-37e89e26c46b",
+          "cost_usd": 0.05731990000000001,
+          "duration_ms": 17387
+        },
+        {
+          "backend": "claude-cli",
+          "role": "refiner",
+          "model": "claude-sonnet-5-5",
+          "session_id": "4ec94f32-2919-4620-bd36-ca98ffa5cf52",
+          "cost_usd": 0.043073400000000005,
+          "duration_ms": 5554
+        },
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "42f4b5cc-d558-49c0-b552-5ab0f471688d",
+          "cost_usd": 0.056221900000000005,
+          "duration_ms": 16397
+        },
+        {
+          "backend": "claude-cli",
+          "role": "refiner",
+          "model": "claude-sonnet-5-5",
+          "session_id": "dbc08d8c-73bb-47d4-98af-9bd15feb0d0f",
+          "cost_usd": 0.008397,
+          "duration_ms": 5042
+        },
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "c6c19623-dff3-491b-957a-4e66bb817c29",
+          "cost_usd": 0.0540959,
+          "duration_ms": 17022
+        }
+      ],
+      "docs_read": [
+        {
+          "path": "docs/GDD.md",
+          "sha256": "ccbcd64c23f541b1ee8f2150add724c13ccc319eb5f1db51f520a175942d1116",
+          "sections": [
+            "Executive Summary",
+            "Design Pillars: What is Central to the Experience?",
+            "MVP Scope",
+            "Character Designs",
+            "Setting & World",
+            "Tone & Aesthetics",
+            "Narrative"
+          ]
+        },
+        {
+          "path": "docs/STYLE_GUIDE.md",
+          "sha256": "f8fafab43f35e23524f217f2e7b25c38e72b2d46b1ae43b600d960ea256473fd",
+          "sections": [
+            "Characters"
+          ]
+        }
+      ]
+    }
+  ]
+}

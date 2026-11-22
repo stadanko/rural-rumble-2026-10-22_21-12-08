@@ -1,0 +1,1781 @@
+{
+  "run_id": "2026-11-22T203354Z",
+  "model": "claude-sonnet-5-5",
+  "threshold": 85,
+  "hard_floor": 7,
+  "max_refinements": 3,
+  "note": null,
+  "estimated_cost_usd": 0.7627,
+  "tasks": [
+    {
+      "task_id": "trailer_backdrop",
+      "kind": "art_brief",
+      "brief": "An image-generation brief for one single-wide trailer for the back row of the Duckville arena backdrop (the 'trailer along the back' in the chosen arena look). The Art Wrangler would feed the prompt to an image model to make a placeholder sprite.",
+      "status": "approved",
+      "final_iteration": 0,
+      "final_score": 85.6,
+      "score_trajectory": [
+        85.6
+      ],
+      "final_draft": {
+        "subject": "Derelict single-wide trailer with rooftop TV antenna and DirecTV-style dish, golden-hour lit, for the back row of the Duckville arena backdrop",
+        "prompt": "Early-90s arcade pixel art sprite (Technos Japan / Capcom / SNK style, like WWF WrestleFest, Final Fight, Streets of Rage), crisp hand-placed pixels, 1 art pixel per native pixel, hard pixel edges, limited-colour dithering only, no smooth gradients, transparent background. Subject: one rundown single-wide mobile home trailer, side-on view, long rectangular box with a slightly rounded shallow-pitched roof, 720 px wide by 480 px tall (twice the height of a 240-px wrestler). Disrepair in concrete detail: faded and peeling dull cream (#E6DFCC) siding with streaks of rust (#A74727) running down from the seams, dented and patched panels in mismatched brown (#795037), sagging roof edge with a rusted corrugated patch and a blue tarp (#2872B8) weighted with old tires, one cracked window with a missing pane covered by cardboard, a crooked faded-red (#C7352C) door with a broken screen door hanging from one hinge, rotted wooden steps with a missing plank, cinder-block foundation, bent skirting with a gap showing darkness (#10151A), weeds and tall grass (#657A3B, #35523A) growing up around the base, a dead window AC unit dripping rust stains. On the roof: a bent old aluminium TV antenna on a leaning mast with guy wires, and a tilted DirecTV-style satellite dish with rust spots. Late-afternoon golden-hour light from the low sun at the left: warm orange (#D26938, #E19A36) rim light and highlights on the sunlit side and roof edge (#FFD65A), cool deep shadow side in #17243A and #25372C, and a long dark shadow stretching to the right across the ground at the base. Muted, lived-in Southern trailer-park look, dark humour tone. Only the trailer and the bit of dirt and weeds at its base; no background scenery. Palette strictly from the Rural Rumble 14 colours: #10151A #17243A #25372C #35523A #657A3B #795037 #A74727 #D26938 #E19A36 #FFD65A #2872B8 #7435A8 #C7352C #E6DFCC.",
+        "negative_prompt": "3D render, photorealistic, photo, vector art, anime, painterly, smooth gradients, soft blur, anti-aliased high-res look, glossy, clean, new, pristine, well-kept, city, skyline, highway, neon signs, crowds, suburban houses, mountains, hills, cliffs, midday sun, overcast, night, text, watermark, characters, people, off-palette colours, neon colours",
+        "palette": [
+          "#10151A",
+          "#17243A",
+          "#25372C",
+          "#35523A",
+          "#657A3B",
+          "#795037",
+          "#A74727",
+          "#D26938",
+          "#E19A36",
+          "#FFD65A",
+          "#2872B8",
+          "#C7352C",
+          "#E6DFCC"
+        ],
+        "lighting": "Late-afternoon golden hour: low sun from the left, warm orange and yellow rim light on the sunlit side and roof, cool dark shadow side, long shadow falling to the right across the dirt.",
+        "details": "Rust streaks, mismatched patched panels, blue tarp with tires on a sagging roof, cracked window with cardboard, crooked door with hanging screen door, rotted steps, cinder-block foundation, bent skirting, weeds around the base, leaning bent TV antenna, tilted rusty DirecTV-style dish, dripping dead window AC unit.",
+        "size_px": {
+          "width": 720,
+          "height": 480
+        },
+        "scale_note": "Drawn at 1 art pixel per native pixel. Barry stands 240 px tall; a single-wide trailer stands roughly twice his height, so this is 480 px tall (antenna and dish included), and 720 px wide. Peaux (215 px) would be dwarfed by it as well.",
+        "layer": "background (back row, behind the wrestlers, in front of the pine tree line and sky)"
+      },
+      "iterations": [
+        {
+          "iteration": 0,
+          "made_by": "generator",
+          "draft": {
+            "subject": "Derelict single-wide trailer with rooftop TV antenna and DirecTV-style dish, golden-hour lit, for the back row of the Duckville arena backdrop",
+            "prompt": "Early-90s arcade pixel art sprite (Technos Japan / Capcom / SNK style, like WWF WrestleFest, Final Fight, Streets of Rage), crisp hand-placed pixels, 1 art pixel per native pixel, hard pixel edges, limited-colour dithering only, no smooth gradients, transparent background. Subject: one rundown single-wide mobile home trailer, side-on view, long rectangular box with a slightly rounded shallow-pitched roof, 720 px wide by 480 px tall (twice the height of a 240-px wrestler). Disrepair in concrete detail: faded and peeling dull cream (#E6DFCC) siding with streaks of rust (#A74727) running down from the seams, dented and patched panels in mismatched brown (#795037), sagging roof edge with a rusted corrugated patch and a blue tarp (#2872B8) weighted with old tires, one cracked window with a missing pane covered by cardboard, a crooked faded-red (#C7352C) door with a broken screen door hanging from one hinge, rotted wooden steps with a missing plank, cinder-block foundation, bent skirting with a gap showing darkness (#10151A), weeds and tall grass (#657A3B, #35523A) growing up around the base, a dead window AC unit dripping rust stains. On the roof: a bent old aluminium TV antenna on a leaning mast with guy wires, and a tilted DirecTV-style satellite dish with rust spots. Late-afternoon golden-hour light from the low sun at the left: warm orange (#D26938, #E19A36) rim light and highlights on the sunlit side and roof edge (#FFD65A), cool deep shadow side in #17243A and #25372C, and a long dark shadow stretching to the right across the ground at the base. Muted, lived-in Southern trailer-park look, dark humour tone. Only the trailer and the bit of dirt and weeds at its base; no background scenery. Palette strictly from the Rural Rumble 14 colours: #10151A #17243A #25372C #35523A #657A3B #795037 #A74727 #D26938 #E19A36 #FFD65A #2872B8 #7435A8 #C7352C #E6DFCC.",
+            "negative_prompt": "3D render, photorealistic, photo, vector art, anime, painterly, smooth gradients, soft blur, anti-aliased high-res look, glossy, clean, new, pristine, well-kept, city, skyline, highway, neon signs, crowds, suburban houses, mountains, hills, cliffs, midday sun, overcast, night, text, watermark, characters, people, off-palette colours, neon colours",
+            "palette": [
+              "#10151A",
+              "#17243A",
+              "#25372C",
+              "#35523A",
+              "#657A3B",
+              "#795037",
+              "#A74727",
+              "#D26938",
+              "#E19A36",
+              "#FFD65A",
+              "#2872B8",
+              "#C7352C",
+              "#E6DFCC"
+            ],
+            "lighting": "Late-afternoon golden hour: low sun from the left, warm orange and yellow rim light on the sunlit side and roof, cool dark shadow side, long shadow falling to the right across the dirt.",
+            "details": "Rust streaks, mismatched patched panels, blue tarp with tires on a sagging roof, cracked window with cardboard, crooked door with hanging screen door, rotted steps, cinder-block foundation, bent skirting, weeds around the base, leaning bent TV antenna, tilted rusty DirecTV-style dish, dripping dead window AC unit.",
+            "size_px": {
+              "width": 720,
+              "height": 480
+            },
+            "scale_note": "Drawn at 1 art pixel per native pixel. Barry stands 240 px tall; a single-wide trailer stands roughly twice his height, so this is 480 px tall (antenna and dish included), and 720 px wide. Peaux (215 px) would be dwarfed by it as well.",
+            "layer": "background (back row, behind the wrestlers, in front of the pine tree line and sky)"
+          },
+          "scorecard": {
+            "total": 85.6,
+            "threshold": 85,
+            "hard_floor": 7,
+            "passed": true,
+            "hard_failures": [],
+            "rules": [
+              {
+                "rule_id": "A-01",
+                "title": "Early-90s arcade pixel art at native scale",
+                "domain": "aesthetic",
+                "weight": 3,
+                "hard": true,
+                "score": 8,
+                "reason": "Prompt names Technos/Capcom/SNK, WrestleFest, Final Fight, Streets of Rage, 1 art px per native px, hard edges, no smooth gradients, and the negative prompt blocks 3D, photo, vector, anime and painterly. Small gap: it allows 'dithering', and a 720x480 image model output is unlikely to be truly hand-placed pixels, with no instruction on outlines or a shading style. [check] 3/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game)",
+                "llm": {
+                  "rule_id": "A-01",
+                  "score": 8,
+                  "reason": "Prompt names Technos/Capcom/SNK, WrestleFest, Final Fight, Streets of Rage, 1 art px per native px, hard edges, no smooth gradients, and the negative prompt blocks 3D, photo, vector, anime and painterly. Small gap: it allows 'dithering', and a 720x480 image model output is unlikely to be truly hand-placed pixels, with no instruction on outlines or a shading style.",
+                  "evidence": "Early-90s arcade pixel art sprite (Technos Japan / Capcom / SNK style, like WWF WrestleFest, Final Fight, Streets of Rage), crisp hand-placed pixels, 1 art pixel per native pixel, hard pixel edges",
+                  "fix": "Add arcade-specific cues (dark 1-px outline, flat cel-style shading with a few tones per material, no anti-aliasing) and say it must be a true pixel grid with no sub-pixel detail."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "3/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-02",
+                "title": "Rural Rumble 14-colour palette",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 7,
+                "reason": "Prompt names all 14 hexes and assigns many to specific parts. But the palette field omits #7435A8, which contradicts the 'strictly 14 colours' line. The prompt also lets 'dithering' and light blending create intermediate colours. The #35523A in the palette is also written as #35523A in the prompt, but the doc's palette has #35523A, so that part is fine. [check] 14/14 hex colours are on the Style Guide palette",
+                "llm": {
+                  "rule_id": "A-02",
+                  "score": 7,
+                  "reason": "Prompt names all 14 hexes and assigns many to specific parts. But the palette field omits #7435A8, which contradicts the 'strictly 14 colours' line. The prompt also lets 'dithering' and light blending create intermediate colours. The #35523A in the palette is also written as #35523A in the prompt, but the doc's palette has #35523A, so that part is fine.",
+                  "evidence": "Palette strictly from the Rural Rumble 14 colours: #10151A ... #7435A8 #C7352C #E6DFCC. / palette array ends \"#C7352C\", \"#E6DFCC\" with no #7435A8",
+                  "fix": "Add #7435A8 to the palette array (or say explicitly why it is unused), and state that every pixel must be exactly one of the listed hexes with no blended or intermediate shades."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "14/14 hex colours are on the Style Guide palette",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-03",
+                "title": "Late-afternoon golden-hour light (D-016)",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": false,
+                "score": 9,
+                "reason": "Low sun from the left, warm orange rim light, #FFD65A roof highlights, cool shadow side, long shadow to the right across the ground, with midday, overcast, night and neon excluded in the negatives. This matches D-016. The only gap is that it has no sky, so the warm orange sky isn't expressed. [check] 4/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows)",
+                "llm": {
+                  "rule_id": "A-03",
+                  "score": 9,
+                  "reason": "Low sun from the left, warm orange rim light, #FFD65A roof highlights, cool shadow side, long shadow to the right across the ground, with midday, overcast, night and neon excluded in the negatives. This matches D-016. The only gap is that it has no sky, so the warm orange sky isn't expressed.",
+                  "evidence": "Late-afternoon golden-hour light from the low sun at the left: warm orange (#D26938, #E19A36) rim light and highlights on the sunlit side and roof edge (#FFD65A), cool deep shadow side in #17243A and #25372C, and a long dark shadow stretching to the right across the ground at the base.",
+                  "fix": "Add a note that the warm orange sky tone should bleed into the trailer's edge light, and that the shadow should be long and stretched at roughly a low-sun angle."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "4/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-04",
+                "title": "Background whitelist: trees, skies, electric poles, trailers",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 9,
+                "reason": "The prompt limits the scene to the trailer plus dirt and weeds, and the negatives exclude mountains, hills and cliffs. The details add only trailer parts, tires and a tarp, which are trailer dressing, not extra landmarks. [check] No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                "llm": {
+                  "rule_id": "A-04",
+                  "score": 9,
+                  "reason": "The prompt limits the scene to the trailer plus dirt and weeds, and the negatives exclude mountains, hills and cliffs. The details add only trailer parts, tires and a tarp, which are trailer dressing, not extra landmarks.",
+                  "evidence": "Only the trailer and the bit of dirt and weeds at its base; no background scenery.",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-05",
+                "title": "Deep woods, not a city",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 7,
+                "reason": "The negatives rule out city, skyline, highway, neon and suburban houses. But a lone trailer sprite on a transparent background says nothing positive about woods or pines, and the 'dark humour' note is generic. The woods context is left to the layer field only. [check] No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                "llm": {
+                  "rule_id": "A-05",
+                  "score": 7,
+                  "reason": "The negatives rule out city, skyline, highway, neon and suburban houses. But a lone trailer sprite on a transparent background says nothing positive about woods or pines, and the 'dark humour' note is generic. The woods context is left to the layer field only.",
+                  "evidence": "city, skyline, highway, neon signs, crowds, suburban houses",
+                  "fix": "Add a positive woods cue, such as pine needles on the roof, leaf litter and pine-straw dirt at the base, and a note that the sprite sits in front of the North Louisiana pine line."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-06",
+                "title": "Disrepair: nothing has been kept up",
+                "domain": "aesthetic",
+                "weight": 3,
+                "hard": false,
+                "score": 10,
+                "reason": "Gives many concrete neglect details: rust streaks, patched mismatched panels, a sagging roof with a tarp and tires, a cracked window with cardboard, a hanging screen door, rotted steps, bent skirting and weeds. Not merely 'old'. [check] 18 distinct neglect details (bent, broken, cracked, dented, faded, leaning, missing, patch, patched, peeling, rotted, rust, rusted, rusty, sagging, stains, tarp, weeds)",
+                "llm": {
+                  "rule_id": "A-06",
+                  "score": 10,
+                  "reason": "Gives many concrete neglect details: rust streaks, patched mismatched panels, a sagging roof with a tarp and tires, a cracked window with cardboard, a hanging screen door, rotted steps, bent skirting and weeds. Not merely 'old'.",
+                  "evidence": "faded and peeling dull cream (#E6DFCC) siding with streaks of rust (#A74727) running down from the seams, dented and patched panels in mismatched brown (#795037), sagging roof edge with a rusted corrugated patch and a blue tarp",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "18 distinct neglect details (bent, broken, cracked, dented, faded, leaning, missing, patch, patched, peeling, rotted, rust, rusted, rusty, sagging, stains, tarp, weeds)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-07",
+                "title": "Trailer roofs carry old TV antennas or satellite dishes",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": false,
+                "score": 10,
+                "reason": "A bent old aluminium TV antenna on a leaning mast and a tilted DirecTV-style dish are both set on the roof, as the guide requires, and are repeated in the subject and details. [check] Roof carries a TV antenna or satellite dish.",
+                "llm": {
+                  "rule_id": "A-07",
+                  "score": 10,
+                  "reason": "A bent old aluminium TV antenna on a leaning mast and a tilted DirecTV-style dish are both set on the roof, as the guide requires, and are repeated in the subject and details.",
+                  "evidence": "On the roof: a bent old aluminium TV antenna on a leaning mast with guy wires, and a tilted DirecTV-style satellite dish with rust spots.",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Roof carries a TV antenna or satellite dish.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-08",
+                "title": "Drawn to scale with the 240-px wrestlers",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 8,
+                "reason": "It states 720x480 native px against Barry's 240 px and calls it twice his height, matching the guide. But the 480 px includes the antenna and dish, whereas the guide's 'roughly twice Barry's height' is for the trailer, so the box itself would be shorter than 480. The 720 px width is an invented figure with no basis in the docs. [check] height 480px vs target 430-530px (a single-wide trailer stands roughly twice Barry's 240-px height)",
+                "llm": {
+                  "rule_id": "A-08",
+                  "score": 8,
+                  "reason": "It states 720x480 native px against Barry's 240 px and calls it twice his height, matching the guide. But the 480 px includes the antenna and dish, whereas the guide's 'roughly twice Barry's height' is for the trailer, so the box itself would be shorter than 480. The 720 px width is an invented figure with no basis in the docs.",
+                  "evidence": "720 px wide by 480 px tall (twice the height of a 240-px wrestler) / 480 px tall (antenna and dish included)",
+                  "fix": "Make the trailer body about 480 px tall with the antenna and dish extending above it (or justify the combined height), and flag the 720 px width as an assumption."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "height 480px vs target 430-530px (a single-wide trailer stands roughly twice Barry's 240-px height)",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "The palette field drops #7435A8 despite the prompt's \"strictly 14 colours\", and the brief has no positive woods and pine cues. It also folds the antenna and dish into the 480 px height."
+          }
+        }
+      ],
+      "calls": [
+        {
+          "backend": "claude-cli",
+          "role": "generator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "15c3b903-81de-45e5-bfeb-61214d10698e",
+          "cost_usd": 0.120196,
+          "duration_ms": 12066
+        },
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "7e582fc9-6de2-44f6-9aa0-2ce65f41488d",
+          "cost_usd": 0.0537748,
+          "duration_ms": 14961
+        }
+      ],
+      "docs_read": [
+        {
+          "path": "docs/STYLE_GUIDE.md",
+          "sha256": "f8fafab43f35e23524f217f2e7b25c38e72b2d46b1ae43b600d960ea256473fd",
+          "sections": [
+            "Overall Game Style",
+            "Sprite Scale",
+            "Arena",
+            "Color Palette"
+          ]
+        },
+        {
+          "path": "docs/GDD.md",
+          "sha256": "ccbcd64c23f541b1ee8f2150add724c13ccc319eb5f1db51f520a175942d1116",
+          "sections": [
+            "Setting & World",
+            "Tone & Aesthetics"
+          ]
+        }
+      ],
+      "output_file": "outputs/trailer_backdrop.json"
+    },
+    {
+      "task_id": "power_pole",
+      "kind": "art_brief",
+      "brief": "An image-generation brief for a wooden electric pole with sagging power lines, to stand in the arena background between the pines and the trailers.",
+      "status": "approved",
+      "final_iteration": 2,
+      "final_score": 85.0,
+      "score_trajectory": [
+        83.8,
+        84.4,
+        85.0
+      ],
+      "final_draft": {
+        "subject": "Weathered wooden utility pole with sagging power lines, leaning slightly, neglected pine-woods trailer-park background prop",
+        "prompt": "Early-90s arcade pixel art sprite in the style of WWF WrestleFest, Final Fight, Streets of Rage and Fatal Fury, crisp hand-placed pixels at 1 native pixel per art pixel, matching the pixel density of the 240 px wrestler sprites, Final Fight-style dark pixel outlining, hard aliased edges, flat shading with a 3-shade ramp per material, clean stair-stepped lines. Uses only the Rural Rumble 14-colour palette: #10151A #17243A #25372C #35523A #657A3B #795037 #A74727 #D26938 #E19A36 #FFD65A #2872B8 #7435A8 #C7352C #E6DFCC. Only these exact flat colours, no blended or intermediate colours; #7435A8 and #C7352C are optional and may appear only as tiny flyer ink accents. Sprite canvas 420x600 native pixels. The pole is 600 px tall, 2.5x Barry's 240 px standing sprite and about 1.25x a 480 px single-wide trailer, so the crossarm clears the trailer roofline. The shaft is thin, about 26 px wide; the crossarm is about 260 px wide. Subject: a tall wooden North Louisiana pine-woods electric utility pole, slightly leaning, standing alone as a background prop on a transparent background. Shaft in weathered brown #795037 with dark grain cracks in #17243A and #10151A, sun-bleached splintered patches in #E6DFCC, a rusty strap band in #A74727. Crossarm near the top with a duct-tape repair in #E6DFCC and three chipped, tilted glass insulators in faded blue #2872B8, one missing and one cracked. A small dented pole transformer can in dark green #25372C with #A74727 rust streaks. Three power lines in #10151A, stair-stepped 1-2 px runs, sag in deep drooping curves off both sides of the crossarm and run off the left and right edges, one line frayed and dangling lower than the others. A torn faded hand-lettered Duckville yard-sale flyer in #E19A36 and #E6DFCC tacked to the shaft. At the base: weeds and dry grass tufts in #657A3B and #35523A on a small patch of bare dirt. Late-afternoon golden-hour light from the low right matching the other arena props: warm #FFD65A and #E19A36 highlights on the right side of the shaft, #D26938 bounce echoing the orange sky, shadowed left side in #17243A. The long cast shadow in #10151A stretches left along the dirt as a cleanly cut separate shape that can sit on the arena dirt. Dark Southern rundown, lived-in, neglected look. Side view, flat 2D, no perspective distortion.",
+        "negative_prompt": "3D render, photorealistic, vector art, anime, painterly, smooth gradients, blur, anti-aliasing, soft glow, high-resolution detail, dithering noise, mountains, hills, cliffs, city, skyline, highway, road, signage, neon signs, crowds, people, suburban, modern clean new pole, metal or concrete pole, steel tower, large industrial transformer, wind turbine, snow, midday light, night, overcast, text, watermark, off-palette colors, blended colors, kudzu",
+        "palette": [
+          "#10151A",
+          "#17243A",
+          "#25372C",
+          "#35523A",
+          "#657A3B",
+          "#795037",
+          "#A74727",
+          "#D26938",
+          "#E19A36",
+          "#FFD65A",
+          "#2872B8",
+          "#7435A8",
+          "#C7352C",
+          "#E6DFCC"
+        ],
+        "lighting": "Late-afternoon golden hour: low warm sun from the right, orange-gold highlights on the right of the pole with a #D26938 bounce, dark shadow side on the left, long shadow falling left across the dirt as a separate cleanly cut shape, direction matching the other arena props.",
+        "details": "Leaning pole with cracked, splintered, sun-bleached wood; rusted strap band; crossarm with duct-tape repair, chipped tilted insulators, one missing; small dented rusty transformer (the only extra hardware); sagging 1-2 px stair-stepped power lines with one frayed dangling line; torn Duckville flyer; weeds and dry grass at the base on bare dirt. Most readable damage cues at sprite size: the lean, the missing insulator, the dangling line. No road or signage. Transparent background so it layers between pines and trailers.",
+        "size_px": {
+          "width": 420,
+          "height": 600
+        },
+        "scale_note": "Drawn at 1 art pixel per native pixel. Barry stands 240 px tall; a single-wide trailer is about 480 px (twice Barry). The pole is 600 px tall (2.5x Barry, about 1.25x a trailer), so the crossarm clears the trailer roofline. The shaft is about 26 px wide and the crossarm about 260 px wide; the 420 px canvas width holds the crossarm and the start of the sagging lines, which run off the sprite edges.",
+        "layer": "background (midground, between the pine tree line and the trailers, behind the wrestlers)"
+      },
+      "iterations": [
+        {
+          "iteration": 0,
+          "made_by": "generator",
+          "draft": {
+            "subject": "Weathered wooden utility pole with sagging power lines, leaning slightly, neglected trailer-park background prop",
+            "prompt": "Early-90s arcade pixel art sprite in the style of WWF WrestleFest, Final Fight, Streets of Rage and Fatal Fury, crisp hand-placed pixels at 1 native pixel per art pixel, hard aliased edges, no anti-aliasing, no smooth gradients, limited-color dithering only. Subject: a tall wooden North Louisiana electric utility pole, slightly leaning, standing alone as a background prop on a transparent background. Pole shaft in dark weathered brown #795037 with darker grain cracks in #17243A and #10151A, splintered and sun-bleached patches in #E6DFCC, a rusty patched metal strap band in #A74727. Wide wooden crossarm near the top with three chipped, tilted glass insulators in faded blue #2872B8, one insulator missing and one cracked. A rusted gray-green transformer can near the top, dented, in #25372C with #A74727 rust streaks. Three thick power lines in #10151A sag in deep drooping catenary curves off both sides of the crossarm, running off the left and right edges of the sprite, one line frayed and dangling lower than the others. Old staples, a faded torn flyer in #E19A36 and #E6DFCC tacked to the shaft, loose bit of wire hanging, weeds and dry grass tufts in #657A3B and #35523A at the base with a small patch of bare dirt. Late-afternoon golden-hour light from the low right: warm #FFD65A and #E19A36 rim highlights on the right side of the shaft, shadowed left side in #17243A, long cast shadow stretching left along the dirt in #10151A. Dark Southern rundown, lived-in, neglected look. Side view, flat 2D, no perspective distortion.",
+            "negative_prompt": "3D render, photorealistic, vector art, anime, painterly, smooth gradients, blur, anti-aliasing, soft glow, high-resolution detail, mountains, hills, cliffs, city, skyline, highway, neon signs, crowds, people, modern clean new pole, metal or concrete pole, steel tower, wind turbine, snow, midday light, night, overcast, text, watermark, off-palette saturated colors",
+            "palette": [
+              "#10151A",
+              "#17243A",
+              "#25372C",
+              "#35523A",
+              "#657A3B",
+              "#795037",
+              "#A74727",
+              "#E19A36",
+              "#FFD65A",
+              "#2872B8",
+              "#E6DFCC"
+            ],
+            "lighting": "Late-afternoon golden hour: low warm sun from the right, orange-gold rim light on the right of the pole, cool dark shadow side on the left, long shadow falling left across the dirt.",
+            "details": "Leaning pole with cracked, splintered, sun-bleached wood; rusted strap bands; crossarm with chipped tilted insulators, one missing; dented rusty transformer; deeply sagging power lines with one frayed dangling line; torn faded flyer and staples; weeds and dry grass at the base on bare dirt. Transparent background so it layers between pines and trailers.",
+            "size_px": {
+              "width": 420,
+              "height": 720
+            },
+            "scale_note": "Drawn at 1 art pixel per native pixel. Barry stands 240 px tall; a single-wide trailer is about 480 px (twice Barry). The pole is 720 px tall, three times Barry's height and taller than the trailers, as real utility poles (about 35 ft) tower over a single-wide. Width of 420 px includes the crossarm and the start of the sagging lines, which continue off the sprite edges to tile with neighbouring pieces.",
+            "layer": "background (midground, between the pine tree line and the trailers, behind the wrestlers)"
+          },
+          "scorecard": {
+            "total": 83.8,
+            "threshold": 85,
+            "hard_floor": 7,
+            "passed": false,
+            "hard_failures": [],
+            "rules": [
+              {
+                "rule_id": "A-01",
+                "title": "Early-90s arcade pixel art at native scale",
+                "domain": "aesthetic",
+                "weight": 3,
+                "hard": true,
+                "score": 9,
+                "reason": "Prompt names the right reference games, demands 1 native px per art pixel, hard aliased edges, and no smooth gradients, and the negative prompt excludes 3D, vector, anime and painterly looks. Small gap: 'limited-color dithering' and the 420x720 size are plausible, but the thin power lines are hard to keep crisp at native scale. [check] 3/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game)",
+                "llm": {
+                  "rule_id": "A-01",
+                  "score": 9,
+                  "reason": "Prompt names the right reference games, demands 1 native px per art pixel, hard aliased edges, and no smooth gradients, and the negative prompt excludes 3D, vector, anime and painterly looks. Small gap: 'limited-color dithering' and the 420x720 size are plausible, but the thin power lines are hard to keep crisp at native scale.",
+                  "evidence": "crisp hand-placed pixels at 1 native pixel per art pixel, hard aliased edges, no anti-aliasing, no smooth gradients",
+                  "fix": "Specify that the lines are 1-2 px wide stair-stepped pixel lines, and name Final Fight-style outlining."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "3/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-02",
+                "title": "Rural Rumble 14-colour palette",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 8,
+                "reason": "The prompt names hex values from the 14-colour palette and the palette field lists 11 of them. Every colour used is in the palette. Gaps: the palette field omits #D26938, #7435A8 and #C7352C, and the prompt says 'rusted gray-green' for #25372C, which is just dark green. [check] 11/11 hex colours are on the Style Guide palette",
+                "llm": {
+                  "rule_id": "A-02",
+                  "score": 8,
+                  "reason": "The prompt names hex values from the 14-colour palette and the palette field lists 11 of them. Every colour used is in the palette. Gaps: the palette field omits #D26938, #7435A8 and #C7352C, and the prompt says 'rusted gray-green' for #25372C, which is just dark green.",
+                  "evidence": "\"palette\": [\"#10151A\", ... \"#E6DFCC\"] (11 colours); \"rusted gray-green transformer can near the top, dented, in #25372C\"",
+                  "fix": "State that the sprite uses only the Style Guide's 14 colours, add #D26938 (rust and sunset warmth), and describe #25372C as dark green."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "11/11 hex colours are on the Style Guide palette",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-03",
+                "title": "Late-afternoon golden-hour light (D-016)",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": false,
+                "score": 9,
+                "reason": "Golden-hour light is spelled out: low warm sun from the right, #FFD65A and #E19A36 rim light, and a long cast shadow falling left along the dirt. This matches D-016. Small gap: a transparent-background prop has no orange sky, and the orange sky colour #D26938 is not used. [check] 3/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows)",
+                "llm": {
+                  "rule_id": "A-03",
+                  "score": 9,
+                  "reason": "Golden-hour light is spelled out: low warm sun from the right, #FFD65A and #E19A36 rim light, and a long cast shadow falling left along the dirt. This matches D-016. Small gap: a transparent-background prop has no orange sky, and the orange sky colour #D26938 is not used.",
+                  "evidence": "Late-afternoon golden-hour light from the low right: warm #FFD65A and #E19A36 rim highlights ... long cast shadow stretching left along the dirt in #10151A.",
+                  "fix": "Add a warm #D26938 bounce on the pole's lit edges to tie it to the orange sky, and note the shadow should be cut to the arena's dirt plane."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "3/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-04",
+                "title": "Background whitelist: trees, skies, electric poles, trailers",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 8,
+                "reason": "The subject is an electric pole, which is on the whitelist. The only ground elements are dirt, grass and weeds, and the negative prompt excludes mountains, hills and cliffs. Gap: the torn flyer, staples and the 'transformer can' are extra details, though they fit the pole and are not landmarks. [check] No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                "llm": {
+                  "rule_id": "A-04",
+                  "score": 8,
+                  "reason": "The subject is an electric pole, which is on the whitelist. The only ground elements are dirt, grass and weeds, and the negative prompt excludes mountains, hills and cliffs. Gap: the torn flyer, staples and the 'transformer can' are extra details, though they fit the pole and are not landmarks.",
+                  "evidence": "standing alone as a background prop on a transparent background ... mountains, hills, cliffs, city",
+                  "fix": "No change needed beyond trimming the flyer. Keep the extras on the pole only."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-05",
+                "title": "Deep woods, not a city",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 7,
+                "reason": "The negative prompt excludes city, skyline, highway, neon and crowds, and the prompt says 'North Louisiana'. But a lone pole on a transparent background carries no deep-woods or pine cue, and a large transformer plus heavy wiring can read as suburban utility infrastructure. [check] No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                "llm": {
+                  "rule_id": "A-05",
+                  "score": 7,
+                  "reason": "The negative prompt excludes city, skyline, highway, neon and crowds, and the prompt says 'North Louisiana'. But a lone pole on a transparent background carries no deep-woods or pine cue, and a large transformer plus heavy wiring can read as suburban utility infrastructure.",
+                  "evidence": "a tall wooden North Louisiana electric utility pole ... standing alone as a background prop",
+                  "fix": "Add rural-woods cues: pine needles caught on the crossarm, a vine or kudzu on the lower shaft, pine-bark chips at the base, and a small rural transformer."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-06",
+                "title": "Disrepair: nothing has been kept up",
+                "domain": "aesthetic",
+                "weight": 3,
+                "hard": false,
+                "score": 9,
+                "reason": "Disrepair is shown with specific details: a leaning pole, splintered and sun-bleached wood, a rusty patched strap, a missing and a cracked insulator, a dented rusty transformer, a frayed dangling line, a torn flyer, and weeds. Small gap: nothing is distinctly Rural Rumble, such as a pole patched with a trailer-park hack. [check] 17 distinct neglect details (chipped, cracked, cracks, dented, faded, leaning, missing, patch, patched, patches, rust, rusted, rusty, sag, sagging, weathered, weeds)",
+                "llm": {
+                  "rule_id": "A-06",
+                  "score": 9,
+                  "reason": "Disrepair is shown with specific details: a leaning pole, splintered and sun-bleached wood, a rusty patched strap, a missing and a cracked insulator, a dented rusty transformer, a frayed dangling line, a torn flyer, and weeds. Small gap: nothing is distinctly Rural Rumble, such as a pole patched with a trailer-park hack.",
+                  "evidence": "one insulator missing and one cracked ... one line frayed and dangling lower than the others ... faded torn flyer ... weeds and dry grass tufts",
+                  "fix": "Add one Duckville-specific neglect detail, such as a hand-lettered Duckville flyer or a duct-taped repair on the crossarm."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "17 distinct neglect details (chipped, cracked, cracks, dented, faded, leaning, missing, patch, patched, patches, rust, rusted, rusty, sag, sagging, weathered, weeds)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-08",
+                "title": "Drawn to scale with the 240-px wrestlers",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 8,
+                "reason": "The brief states size_px against Barry's 240 px and the 480 px single-wide, and it justifies a 720 px pole. Gaps: the 3x Barry height is the draft's own invention and may be too tall for the camera zoom. The 420 px width crops the lines, and the claim that they tile with neighbouring pieces is unsupported by the docs. This detail is not in the prompt text that reaches the image model. [check] height 720px vs target 480-1080px (taller than a single-wide trailer (about 480 px), no taller than the 1080-px backdrop)",
+                "llm": {
+                  "rule_id": "A-08",
+                  "score": 8,
+                  "reason": "The brief states size_px against Barry's 240 px and the 480 px single-wide, and it justifies a 720 px pole. Gaps: the 3x Barry height is the draft's own invention and may be too tall for the camera zoom. The 420 px width crops the lines, and the claim that they tile with neighbouring pieces is unsupported by the docs. This detail is not in the prompt text that reaches the image model.",
+                  "evidence": "The pole is 720 px tall, three times Barry's height and taller than the trailers ... Width of 420 px includes the crossarm",
+                  "fix": "Put the pixel size and scale into the prompt, and consider about 600 px (2.5x Barry) so the pole is only slightly taller than the 480 px trailers. Drop the tiling claim or explain it."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "height 720px vs target 480-1080px (taller than a single-wide trailer (about 480 px), no taller than the 1080-px backdrop)",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "The draft is strong overall, but its biggest remaining problem is that it has no deep-woods or pine cues and no Rural Rumble-specific details, and the scale and size reasoning appears only in scale_note, not in the prompt."
+          },
+          "refined_from_iteration": 0,
+          "refiner_changes": [
+            {
+              "rule_id": "A-05",
+              "change": "Added woods cues: pine needles on crossarm, kudzu on lower shaft, pine-bark chips at base, small rural transformer; added 'suburban' and 'large industrial transformer' to negatives."
+            },
+            {
+              "rule_id": "A-02",
+              "change": "Prompt now states it uses only the 14 Style Guide colours and lists all 14; palette field expanded to 14 including #D26938; #25372C described as dark green."
+            },
+            {
+              "rule_id": "A-04",
+              "change": "Kept extras on the pole only; flyer retained as small pole detail, no new background elements."
+            },
+            {
+              "rule_id": "A-08",
+              "change": "Resized to 420x600 (2.5x Barry), put size and scale in the prompt, dropped tiling claim."
+            },
+            {
+              "rule_id": "A-01",
+              "change": "Specified 1-2 px stair-stepped power lines and Final Fight-style dark outlining."
+            },
+            {
+              "rule_id": "A-06",
+              "change": "Added duct-tape crossarm repair and hand-lettered Duckville flyer."
+            },
+            {
+              "rule_id": "A-03",
+              "change": "Added #D26938 bounce light tying to orange sky; shadow cut to the dirt plane."
+            }
+          ]
+        },
+        {
+          "iteration": 1,
+          "made_by": "refiner",
+          "draft": {
+            "subject": "Weathered wooden utility pole with sagging power lines, leaning slightly, neglected pine-woods trailer-park background prop",
+            "prompt": "Early-90s arcade pixel art sprite in the style of WWF WrestleFest, Final Fight, Streets of Rage and Fatal Fury, crisp hand-placed pixels at 1 native pixel per art pixel, Final Fight-style dark pixel outlining, hard aliased edges, no anti-aliasing, no smooth gradients, limited-color dithering only. Uses only the Rural Rumble 14-colour palette: #10151A #17243A #25372C #35523A #657A3B #795037 #A74727 #D26938 #E19A36 #FFD65A #2872B8 #7435A8 #C7352C #E6DFCC. Sprite size 420x600 native pixels, pole about 600 px tall (2.5x Barry's 240 px, slightly taller than a 480 px single-wide trailer). Subject: a tall wooden North Louisiana pine-woods electric utility pole, slightly leaning, standing alone as a background prop on a transparent background. Pole shaft in weathered brown #795037 with dark grain cracks in #17243A and #10151A, splintered sun-bleached patches in #E6DFCC, a rusty patched strap band in #A74727. Wide wooden crossarm near the top with a strip of duct tape repair in #E6DFCC and three chipped, tilted glass insulators in faded blue #2872B8, one insulator missing and one cracked. Dry pine needles in #657A3B and #795037 caught on the crossarm. A small dented rural pole transformer can in dark green #25372C with #A74727 rust streaks. Three power lines in #10151A, drawn as 1-2 px wide stair-stepped pixel lines, sag in deep drooping curves off both sides of the crossarm and run off the left and right edges of the sprite, one line frayed and dangling lower than the others. Old staples, a faded torn hand-lettered Duckville yard-sale flyer in #E19A36 and #E6DFCC tacked to the shaft, loose bit of wire hanging. A creeping kudzu vine in #35523A and #657A3B climbs the lower shaft. At the base: weeds, dry grass tufts in #657A3B and #35523A, pine-bark chips and pine needles on a small patch of bare dirt. Late-afternoon golden-hour light from the low right: warm #FFD65A and #E19A36 rim highlights on the right side of the shaft, a warm #D26938 bounce on the lit edges echoing the orange sky, shadowed left side in #17243A, long cast shadow stretching left along the dirt plane in #10151A. Dark Southern rundown, lived-in, neglected look. Side view, flat 2D, no perspective distortion.",
+            "negative_prompt": "3D render, photorealistic, vector art, anime, painterly, smooth gradients, blur, anti-aliasing, soft glow, high-resolution detail, mountains, hills, cliffs, city, skyline, highway, neon signs, crowds, people, suburban, modern clean new pole, metal or concrete pole, steel tower, large industrial transformer, wind turbine, snow, midday light, night, overcast, text, watermark, off-palette colors",
+            "palette": [
+              "#10151A",
+              "#17243A",
+              "#25372C",
+              "#35523A",
+              "#657A3B",
+              "#795037",
+              "#A74727",
+              "#D26938",
+              "#E19A36",
+              "#FFD65A",
+              "#2872B8",
+              "#7435A8",
+              "#C7352C",
+              "#E6DFCC"
+            ],
+            "lighting": "Late-afternoon golden hour: low warm sun from the right, orange-gold rim light on the right of the pole with a #D26938 bounce, cool dark shadow side on the left, long shadow falling left across the dirt plane.",
+            "details": "Leaning pole with cracked, splintered, sun-bleached wood; rusted strap bands; crossarm with duct-tape repair, chipped tilted insulators, one missing; pine needles on the crossarm; small dented rusty transformer; sagging 1-2 px power lines with one frayed dangling line; torn Duckville flyer and staples; kudzu on the lower shaft; weeds, pine-bark chips and dry grass at the base on bare dirt. Transparent background so it layers between pines and trailers.",
+            "size_px": {
+              "width": 420,
+              "height": 600
+            },
+            "scale_note": "Drawn at 1 art pixel per native pixel. Barry stands 240 px tall; a single-wide trailer is about 480 px (twice Barry). The pole is 600 px tall (2.5x Barry), only slightly taller than the trailers, so it stays readable under the camera zoom-out. The 420 px width covers the crossarm and the start of the sagging lines, which run off the sprite edges.",
+            "layer": "background (midground, between the pine tree line and the trailers, behind the wrestlers)"
+          },
+          "scorecard": {
+            "total": 84.4,
+            "threshold": 85,
+            "hard_floor": 7,
+            "passed": false,
+            "hard_failures": [],
+            "rules": [
+              {
+                "rule_id": "A-01",
+                "title": "Early-90s arcade pixel art at native scale",
+                "domain": "aesthetic",
+                "weight": 3,
+                "hard": true,
+                "score": 8,
+                "reason": "Prompt names WrestleFest, Final Fight, SoR, Fatal Fury, 1 native px per art pixel, hard aliased edges, and negatives block 3D/painterly. Small gaps: a 420x600 sprite with fine 1-2 px wire detail and 'limited-color dithering' is slightly more detailed than arcade props, and the wire spans can't truly be 1-2px sag curves without anti-aliasing risk. [check] 3/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game)",
+                "llm": {
+                  "rule_id": "A-01",
+                  "score": 8,
+                  "reason": "Prompt names WrestleFest, Final Fight, SoR, Fatal Fury, 1 native px per art pixel, hard aliased edges, and negatives block 3D/painterly. Small gaps: a 420x600 sprite with fine 1-2 px wire detail and 'limited-color dithering' is slightly more detailed than arcade props, and the wire spans can't truly be 1-2px sag curves without anti-aliasing risk.",
+                  "evidence": "crisp hand-placed pixels at 1 native pixel per art pixel, Final Fight-style dark pixel outlining, hard aliased edges, no anti-aliasing",
+                  "fix": "Add an explicit note that it should match the wrestlers' pixel density and simplify the lines to clean stair-stepped runs with a limited-shade ramp per material."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "3/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-02",
+                "title": "Rural Rumble 14-colour palette",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 8,
+                "reason": "The prompt lists all 14 hex codes and assigns them to parts, and the palette field matches. However it uses #7435A8 and #C7352C nowhere, and the 'dithering' and 'bounce' blends may drift off-palette. The negative prompt also bans off-palette colours. [check] 14/14 hex colours are on the Style Guide palette",
+                "llm": {
+                  "rule_id": "A-02",
+                  "score": 8,
+                  "reason": "The prompt lists all 14 hex codes and assigns them to parts, and the palette field matches. However it uses #7435A8 and #C7352C nowhere, and the 'dithering' and 'bounce' blends may drift off-palette. The negative prompt also bans off-palette colours.",
+                  "evidence": "Uses only the Rural Rumble 14-colour palette: #10151A #17243A #25372C #35523A #657A3B #795037 #A74727 #D26938 #E19A36 #FFD65A #2872B8 #7435A8 #C7352C #E6DFCC.",
+                  "fix": "State that unused palette colours (#7435A8, #C7352C) are optional, or use them in small accents (e.g. flyer ink), and say no intermediate blended colours are allowed."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "14/14 hex colours are on the Style Guide palette",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-03",
+                "title": "Late-afternoon golden-hour light (D-016)",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": false,
+                "score": 9,
+                "reason": "Low right golden-hour sun with warm rim light, orange bounce and a long shadow across the dirt match D-016. The only gap is that the sprite is on a transparent background, so the orange sky is only echoed through the bounce light. [check] 4/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows)",
+                "llm": {
+                  "rule_id": "A-03",
+                  "score": 9,
+                  "reason": "Low right golden-hour sun with warm rim light, orange bounce and a long shadow across the dirt match D-016. The only gap is that the sprite is on a transparent background, so the orange sky is only echoed through the bounce light.",
+                  "evidence": "Late-afternoon golden-hour light from the low right: warm #FFD65A and #E19A36 rim highlights... long cast shadow stretching left along the dirt plane in #10151A.",
+                  "fix": "Say that the shadow should be a separate or cleanly cut shape that can sit on the arena dirt, and that the lighting direction should match the scene's other props."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "4/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-04",
+                "title": "Background whitelist: trees, skies, electric poles, trailers",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 9,
+                "reason": "The subject is a pole in front of pines/trailers, with no mountains, hills or cliffs, and the negative prompt blocks them. The kudzu, flyer and transformer are small additions beyond the whitelist but are attached to the pole and plausible. [check] No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                "llm": {
+                  "rule_id": "A-04",
+                  "score": 9,
+                  "reason": "The subject is a pole in front of pines/trailers, with no mountains, hills or cliffs, and the negative prompt blocks them. The kudzu, flyer and transformer are small additions beyond the whitelist but are attached to the pole and plausible.",
+                  "evidence": "standing alone as a background prop on a transparent background... negative_prompt: \"mountains, hills, cliffs, city, skyline, highway\"",
+                  "fix": "Drop the kudzu or keep it minimal, and confirm the transformer is the only extra hardware beyond the pole."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-05",
+                "title": "Deep woods, not a city",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 9,
+                "reason": "Pine-woods setting, dirt, pine needles and bark chips all say woods, and the negatives exclude city, neon, crowds and suburban polish. Mentions Duckville specifically. As a lone pole on a transparent background, the woods feel comes only from details. [check] No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                "llm": {
+                  "rule_id": "A-05",
+                  "score": 9,
+                  "reason": "Pine-woods setting, dirt, pine needles and bark chips all say woods, and the negatives exclude city, neon, crowds and suburban polish. Mentions Duckville specifically. As a lone pole on a transparent background, the woods feel comes only from details.",
+                  "evidence": "tall wooden North Louisiana pine-woods electric utility pole... pine-bark chips and pine needles on a small patch of bare dirt",
+                  "fix": "Optionally add that no road, signage or other infrastructure appears, to reinforce a remote feel."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-06",
+                "title": "Disrepair: nothing has been kept up",
+                "domain": "aesthetic",
+                "weight": 3,
+                "hard": false,
+                "score": 9,
+                "reason": "Very concrete neglect details: leaning, splintered bleached wood, rusty strap, duct-tape repair, missing and cracked insulators, dented rusty transformer, frayed dangling line, torn flyer, kudzu and weeds. Fully meets the rule; the pine-needles/kudzu detail makes it slightly busy. [check] 19 distinct neglect details (chipped, cracked, cracks, dented, duct tape, duct-tape, faded, leaning, missing, patch, patched, patches, rust, rusted, rusty, sag, sagging, weathered, weeds)",
+                "llm": {
+                  "rule_id": "A-06",
+                  "score": 9,
+                  "reason": "Very concrete neglect details: leaning, splintered bleached wood, rusty strap, duct-tape repair, missing and cracked insulators, dented rusty transformer, frayed dangling line, torn flyer, kudzu and weeds. Fully meets the rule; the pine-needles/kudzu detail makes it slightly busy.",
+                  "evidence": "one insulator missing and one cracked... one line frayed and dangling lower than the others... creeping kudzu vine",
+                  "fix": "Prioritise two or three of the most readable damage cues at sprite size so they don't turn to noise."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "19 distinct neglect details (chipped, cracked, cracks, dented, duct tape, duct-tape, faded, leaning, missing, patch, patched, patches, rust, rusted, rusty, sag, sagging, weathered, weeds)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-08",
+                "title": "Drawn to scale with the 240-px wrestlers",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 7,
+                "reason": "The brief states pixel sizes against Barry's 240 px and the 480 px single-wide trailer, which is what the rule asks. But it makes the pole 600 px, only slightly taller than a 480 px trailer, and a real utility pole is much taller than a single-wide, and the crossarm sits above the roofline so the claimed relationship is vague. Also 420 px width is arbitrary for a thin pole and the lines running off the edges. [check] height 600px vs target 480-1080px (taller than a single-wide trailer (about 480 px), no taller than the 1080-px backdrop)",
+                "llm": {
+                  "rule_id": "A-08",
+                  "score": 7,
+                  "reason": "The brief states pixel sizes against Barry's 240 px and the 480 px single-wide trailer, which is what the rule asks. But it makes the pole 600 px, only slightly taller than a 480 px trailer, and a real utility pole is much taller than a single-wide, and the crossarm sits above the roofline so the claimed relationship is vague. Also 420 px width is arbitrary for a thin pole and the lines running off the edges.",
+                  "evidence": "Sprite size 420x600 native pixels, pole about 600 px tall (2.5x Barry's 240 px, slightly taller than a 480 px single-wide trailer).",
+                  "fix": "Justify the height with real proportions (pole about 2.5x Barry puts it at about 1.25x a trailer, so say the crossarm clears the trailer roofline) and give the pole shaft width in pixels (e.g. about 24-30 px) so the thin shaft isn't rendered chunky."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "height 600px vs target 480-1080px (taller than a single-wide trailer (about 480 px), no taller than the 1080-px backdrop)",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "The brief is strong and on-style, but its scale reasoning is loose: a 600 px pole barely overtops a 480 px trailer with no shaft width given, and the 420 px canvas is arbitrary for a thin pole."
+          },
+          "refined_from_iteration": 1,
+          "refiner_changes": [
+            {
+              "rule_id": "A-08",
+              "change": "Justified the 600 px height as 2.5x Barry and about 1.25x a 480 px trailer, so the crossarm clears the roofline. Gave the shaft width (~26 px) and crossarm width (~260 px)."
+            },
+            {
+              "rule_id": "A-01",
+              "change": "Added matching of wrestler pixel density, a 3-shade ramp per material and clean stair-stepped lines. Removed the dithering and fine-detail wording, and the pine needles and bark chips."
+            },
+            {
+              "rule_id": "A-02",
+              "change": "Stated that only exact flat palette colours are allowed with no blends. Marked #7435A8 and #C7352C as optional flyer-ink accents."
+            },
+            {
+              "rule_id": "A-06",
+              "change": "Listed the three most readable damage cues (lean, missing insulator, dangling line). Cut the busy small details."
+            },
+            {
+              "rule_id": "A-03",
+              "change": "Made the shadow a separate cleanly cut shape that can sit on the arena dirt, with lighting direction matching the other props."
+            },
+            {
+              "rule_id": "A-04",
+              "change": "Removed the kudzu and added it to the negative prompt. Confirmed the transformer is the only extra hardware."
+            },
+            {
+              "rule_id": "A-05",
+              "change": "Added road and signage to the negatives and noted that none appear."
+            }
+          ]
+        },
+        {
+          "iteration": 2,
+          "made_by": "refiner",
+          "draft": {
+            "subject": "Weathered wooden utility pole with sagging power lines, leaning slightly, neglected pine-woods trailer-park background prop",
+            "prompt": "Early-90s arcade pixel art sprite in the style of WWF WrestleFest, Final Fight, Streets of Rage and Fatal Fury, crisp hand-placed pixels at 1 native pixel per art pixel, matching the pixel density of the 240 px wrestler sprites, Final Fight-style dark pixel outlining, hard aliased edges, flat shading with a 3-shade ramp per material, clean stair-stepped lines. Uses only the Rural Rumble 14-colour palette: #10151A #17243A #25372C #35523A #657A3B #795037 #A74727 #D26938 #E19A36 #FFD65A #2872B8 #7435A8 #C7352C #E6DFCC. Only these exact flat colours, no blended or intermediate colours; #7435A8 and #C7352C are optional and may appear only as tiny flyer ink accents. Sprite canvas 420x600 native pixels. The pole is 600 px tall, 2.5x Barry's 240 px standing sprite and about 1.25x a 480 px single-wide trailer, so the crossarm clears the trailer roofline. The shaft is thin, about 26 px wide; the crossarm is about 260 px wide. Subject: a tall wooden North Louisiana pine-woods electric utility pole, slightly leaning, standing alone as a background prop on a transparent background. Shaft in weathered brown #795037 with dark grain cracks in #17243A and #10151A, sun-bleached splintered patches in #E6DFCC, a rusty strap band in #A74727. Crossarm near the top with a duct-tape repair in #E6DFCC and three chipped, tilted glass insulators in faded blue #2872B8, one missing and one cracked. A small dented pole transformer can in dark green #25372C with #A74727 rust streaks. Three power lines in #10151A, stair-stepped 1-2 px runs, sag in deep drooping curves off both sides of the crossarm and run off the left and right edges, one line frayed and dangling lower than the others. A torn faded hand-lettered Duckville yard-sale flyer in #E19A36 and #E6DFCC tacked to the shaft. At the base: weeds and dry grass tufts in #657A3B and #35523A on a small patch of bare dirt. Late-afternoon golden-hour light from the low right matching the other arena props: warm #FFD65A and #E19A36 highlights on the right side of the shaft, #D26938 bounce echoing the orange sky, shadowed left side in #17243A. The long cast shadow in #10151A stretches left along the dirt as a cleanly cut separate shape that can sit on the arena dirt. Dark Southern rundown, lived-in, neglected look. Side view, flat 2D, no perspective distortion.",
+            "negative_prompt": "3D render, photorealistic, vector art, anime, painterly, smooth gradients, blur, anti-aliasing, soft glow, high-resolution detail, dithering noise, mountains, hills, cliffs, city, skyline, highway, road, signage, neon signs, crowds, people, suburban, modern clean new pole, metal or concrete pole, steel tower, large industrial transformer, wind turbine, snow, midday light, night, overcast, text, watermark, off-palette colors, blended colors, kudzu",
+            "palette": [
+              "#10151A",
+              "#17243A",
+              "#25372C",
+              "#35523A",
+              "#657A3B",
+              "#795037",
+              "#A74727",
+              "#D26938",
+              "#E19A36",
+              "#FFD65A",
+              "#2872B8",
+              "#7435A8",
+              "#C7352C",
+              "#E6DFCC"
+            ],
+            "lighting": "Late-afternoon golden hour: low warm sun from the right, orange-gold highlights on the right of the pole with a #D26938 bounce, dark shadow side on the left, long shadow falling left across the dirt as a separate cleanly cut shape, direction matching the other arena props.",
+            "details": "Leaning pole with cracked, splintered, sun-bleached wood; rusted strap band; crossarm with duct-tape repair, chipped tilted insulators, one missing; small dented rusty transformer (the only extra hardware); sagging 1-2 px stair-stepped power lines with one frayed dangling line; torn Duckville flyer; weeds and dry grass at the base on bare dirt. Most readable damage cues at sprite size: the lean, the missing insulator, the dangling line. No road or signage. Transparent background so it layers between pines and trailers.",
+            "size_px": {
+              "width": 420,
+              "height": 600
+            },
+            "scale_note": "Drawn at 1 art pixel per native pixel. Barry stands 240 px tall; a single-wide trailer is about 480 px (twice Barry). The pole is 600 px tall (2.5x Barry, about 1.25x a trailer), so the crossarm clears the trailer roofline. The shaft is about 26 px wide and the crossarm about 260 px wide; the 420 px canvas width holds the crossarm and the start of the sagging lines, which run off the sprite edges.",
+            "layer": "background (midground, between the pine tree line and the trailers, behind the wrestlers)"
+          },
+          "scorecard": {
+            "total": 85.0,
+            "threshold": 85,
+            "hard_floor": 7,
+            "passed": true,
+            "hard_failures": [],
+            "rules": [
+              {
+                "rule_id": "A-01",
+                "title": "Early-90s arcade pixel art at native scale",
+                "domain": "aesthetic",
+                "weight": 3,
+                "hard": true,
+                "score": 9,
+                "reason": "Prompt names the Technos/Capcom/SNK reference games, 1 native px per art pixel, hard aliased edges, flat 3-shade ramps, and the negative prompt excludes 3D, vector, painterly and gradients. Small gap: a 420x600 sprite is a large canvas and the prompt doesn't note that image models tend to produce non-pixel-grid output. [check] 3/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game)",
+                "llm": {
+                  "rule_id": "A-01",
+                  "score": 9,
+                  "reason": "Prompt names the Technos/Capcom/SNK reference games, 1 native px per art pixel, hard aliased edges, flat 3-shade ramps, and the negative prompt excludes 3D, vector, painterly and gradients. Small gap: a 420x600 sprite is a large canvas and the prompt doesn't note that image models tend to produce non-pixel-grid output.",
+                  "evidence": "crisp hand-placed pixels at 1 native pixel per art pixel, matching the pixel density of the 240 px wrestler sprites, Final Fight-style dark pixel outlining, hard aliased edges, flat shading with a 3-shade ramp per material",
+                  "fix": "Add an explicit instruction that every art pixel is a true square on a hard grid with no sub-pixel resampling."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "3/3 arcade pixel-art markers in the prompt (pixel art / 16-bit or arcade / a named reference game)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-02",
+                "title": "Rural Rumble 14-colour palette",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 8,
+                "reason": "The prompt lists all 14 hexes, restricts to exact flat colours, and assigns colours to materials. Small gap: it says the purple and red are optional, and the 'faded blue' insulators and flyer ink accents are a loose use. No off-palette colour is introduced. [check] 14/14 hex colours are on the Style Guide palette",
+                "llm": {
+                  "rule_id": "A-02",
+                  "score": 8,
+                  "reason": "The prompt lists all 14 hexes, restricts to exact flat colours, and assigns colours to materials. Small gap: it says the purple and red are optional, and the 'faded blue' insulators and flyer ink accents are a loose use. No off-palette colour is introduced.",
+                  "evidence": "Uses only the Rural Rumble 14-colour palette: #10151A #17243A ... Only these exact flat colours, no blended or intermediate colours; #7435A8 and #C7352C are optional and may appear only as tiny flyer ink accents.",
+                  "fix": "Give #7435A8 and #C7352C a concrete role or drop them from the prompt. Also state that the transparent background and any anti-aliasing are not extra colours."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "14/14 hex colours are on the Style Guide palette",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-03",
+                "title": "Late-afternoon golden-hour light (D-016)",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": false,
+                "score": 9,
+                "reason": "Specifies low right golden-hour sun with #FFD65A/#E19A36 highlights, #D26938 bounce, and a long shadow across the dirt. The sky isn't shown (a transparent prop), but the orange sky is echoed by the bounce light. Small gap: a long shadow cast to the left from a right sun is stated but its length isn't quantified in px. [check] 4/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows)",
+                "llm": {
+                  "rule_id": "A-03",
+                  "score": 9,
+                  "reason": "Specifies low right golden-hour sun with #FFD65A/#E19A36 highlights, #D26938 bounce, and a long shadow across the dirt. The sky isn't shown (a transparent prop), but the orange sky is echoed by the bounce light. Small gap: a long shadow cast to the left from a right sun is stated but its length isn't quantified in px.",
+                  "evidence": "Late-afternoon golden-hour light from the low right matching the other arena props: warm #FFD65A and #E19A36 highlights on the right side of the shaft, #D26938 bounce echoing the orange sky",
+                  "fix": "Give the shadow length in px, e.g. about 1.5-2x the pole height, and say it falls onto dirt."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "4/4 golden-hour cues (golden hour, late afternoon, warm orange light, long shadows)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-04",
+                "title": "Background whitelist: trees, skies, electric poles, trailers",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 8,
+                "reason": "The subject is a pole in the allowed set, and the negative prompt excludes mountains, hills, cliffs and the city. However, it adds a Duckville flyer, a transformer, and weeds on a dirt patch, which are small extras beyond the whitelist. The details field states the transformer is the only extra hardware. [check] No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                "llm": {
+                  "rule_id": "A-04",
+                  "score": 8,
+                  "reason": "The subject is a pole in the allowed set, and the negative prompt excludes mountains, hills, cliffs and the city. However, it adds a Duckville flyer, a transformer, and weeds on a dirt patch, which are small extras beyond the whitelist. The details field states the transformer is the only extra hardware.",
+                  "evidence": "A small dented pole transformer can in dark green #25372C with #A74727 rust streaks. ... A torn faded hand-lettered Duckville yard-sale flyer",
+                  "fix": "Keep the transformer, which is realistic for a pole, but drop or minimise the flyer. Confirm the sprite contains only the pole, lines and ground, with no other landmarks."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-05",
+                "title": "Deep woods, not a city",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 8,
+                "reason": "Calls it a North Louisiana pine-woods prop and excludes city, highway, neon, crowds and suburban polish. Standing alone on a transparent background means the woods feeling relies on the layering. The prompt itself contains no pine imagery. [check] No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                "llm": {
+                  "rule_id": "A-05",
+                  "score": 8,
+                  "reason": "Calls it a North Louisiana pine-woods prop and excludes city, highway, neon, crowds and suburban polish. Standing alone on a transparent background means the woods feeling relies on the layering. The prompt itself contains no pine imagery.",
+                  "evidence": "a tall wooden North Louisiana pine-woods electric utility pole, slightly leaning, standing alone as a background prop on a transparent background",
+                  "fix": "Add rural woods cues at the base, such as pine needles on the dirt, so the prop reads as deep woods even on its own."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No banned scenery (mountains, large hills, city, neon, other biomes) in the prompt.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-06",
+                "title": "Disrepair: nothing has been kept up",
+                "domain": "aesthetic",
+                "weight": 3,
+                "hard": false,
+                "score": 9,
+                "reason": "There are many concrete neglect details: leaning, cracked and splintered wood, rusty strap, duct-tape repair, a missing and a cracked insulator, a dented rusty transformer, frayed dangling line, torn flyer and weeds. A small gap: the details field prioritises three cues but some are very fine for 1-2 px lines. [check] 18 distinct neglect details (chipped, cracked, cracks, dented, duct-tape, faded, lean, leaning, missing, patch, patches, rust, rusted, rusty, sag, sagging, weathered, weeds)",
+                "llm": {
+                  "rule_id": "A-06",
+                  "score": 9,
+                  "reason": "There are many concrete neglect details: leaning, cracked and splintered wood, rusty strap, duct-tape repair, a missing and a cracked insulator, a dented rusty transformer, frayed dangling line, torn flyer and weeds. A small gap: the details field prioritises three cues but some are very fine for 1-2 px lines.",
+                  "evidence": "slightly leaning, ... one missing and one cracked ... one line frayed and dangling lower than the others ... torn faded hand-lettered Duckville yard-sale flyer ... weeds and dry grass tufts",
+                  "fix": "Make the lean angle explicit (e.g. 4-6 degrees) and make the dangling line obviously thicker or longer so it reads at game scale."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "18 distinct neglect details (chipped, cracked, cracks, dented, duct-tape, faded, lean, leaning, missing, patch, patches, rust, rusted, rusty, sag, sagging, weathered, weeds)",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "A-08",
+                "title": "Drawn to scale with the 240-px wrestlers",
+                "domain": "aesthetic",
+                "weight": 2,
+                "hard": true,
+                "score": 8,
+                "reason": "Gives native pixel sizes against Barry's 240 px and a 480 px single-wide trailer, with the pole 600 px (2.5x Barry). Doc gives no pole height, but the stated relationships are consistent. Small issues: a 26 px shaft on a 600 px pole is very thin, and the 'about 1.25x trailer' ratio is an invented choice. [check] height 600px vs target 480-1080px (taller than a single-wide trailer (about 480 px), no taller than the 1080-px backdrop)",
+                "llm": {
+                  "rule_id": "A-08",
+                  "score": 8,
+                  "reason": "Gives native pixel sizes against Barry's 240 px and a 480 px single-wide trailer, with the pole 600 px (2.5x Barry). Doc gives no pole height, but the stated relationships are consistent. Small issues: a 26 px shaft on a 600 px pole is very thin, and the 'about 1.25x trailer' ratio is an invented choice.",
+                  "evidence": "The pole is 600 px tall, 2.5x Barry's 240 px standing sprite and about 1.25x a 480 px single-wide trailer, so the crossarm clears the trailer roofline. The shaft is thin, about 26 px wide; the crossarm is about 260 px wide.",
+                  "fix": "Keep the scale statements, but check the 26 px shaft against Barry's body width, and note the pole height as a design choice, not a doc fact."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "height 600px vs target 480-1080px (taller than a single-wide trailer (about 480 px), no taller than the 1080-px backdrop)",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "The draft is strong overall; its biggest remaining issue is minor extras (the flyer, the transformer) and thin woods cues that stretch the background whitelist and deep-woods feel, and the pole height is an unsupported estimate."
+          }
+        }
+      ],
+      "calls": [
+        {
+          "backend": "claude-cli",
+          "role": "generator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "0a023e71-b49b-4e34-9c3f-ce5945a45ddc",
+          "cost_usd": 0.0425463,
+          "duration_ms": 11173
+        },
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "aa59c461-6894-4ed2-b615-b5cc034ac630",
+          "cost_usd": 0.0507088,
+          "duration_ms": 13218
+        },
+        {
+          "backend": "claude-cli",
+          "role": "refiner",
+          "model": "claude-sonnet-5-5",
+          "session_id": "5239c777-6498-4633-9163-9e65851d8d6a",
+          "cost_usd": 0.0624242,
+          "duration_ms": 11774
+        },
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "4985393b-a232-4e9c-aae2-d5a9a4612f47",
+          "cost_usd": 0.0528188,
+          "duration_ms": 14174
+        },
+        {
+          "backend": "claude-cli",
+          "role": "refiner",
+          "model": "claude-sonnet-5-5",
+          "session_id": "ee2d7a43-a448-456a-a23c-5f84e9707b5b",
+          "cost_usd": 0.0658342,
+          "duration_ms": 12508
+        },
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "80e1d920-7ba2-4375-8da4-ccbd970f4ae2",
+          "cost_usd": 0.054128800000000005,
+          "duration_ms": 13580
+        }
+      ],
+      "docs_read": [
+        {
+          "path": "docs/STYLE_GUIDE.md",
+          "sha256": "f8fafab43f35e23524f217f2e7b25c38e72b2d46b1ae43b600d960ea256473fd",
+          "sections": [
+            "Overall Game Style",
+            "Sprite Scale",
+            "Arena",
+            "Color Palette"
+          ]
+        },
+        {
+          "path": "docs/GDD.md",
+          "sha256": "ccbcd64c23f541b1ee8f2150add724c13ccc319eb5f1db51f520a175942d1116",
+          "sections": [
+            "Setting & World",
+            "Tone & Aesthetics"
+          ]
+        }
+      ],
+      "output_file": "outputs/power_pole.json"
+    },
+    {
+      "task_id": "trash_talk_prematch",
+      "kind": "trash_talk",
+      "brief": "A four-line pre-match trash-talk exchange between Barry and Peaux, spoken in the trailer park just before the bell. Candidate flavour text for the moment before the versus text; it is not wired into the game.",
+      "status": "approved",
+      "final_iteration": 2,
+      "final_score": 85.3,
+      "score_trajectory": [
+        71.1,
+        84.2,
+        85.3
+      ],
+      "final_draft": {
+        "lines": [
+          {
+            "speaker": "barry",
+            "text": "Pick up them cigarette butts, boy, or I'll knock you cold in your own driveway."
+          },
+          {
+            "speaker": "peaux",
+            "text": "Expelled at sixteen, Barry. Your lecture's the only thing here I'm not smoking."
+          },
+          {
+            "speaker": "barry",
+            "text": "Thirty years hauling freight, smartass. One Irish Whip and your eyeliner's in the gravel."
+          },
+          {
+            "speaker": "peaux",
+            "text": "My football brothers hit harder, redneck. Swing first. I'll bury you in butts."
+          }
+        ]
+      },
+      "iterations": [
+        {
+          "iteration": 0,
+          "made_by": "generator",
+          "draft": {
+            "lines": [
+              {
+                "speaker": "barry",
+                "text": "Pick up your cigarette butts, boy, or I'll bodyslam you into the gravel with 'em."
+              },
+              {
+                "speaker": "peaux",
+                "text": "Those are my mom's. Nice gut, though. Does the spare tire come with a jack?"
+              },
+              {
+                "speaker": "barry",
+                "text": "Smartass. Hauled freight twenty years. One Irish Whip and you're eyeliner on a driveway."
+              },
+              {
+                "speaker": "peaux",
+                "text": "My brothers hit harder than you, old man. Ring the bell. I'm bored."
+              }
+            ]
+          },
+          "scorecard": {
+            "total": 71.1,
+            "threshold": 85,
+            "hard_floor": 7,
+            "passed": false,
+            "hard_failures": [
+              "N-02"
+            ],
+            "rules": [
+              {
+                "rule_id": "N-01",
+                "title": "Only the two GDD wrestlers, named as the GDD names them",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 10,
+                "reason": "Only Barry and Peaux speak. No other wrestlers or named characters appear; the mom and brothers are unnamed and the brothers come from the GDD. [check] Only Barry and Peaux speak; no other wrestlers or invented nicknames.",
+                "llm": {
+                  "rule_id": "N-01",
+                  "score": 10,
+                  "reason": "Only Barry and Peaux speak. No other wrestlers or named characters appear; the mom and brothers are unnamed and the brothers come from the GDD.",
+                  "evidence": "\"speaker\": \"barry\" / \"speaker\": \"peaux\"",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Only Barry and Peaux speak; no other wrestlers or invented nicknames.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-02",
+                "title": "Knockout is the only way to win",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": true,
+                "score": 5,
+                "reason": "No pinfalls, titles, belts or other match types. The only win talk is a threat of being flattened, which fits a KO, but a KO is never named. [check] Non-MVP mechanics mentioned: \"Ring\" (other match type / ring furniture)",
+                "llm": {
+                  "rule_id": "N-02",
+                  "score": 9,
+                  "reason": "No pinfalls, titles, belts or other match types. The only win talk is a threat of being flattened, which fits a KO, but a KO is never named.",
+                  "evidence": "One Irish Whip and you're eyeliner on a driveway.",
+                  "fix": "Make one threat explicitly about knocking the other out, e.g. \"I'll knock you cold.\""
+                },
+                "check": {
+                  "score": 5,
+                  "reason": "Non-MVP mechanics mentioned: \"Ring\" (other match type / ring furniture)",
+                  "evidence": [
+                    "Ring"
+                  ]
+                }
+              },
+              {
+                "rule_id": "N-03",
+                "title": "Only moves that exist in the MVP",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 10,
+                "reason": "Only the bodyslam and the Irish Whip are referenced, and both are MVP moves. [check] Only MVP moves referenced (punch/kick, lock-up, bodyslam, Irish Whip, stomp) or none.",
+                "llm": {
+                  "rule_id": "N-03",
+                  "score": 10,
+                  "reason": "Only the bodyslam and the Irish Whip are referenced, and both are MVP moves.",
+                  "evidence": "I'll bodyslam you into the gravel / One Irish Whip",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Only MVP moves referenced (punch/kick, lock-up, bodyslam, Irish Whip, stomp) or none.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-04",
+                "title": "Barry sounds like Barry",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 6,
+                "reason": "Cigarette butts, the trucker background and the gut jab fit Barry's profile and look. \"Twenty years\" of freight contradicts his early-thirties age and is an invented figure. The dirt track in Hoon, the mustache and the hat are missing.",
+                "llm": {
+                  "rule_id": "N-04",
+                  "score": 6,
+                  "reason": "Cigarette butts, the trucker background and the gut jab fit Barry's profile and look. \"Twenty years\" of freight contradicts his early-thirties age and is an invented figure. The dirt track in Hoon, the mustache and the hat are missing.",
+                  "evidence": "Hauled freight twenty years.",
+                  "fix": "Drop \"twenty years\". Add a Hoon dirt-track, mustache or trucker-hat reference, e.g. \"I run the dirt track in Hoon, boy.\""
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-05",
+                "title": "Peaux sounds like Peaux",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 7,
+                "reason": "Peaux is sullen, cutting and young, and the brothers line matches his GDD background. The eyeliner is only mentioned by Barry. The rednecks, being expelled and his goth look are absent, and the mom is invented.",
+                "llm": {
+                  "rule_id": "N-05",
+                  "score": 7,
+                  "reason": "Peaux is sullen, cutting and young, and the brothers line matches his GDD background. The eyeliner is only mentioned by Barry. The rednecks, being expelled and his goth look are absent, and the mom is invented.",
+                  "evidence": "My brothers hit harder than you, old man. Ring the bell. I'm bored.",
+                  "fix": "Have Peaux mention his football-playing brothers, rednecks or eyeliner himself. Drop or justify the invented mom."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-06",
+                "title": "Rooted in Duckville",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": false,
+                "score": 5,
+                "reason": "Gravel and a driveway place it in the trailer park, and the cigarette-butt beef reads as a neighbour dispute. Duckville and the trailers are never named, and \"Ring the bell\" leans toward a formal event. [check] place names: none; trailer-park details: ['cigarette butts', 'driveway', 'gravel']",
+                "llm": {
+                  "rule_id": "N-06",
+                  "score": 7,
+                  "reason": "Gravel and a driveway place it in the trailer park, and the cigarette-butt beef reads as a neighbour dispute. Duckville and the trailers are never named, and \"Ring the bell\" leans toward a formal event.",
+                  "evidence": "into the gravel with 'em ... on a driveway ... Ring the bell.",
+                  "fix": "Add a Duckville or trailer reference, e.g. \"in front of my trailer\", and replace \"Ring the bell\" with a backyard cue."
+                },
+                "check": {
+                  "score": 5,
+                  "reason": "place names: none; trailer-park details: ['cigarette butts', 'driveway', 'gravel']",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-07",
+                "title": "Dark Southern humor",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 7,
+                "reason": "The spare-tire jack quip and \"eyeliner on a driveway\" are blunt and irreverent. It stays fairly mild, and the \"my brothers hit harder, old man\" taunt is close to stock promo bravado.",
+                "llm": {
+                  "rule_id": "N-07",
+                  "score": 7,
+                  "reason": "The spare-tire jack quip and \"eyeliner on a driveway\" are blunt and irreverent. It stays fairly mild, and the \"my brothers hit harder, old man\" taunt is close to stock promo bravado.",
+                  "evidence": "Does the spare tire come with a jack?",
+                  "fix": "Add a darker, more Squidbillies-style detail, such as a grim joke about the park, the neighbours or the butts."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-08",
+                "title": "Short enough not to interrupt the arcade action",
+                "domain": "narrative",
+                "weight": 1,
+                "hard": false,
+                "score": 10,
+                "reason": "Exactly four lines, alternating speakers. The longest line is about 88 characters, under the 90 limit. [check] 4 alternating lines, all within 90 characters.",
+                "llm": {
+                  "rule_id": "N-08",
+                  "score": 10,
+                  "reason": "Exactly four lines, alternating speakers. The longest line is about 88 characters, under the 90 limit.",
+                  "evidence": "Smartass. Hauled freight twenty years. One Irish Whip and you're eyeliner on a driveway.",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "4 alternating lines, all within 90 characters.",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "Barry's \"Hauled freight twenty years\" contradicts his early-thirties age, and the exchange has no Duckville, Hoon dirt track, mustache or rednecks, so it is only partly specific to Rural Rumble."
+          },
+          "refined_from_iteration": 0,
+          "refiner_changes": [
+            {
+              "rule_id": "N-02",
+              "change": "Barry now threatens to knock Peaux cold (a KO); removed 'Ring the bell'."
+            },
+            {
+              "rule_id": "N-06",
+              "change": "Named Duckville, added 'in front of my trailer' and gravel; replaced the bell cue with 'Swing first'."
+            },
+            {
+              "rule_id": "N-04",
+              "change": "Dropped 'twenty years'; added the Hoon dirt track and kept the butts and gut beef."
+            },
+            {
+              "rule_id": "N-05",
+              "change": "Peaux now mentions his football brothers, calls Barry a redneck and brings up his own eyeliner via Barry; removed the invented mom."
+            },
+            {
+              "rule_id": "N-07",
+              "change": "Added a darker Southern joke about funerals and smoking in Duckville."
+            }
+          ]
+        },
+        {
+          "iteration": 1,
+          "made_by": "refiner",
+          "draft": {
+            "lines": [
+              {
+                "speaker": "barry",
+                "text": "Pick up them cigarette butts, boy, or I'll knock you cold in front of my trailer."
+              },
+              {
+                "speaker": "peaux",
+                "text": "They're the only thing in Duckville worth smoking. Nice gut. Spare tire come with a jack?"
+              },
+              {
+                "speaker": "barry",
+                "text": "I run the dirt track in Hoon, smartass. One Irish Whip and your eyeliner's in the gravel."
+              },
+              {
+                "speaker": "peaux",
+                "text": "My football brothers hit harder, redneck. Swing first. Mama needs a funeral to look forward to."
+              }
+            ]
+          },
+          "scorecard": {
+            "total": 84.2,
+            "threshold": 85,
+            "hard_floor": 7,
+            "passed": false,
+            "hard_failures": [],
+            "rules": [
+              {
+                "rule_id": "N-01",
+                "title": "Only the two GDD wrestlers, named as the GDD names them",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 9,
+                "reason": "Only Barry and Peaux speak, and no other wrestler is named. The one gap is \"Mama\", an unnamed relative the GDD never mentions, which is a small invention. [check] Only Barry and Peaux speak; no other wrestlers or invented nicknames.",
+                "llm": {
+                  "rule_id": "N-01",
+                  "score": 9,
+                  "reason": "Only Barry and Peaux speak, and no other wrestler is named. The one gap is \"Mama\", an unnamed relative the GDD never mentions, which is a small invention.",
+                  "evidence": "Mama needs a funeral to look forward to.",
+                  "fix": "Cut \"Mama\" and put the dark joke on something the docs support, such as the football brothers or Barry's cigarette butts."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Only Barry and Peaux speak; no other wrestlers or invented nicknames.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-02",
+                "title": "Knockout is the only way to win",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": true,
+                "score": 9,
+                "reason": "The only win condition is a knockout (\"knock you cold\"). There are no pinfalls, belts or other match types. The funeral joke is vague about stakes but does not name a non-KO win. [check] No non-MVP win conditions (pinfall, submission, titles, tag team, rings/ropes).",
+                "llm": {
+                  "rule_id": "N-02",
+                  "score": 9,
+                  "reason": "The only win condition is a knockout (\"knock you cold\"). There are no pinfalls, belts or other match types. The funeral joke is vague about stakes but does not name a non-KO win.",
+                  "evidence": "or I'll knock you cold in front of my trailer.",
+                  "fix": "Make Peaux's last line refer to the knockout outcome directly, for example \"swing first, I'll still be the one standing when you're out cold\"."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No non-MVP win conditions (pinfall, submission, titles, tag team, rings/ropes).",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-03",
+                "title": "Only moves that exist in the MVP",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 10,
+                "reason": "The only move named is the Irish Whip, which is in the MVP. No suplexes, finishers or signature moves appear. [check] Only MVP moves referenced (punch/kick, lock-up, bodyslam, Irish Whip, stomp) or none.",
+                "llm": {
+                  "rule_id": "N-03",
+                  "score": 10,
+                  "reason": "The only move named is the Irish Whip, which is in the MVP. No suplexes, finishers or signature moves appear.",
+                  "evidence": "One Irish Whip and your eyeliner's in the gravel.",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Only MVP moves referenced (punch/kick, lock-up, bodyslam, Irish Whip, stomp) or none.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-04",
+                "title": "Barry sounds like Barry",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 8,
+                "reason": "Barry uses the cigarette-butt grievance, the Hoon dirt track, his trailer and a blunt \"boy\", all of which come from his profile. His trucker, mustache and stubborn traits are not referenced. The gut gets mocked only by Peaux.",
+                "llm": {
+                  "rule_id": "N-04",
+                  "score": 8,
+                  "reason": "Barry uses the cigarette-butt grievance, the Hoon dirt track, his trailer and a blunt \"boy\", all of which come from his profile. His trucker, mustache and stubborn traits are not referenced. The gut gets mocked only by Peaux.",
+                  "evidence": "Pick up them cigarette butts, boy, or I'll knock you cold in front of my trailer.",
+                  "fix": "Add one trucker or look detail in Barry's voice, such as \"thirty years of hauling\" or a mustache or hat reference, while keeping the blunt tone."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-05",
+                "title": "Peaux sounds like Peaux",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 8,
+                "reason": "Peaux is sullen and cutting. He refers to his football brothers and calls Barry a redneck, and his eyeliner is mentioned. His expulsion or goth identity is not used, and the Duckville smoking jab is more generic snark than goth.",
+                "llm": {
+                  "rule_id": "N-05",
+                  "score": 8,
+                  "reason": "Peaux is sullen and cutting. He refers to his football brothers and calls Barry a redneck, and his eyeliner is mentioned. His expulsion or goth identity is not used, and the Duckville smoking jab is more generic snark than goth.",
+                  "evidence": "My football brothers hit harder, redneck. Swing first.",
+                  "fix": "Add a goth or troubled-past touch, such as a school-expulsion jab or deadpan eyeliner pride."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-06",
+                "title": "Rooted in Duckville",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": false,
+                "score": 9,
+                "reason": "The exchange is set in Duckville's trailer park, with Duckville, the trailer and the gravel all named. The two read as neighbours, and there is no arena or crowd. The Hoon reference is Barry's track and not the setting. [check] place names: ['duckville', 'hoon']; trailer-park details: ['cigarette butts', 'dirt track', 'gravel', 'trailer']",
+                "llm": {
+                  "rule_id": "N-06",
+                  "score": 9,
+                  "reason": "The exchange is set in Duckville's trailer park, with Duckville, the trailer and the gravel all named. The two read as neighbours, and there is no arena or crowd. The Hoon reference is Barry's track and not the setting.",
+                  "evidence": "They're the only thing in Duckville worth smoking.",
+                  "fix": "Add one more neighbour cue, such as the next driveway over or Peaux's trailer, to make the feud more local."
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "place names: ['duckville', 'hoon']; trailer-park details: ['cigarette butts', 'dirt track', 'gravel', 'trailer']",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-07",
+                "title": "Dark Southern humor",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 8,
+                "reason": "The humor is blunt and irreverent, and it has a dark edge: the spare-tire jab and the funeral line. It avoids stock promo bravado. The funeral line is a little muddled and could be sharper.",
+                "llm": {
+                  "rule_id": "N-07",
+                  "score": 8,
+                  "reason": "The humor is blunt and irreverent, and it has a dark edge: the spare-tire jab and the funeral line. It avoids stock promo bravado. The funeral line is a little muddled and could be sharper.",
+                  "evidence": "Nice gut. Spare tire come with a jack?",
+                  "fix": "Tighten the last line into a clearer dark Southern punchline in the Squidbillies or Eastbound & Down vein."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-08",
+                "title": "Short enough not to interrupt the arcade action",
+                "domain": "narrative",
+                "weight": 1,
+                "hard": false,
+                "score": 5,
+                "reason": "There are exactly four lines and the speakers alternate, but the last line is about 94 characters, over the 90 limit. Lines 2 and 3 are right at the limit, around 89. [check] 1 line(s) over 90 characters ([95])",
+                "llm": {
+                  "rule_id": "N-08",
+                  "score": 5,
+                  "reason": "There are exactly four lines and the speakers alternate, but the last line is about 94 characters, over the 90 limit. Lines 2 and 3 are right at the limit, around 89.",
+                  "evidence": "My football brothers hit harder, redneck. Swing first. Mama needs a funeral to look forward to.",
+                  "fix": "Trim line 4 to 90 characters or fewer, for example \"My football brothers hit harder, redneck. Swing first. Somebody needs a funeral.\""
+                },
+                "check": {
+                  "score": 8,
+                  "reason": "1 line(s) over 90 characters ([95])",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "Peaux's final line is about 94 characters, over the 90 limit, and it adds an invented \\\"Mama\\\"; Barry's trucker and mustache identity is also thin."
+          },
+          "refined_from_iteration": 1,
+          "refiner_changes": [
+            {
+              "rule_id": "N-08",
+              "change": "Rewrote all lines to stay under 90 characters, including the 95-character line 4."
+            },
+            {
+              "rule_id": "N-01",
+              "change": "Removed 'Mama', the invented relative."
+            },
+            {
+              "rule_id": "N-04",
+              "change": "Barry now references 30 years hauling freight (trucker) and his cigarette-butt grievance."
+            },
+            {
+              "rule_id": "N-05",
+              "change": "Peaux now references his expulsion at sixteen, his eyeliner and his football brothers."
+            },
+            {
+              "rule_id": "N-07",
+              "change": "Replaced the muddled funeral joke with a sharper dark punchline about burying Barry in butts."
+            },
+            {
+              "rule_id": "N-02",
+              "change": "Barry's knockout threat stays, and Peaux's burial line now reads as a knockout outcome."
+            },
+            {
+              "rule_id": "N-06",
+              "change": "Added 'your own driveway' as a neighbour cue."
+            }
+          ]
+        },
+        {
+          "iteration": 2,
+          "made_by": "refiner",
+          "draft": {
+            "lines": [
+              {
+                "speaker": "barry",
+                "text": "Pick up them cigarette butts, boy, or I'll knock you cold in your own driveway."
+              },
+              {
+                "speaker": "peaux",
+                "text": "Expelled at sixteen, Barry. Your lecture's the only thing here I'm not smoking."
+              },
+              {
+                "speaker": "barry",
+                "text": "Thirty years hauling freight, smartass. One Irish Whip and your eyeliner's in the gravel."
+              },
+              {
+                "speaker": "peaux",
+                "text": "My football brothers hit harder, redneck. Swing first. I'll bury you in butts."
+              }
+            ]
+          },
+          "scorecard": {
+            "total": 85.3,
+            "threshold": 85,
+            "hard_floor": 7,
+            "passed": true,
+            "hard_failures": [],
+            "rules": [
+              {
+                "rule_id": "N-01",
+                "title": "Only the two GDD wrestlers, named as the GDD names them",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 10,
+                "reason": "Only Barry and Peaux speak, and no other wrestlers or named characters appear. Peaux's \"football brothers\" are from his profile and are not named. [check] Only Barry and Peaux speak; no other wrestlers or invented nicknames.",
+                "llm": {
+                  "rule_id": "N-01",
+                  "score": 10,
+                  "reason": "Only Barry and Peaux speak, and no other wrestlers or named characters appear. Peaux's \"football brothers\" are from his profile and are not named.",
+                  "evidence": "\"speaker\": \"barry\" / \"speaker\": \"peaux\"",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Only Barry and Peaux speak; no other wrestlers or invented nicknames.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-02",
+                "title": "Knockout is the only way to win",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": true,
+                "score": 10,
+                "reason": "The only win talk is knocking someone out (\"knock you cold\"). There are no pinfalls, titles or other match types. [check] No non-MVP win conditions (pinfall, submission, titles, tag team, rings/ropes).",
+                "llm": {
+                  "rule_id": "N-02",
+                  "score": 10,
+                  "reason": "The only win talk is knocking someone out (\"knock you cold\"). There are no pinfalls, titles or other match types.",
+                  "evidence": "I'll knock you cold in your own driveway.",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "No non-MVP win conditions (pinfall, submission, titles, tag team, rings/ropes).",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-03",
+                "title": "Only moves that exist in the MVP",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": true,
+                "score": 10,
+                "reason": "The only move named is the Irish Whip, which is in the MVP. There are no invented finishers. [check] Only MVP moves referenced (punch/kick, lock-up, bodyslam, Irish Whip, stomp) or none.",
+                "llm": {
+                  "rule_id": "N-03",
+                  "score": 10,
+                  "reason": "The only move named is the Irish Whip, which is in the MVP. There are no invented finishers.",
+                  "evidence": "One Irish Whip and your eyeliner's in the gravel.",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "Only MVP moves referenced (punch/kick, lock-up, bodyslam, Irish Whip, stomp) or none.",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-04",
+                "title": "Barry sounds like Barry",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 7,
+                "reason": "The cigarette-butt grievance and the trucker background fit his profile. \"Thirty years hauling freight\" contradicts the Style Guide's early-thirties age. Hoon, the dirt track, the mustache and the gut are never used.",
+                "llm": {
+                  "rule_id": "N-04",
+                  "score": 7,
+                  "reason": "The cigarette-butt grievance and the trucker background fit his profile. \"Thirty years hauling freight\" contradicts the Style Guide's early-thirties age. Hoon, the dirt track, the mustache and the gut are never used.",
+                  "evidence": "Thirty years hauling freight, smartass.",
+                  "fix": "Change it to something like \"Ten years hauling freight and running my Hoon dirt track\". Add a mustache or gut jab."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-05",
+                "title": "Peaux sounds like Peaux",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 9,
+                "reason": "The lines use his expulsion at sixteen, his football brothers, his eyeliner and his contempt for rednecks, in a cutting, young voice. The only gap is that the eye black versus eyeliner contrast is not used.",
+                "llm": {
+                  "rule_id": "N-05",
+                  "score": 9,
+                  "reason": "The lines use his expulsion at sixteen, his football brothers, his eyeliner and his contempt for rednecks, in a cutting, young voice. The only gap is that the eye black versus eyeliner contrast is not used.",
+                  "evidence": "Expelled at sixteen, Barry. / My football brothers hit harder, redneck.",
+                  "fix": "Add a jab at redneck eye black versus his eyeliner."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-06",
+                "title": "Rooted in Duckville",
+                "domain": "narrative",
+                "weight": 2,
+                "hard": false,
+                "score": 5,
+                "reason": "The driveway and gravel fit the trailer park, and they read as neighbours. Duckville and the trailers are never named, so the setting could be any Southern lot. [check] place names: none; trailer-park details: ['cigarette butts', 'driveway', 'gravel']",
+                "llm": {
+                  "rule_id": "N-06",
+                  "score": 8,
+                  "reason": "The driveway and gravel fit the trailer park, and they read as neighbours. Duckville and the trailers are never named, so the setting could be any Southern lot.",
+                  "evidence": "in your own driveway / your eyeliner's in the gravel",
+                  "fix": "Name Duckville or the trailers, for example \"outside my trailer\" or \"in Duckville\"."
+                },
+                "check": {
+                  "score": 5,
+                  "reason": "place names: none; trailer-park details: ['cigarette butts', 'driveway', 'gravel']",
+                  "evidence": []
+                }
+              },
+              {
+                "rule_id": "N-07",
+                "title": "Dark Southern humor",
+                "domain": "narrative",
+                "weight": 3,
+                "hard": false,
+                "score": 8,
+                "reason": "The humor is blunt and irreverent, with a smoking pun and a cigarette-butt burial threat. It is a little tame next to the dark Squidbillies edge.",
+                "llm": {
+                  "rule_id": "N-07",
+                  "score": 8,
+                  "reason": "The humor is blunt and irreverent, with a smoking pun and a cigarette-butt burial threat. It is a little tame next to the dark Squidbillies edge.",
+                  "evidence": "Your lecture's the only thing here I'm not smoking. / I'll bury you in butts.",
+                  "fix": "Sharpen one line with darker, more absurd Southern imagery, such as a mean trailer-park detail."
+                },
+                "check": null
+              },
+              {
+                "rule_id": "N-08",
+                "title": "Short enough not to interrupt the arcade action",
+                "domain": "narrative",
+                "weight": 1,
+                "hard": false,
+                "score": 10,
+                "reason": "There are exactly four lines and the speakers alternate. The longest line is 89 characters, so every line is within 90. [check] 4 alternating lines, all within 90 characters.",
+                "llm": {
+                  "rule_id": "N-08",
+                  "score": 10,
+                  "reason": "There are exactly four lines and the speakers alternate. The longest line is 89 characters, so every line is within 90.",
+                  "evidence": "Thirty years hauling freight, smartass. One Irish Whip and your eyeliner's in the gravel.",
+                  "fix": ""
+                },
+                "check": {
+                  "score": 10,
+                  "reason": "4 alternating lines, all within 90 characters.",
+                  "evidence": []
+                }
+              }
+            ],
+            "summary": "Barry's \"Thirty years hauling freight\" contradicts his early-thirties look, and the exchange never names Duckville or Hoon, so a few GDD details are missing."
+          }
+        }
+      ],
+      "calls": [
+        {
+          "backend": "claude-cli",
+          "role": "generator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "809d0b2d-57b9-4252-b069-610eec4ff4a0",
+          "cost_usd": 0.0050606,
+          "duration_ms": 3220
+        },
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "860919f3-5214-40b4-abb0-67f4c51add02",
+          "cost_usd": 0.057374800000000004,
+          "duration_ms": 17539
+        },
+        {
+          "backend": "claude-cli",
+          "role": "refiner",
+          "model": "claude-sonnet-5-5",
+          "session_id": "2f50c2fd-5982-44a4-94c9-2188a6f7e57c",
+          "cost_usd": 0.0412742,
+          "duration_ms": 4609
+        },
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "f8b53074-6964-4468-b690-56f31f1d7f7e",
+          "cost_usd": 0.0593948,
+          "duration_ms": 18575
+        },
+        {
+          "backend": "claude-cli",
+          "role": "refiner",
+          "model": "claude-sonnet-5-5",
+          "session_id": "53840c4d-9e7a-497b-84f8-068066f00161",
+          "cost_usd": 0.0435582,
+          "duration_ms": 4695
+        },
+        {
+          "backend": "claude-cli",
+          "role": "evaluator",
+          "model": "claude-sonnet-5-5",
+          "session_id": "dba5d485-6177-4bc1-b896-08a47ada9aaf",
+          "cost_usd": 0.053574800000000006,
+          "duration_ms": 13830
+        }
+      ],
+      "docs_read": [
+        {
+          "path": "docs/GDD.md",
+          "sha256": "ccbcd64c23f541b1ee8f2150add724c13ccc319eb5f1db51f520a175942d1116",
+          "sections": [
+            "Executive Summary",
+            "Design Pillars: What is Central to the Experience?",
+            "MVP Scope",
+            "Character Designs",
+            "Setting & World",
+            "Tone & Aesthetics",
+            "Narrative"
+          ]
+        },
+        {
+          "path": "docs/STYLE_GUIDE.md",
+          "sha256": "f8fafab43f35e23524f217f2e7b25c38e72b2d46b1ae43b600d960ea256473fd",
+          "sections": [
+            "Characters"
+          ]
+        }
+      ],
+      "output_file": "outputs/trash_talk_prematch.json"
+    }
+  ]
+}

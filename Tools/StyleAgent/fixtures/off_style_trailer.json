@@ -1,0 +1,11 @@
+{
+  "subject": "A sleek modern mobile home in a city trailer lot",
+  "prompt": "Photorealistic 3D render of a brand-new silver mobile home, freshly painted and spotless, parked in an urban lot at night with neon signs, a glowing city skyline and snowy mountains behind it, smooth gradients, cinematic 8k lighting, palette #00FFFF #FF00FF #FFFFFF #1A1A1A",
+  "negative_prompt": "pixel art, low resolution",
+  "palette": ["#00FFFF", "#FF00FF", "#FFFFFF", "#1A1A1A"],
+  "lighting": "Night, cool blue moonlight with pink neon glow",
+  "details": "Clean siding, manicured lawn, modern solar panels on the roof.",
+  "size_px": {"width": 1200, "height": 260},
+  "scale_note": "Fits the screen nicely.",
+  "layer": "background"
+}

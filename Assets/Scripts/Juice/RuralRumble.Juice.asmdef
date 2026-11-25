@@ -4,7 +4,11 @@
     "references": [
         "RuralRumble.Core",
         "RuralRumble.Combat",
-        "RuralRumble.Match"
+        "RuralRumble.Match",
+        "RuralRumble.Lighting",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Universal.2D.Runtime",
+        "Unity.RenderPipelines.Core.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

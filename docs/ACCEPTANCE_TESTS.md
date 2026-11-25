@@ -719,3 +719,30 @@ Test files: `Assets/Tests/EditMode/Juice/FootstepRulesTests.cs`, `Assets/Tests/E
 3. Grass and puddle sets have only two clips each, so they alternate. Does that sound mechanical, especially when running (four steps a second)? If so, try pitch variation 0.02–0.03 in `FootstepSettings` (FS1.2).
 4. Two wrestlers walking at once: does it get cluttered? (FS1.6)
 5. Run levels: the running sets measure about 3 dB louder than walking by design. Does a run feel heavier without being too loud?
+
+## Start screen intro: logo drop (UI & Match Flow; ARCHITECTURE 4.6 "Start screen intro", D-051)
+
+The Start screen's root is transparent so the camera's live, drifting yard shows. The `title-block` (logo plus its dark 55 % panel) falls in from above the screen, slams down with a squash-and-recover bounce and a short UI jolt, then the blinking prompt appears. Juice owns the dim-to-full light reveal, camera shake, dust and playing the thud (see Juice's Start screen section). Timing lives in `StartIntroTimeline` / `StartIntroSequence` (`Assets/Scripts/UI/`), Starting points tuned on `StartScreenController` → `Intro`: start delay 0.3 s, fall 0.45 s (ease-in power 2), impact at 0.75 s, bounce 0.25 s (squash 0.18), jolt 0.2 s (10 px), prompt 0.6 s after impact (1.35 s). **Status: built (UI, 2026-11-24).** EditMode 728/729 (only the known C1.4 `ComboTimingTests` failure; `StartIntroTimelineTests` 25/25). Play check not run (see SI1.8).
+
+### SI1. Logo drop and skip
+
+| ID | Requirement | Source | Test | Type |
+|---|---|---|---|---|
+| SI1.1 | `.start-root` has no background colour or image (live backdrop visible); `title-block` keeps its 55 % dark panel and falls with the logo | Start screen upgrade | `Assets/UI/StartScreen.uss` (inspection) | Inspection |
+| SI1.2 | Phases over time: Waiting (logo above the screen) → Falling (ease-in, accelerating) → Bouncing → Revealing → Ready (prompt) | 4.6 | `StartIntroTimelineTests.PhaseAt_FollowsTheTimeline` (10 cases), `FallProgress_StartsAbove_EasesIn_EndsAtRest`, `Pose_AboveScreenBeforeFall_AtRestAfterSettle`, `Defaults_AreTheStartingPoints` | Auto |
+| SI1.3 | Landing: wider and shorter on impact, smaller opposite overshoot, settles to 1×1 by the end of the bounce; jolt only for the jolt time after impact | Start screen upgrade | `StartIntroTimelineTests.Squash_WiderShorterOnImpact_OvershootsThenSettles`, `Shake_OnlyForShakeDuration_AfterImpact`, `ZeroDurations_DoNotDivideByZero` | Auto |
+| SI1.4 | Uninterrupted: `StartScreenEvents.RaiseLogoLanded(false)` and `UiSound.LogoSlam` exactly once, in the impact frame (not after the bounce); prompt exactly once at impact + prompt delay; UI is the only raiser of LogoSlam | 4.6 | `StartIntroTimelineTests.Uninterrupted_RaisesLandedOnceWithSlamAtImpact_ThenShowsPrompt`, `PromptNotVisible_UntilPromptTime` | Auto |
+| SI1.5 | A press before the prompt skips: logo snaps to rest, `RaiseLogoLanded(true)` if not already raised, no LogoSlam, prompt shown at once, game not started; landed never raised twice | 4.6 | `StartIntroTimelineTests.PressDuringFall_Skips_RaisesLandedSkipped_NoSlam_ShowsPrompt_DoesNotStart`, `PressDuringBounce_SnapsToRest_DoesNotRaiseLandedAgain` | Auto |
+| SI1.6 | The next press after the prompt starts the game once (UiSound.Start, `StartScreenFlow.NextScene`); presses inside the input delay (0.2 s) after the screen opens, or after a skip, are ignored | D-003 | `StartIntroTimelineTests.PressInsideInputDelay_IsIgnored`, `PressAfterSkip_StartsGame_OnlyOnce_AfterInputDelay`, `PressAfterPromptShownNaturally_StartsGame`; `StartScreenFlowTests` | Auto |
+| SI1.7 | Keyboard and controller both skip and start (any button, `InputSystem.onAnyButtonPress`) | CONTROLS.md, D-019 | none | Play check |
+| SI1.8 | In Play mode on Start.unity: logo falls, slams, bounces, prompt appears and blinks; skip works; lights and thud line up with the impact | 4.6 | not run 2026-11-24 (Editor busy with another agent's test run) | Play check |
+| SI1.9 | Feel: the drop reads as a heavy arcade slam, the bounce is quick, the logo is readable over the lit porch at 16:9 | Start screen upgrade | none | **Human** |
+
+### Start screen intro: human playtest checklist
+
+1. Open the Start scene: does the logo fall from fully off-screen (no flash at its resting place on the first frame)?
+2. Does the fall feel heavy (accelerating) and the squash-and-bounce quick, not rubbery? Tune `fallEasePower`, `squashAmount`, `bounceDuration` on `StartScreenController` → `Intro`.
+3. Do the UI jolt, Juice's camera shake, the light ramp and the thud all land on the same frame?
+4. Is the 0.6 s wait before the prompt right, or does it feel slow?
+5. Press a key, then a controller button, during the fall: the logo snaps down, lights go straight to full, no thud, the prompt shows, and the game does not start until the next press.
+6. Is the title readable over the lit porch with the 55 % panel at 1920×1080 and at other 16:9 sizes?

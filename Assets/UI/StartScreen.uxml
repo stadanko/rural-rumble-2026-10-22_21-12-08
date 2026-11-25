@@ -4,6 +4,6 @@
         <ui:VisualElement name="title-block" class="title-block">
             <ui:Label name="title" text="RURAL RUMBLE" class="title" />
         </ui:VisualElement>
-        <ui:Label name="prompt" text="Press Any Button to Start" class="prompt" />
+        <ui:Label name="prompt" text="Press Any Button to Start" class="prompt prompt--hidden" />
     </ui:VisualElement>
 </ui:UXML>

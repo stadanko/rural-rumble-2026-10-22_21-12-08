@@ -22,6 +22,8 @@ namespace RuralRumble.Juice
         [SerializeField] private AudioClipSlot back = new AudioClipSlot(0.35f);
         [Tooltip("Pressing Start on the Start screen (ui_start).")]
         [SerializeField] private AudioClipSlot start = new AudioClipSlot(0.35f);
+        [Tooltip("Start screen logo slamming down (sfx_body_thud, the match knockdown/bodyslam thud). Raised by UI as UiSound.LogoSlam on landing, not on skip. Starting point.")]
+        [SerializeField] private AudioClipSlot logoSlam = new AudioClipSlot(1f);
 
         /// <summary>The slot for a menu sound, or null for an unknown value.</summary>
         public AudioClipSlot SlotFor(UiSound sound)
@@ -32,6 +34,7 @@ namespace RuralRumble.Juice
                 case UiSound.Confirm: return confirm;
                 case UiSound.Back: return back;
                 case UiSound.Start: return start;
+                case UiSound.LogoSlam: return logoSlam;
                 default: return null;
             }
         }

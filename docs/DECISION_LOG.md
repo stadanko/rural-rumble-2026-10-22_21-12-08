@@ -587,6 +587,28 @@ Agents: read this before starting work. If a task conflicts with a decision here
 
 ---
 
+## D-051: Start screen intro: logo slam and yard light-up over a live arena backdrop
+
+- **Date:** 2026-11-24
+- **Decided by:** Designer (the intro, the dim-to-lit reveal, the live backdrop, the thud, no ambience, skip on press); values marked **Starting point** are set by the agents.
+- **Decision:**
+  - **Opening:** the Start screen opens with the trailer park visible but dim, as a near-silhouette.
+  - **Logo slam:** the "RURAL RUMBLE" logo falls in from above the screen and slams down. On impact the screen shakes, dust bursts along the logo's bottom edge and a body thud plays.
+  - **Light-up:** on landing the yard lights up to the full match lighting, then "Press Any Button to Start" appears.
+  - **Live backdrop:** the large D-048 arena with the match's lighting rig (sun key, sun shafts, porch lantern flicker, puddle glows, global light) and post-processing (`MatchVolumeProfile`), with a slow camera drift back and forth across the arena. No wrestlers.
+  - **Audio:** the thud reuses the existing body thud (`sfx_body_thud`) as menu sound `LogoSlam`. No ambience for now.
+  - **Skip:** a press during the intro skips to the landed, lit state with no thud, shake or dust; the next press starts the game as before (Start → Character Select).
+  - **Starting points:**
+    - Dim level 25% of the authored light. Ramp to full 0.5 s after landing. If no landing arrives, an 8 s failsafe raises the lights.
+    - Logo: falls from 0.3 s to 0.75 s (ease-in power 2), then a 0.25 s squash bounce (18%) and a 10 px UI jolt for 0.2 s. The prompt appears 0.6 s after impact (1.35 s). Input is ignored for the first 0.2 s.
+    - Camera shake (child camera): 0.32 units, 0.45 s, 40 Hz, whole art pixels.
+    - Dust: 36 lit pixel puffs, about 0.9 s life, along the logo block's bottom edge.
+    - Backdrop camera: orthographic size 6 (1280x720 art px), view centre y -8, eased ping-pong over 26 s, 0.5-unit margin from the art edges, unscaled time.
+- **Why:** Designer request (2026-11-24): a stronger first impression than a static title over a flat image.
+- **Affects:** Core (`StartScreenEvents`, `UiSound.LogoSlam`, `StartBackdropDrift`, `LightFlicker.Brightness`), UI (`StartScreen.uxml`/`.uss`, `StartScreenController`, `StartIntroTimeline`, `StartIntroSequence`), Juice (`StartIntroJuice`, `StartIntroRules`, `StartIntroJuice.prefab`, `MenuAudioSettings` `logoSlam` slot), `RuralRumble.Juice.asmdef` (now references `RuralRumble.Lighting` and URP), `Start.unity`, docs/ARCHITECTURE.md §2, §3.1, §4.6.
+
+---
+
 ## Open Questions
 
 Not yet decided. Agents must not resolve these on their own.

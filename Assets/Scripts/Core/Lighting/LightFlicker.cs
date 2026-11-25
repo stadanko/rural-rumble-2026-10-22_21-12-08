@@ -42,6 +42,15 @@ namespace RuralRumble.Lighting
 
         public float BaseIntensity { get => baseIntensity; set => baseIntensity = value; }
 
+        /// <summary>
+        /// Runtime multiplier on both the intensity and the volume the flicker writes (1 = as authored, 0 = dark). Not
+        /// serialized. A fade such as the Start screen light reveal sets this instead of the light's intensity, which
+        /// this component overwrites every frame.
+        /// </summary>
+        public float Brightness { get => brightness; set => brightness = Mathf.Max(0f, value); }
+
+        private float brightness = 1f;
+
         private void Awake() => target = GetComponent<Light2D>();
 
         private void Update()
@@ -61,7 +70,7 @@ namespace RuralRumble.Lighting
                 dipRemaining = dipDuration;
             }
 
-            k = Mathf.Max(0f, k);
+            k = Mathf.Max(0f, k) * brightness;
             target.intensity = baseIntensity * k;
             if (baseVolumeIntensity > 0f) target.volumeIntensity = baseVolumeIntensity * k;
         }
@@ -69,8 +78,8 @@ namespace RuralRumble.Lighting
         private void OnDisable()
         {
             if (target == null) return;
-            target.intensity = baseIntensity;
-            if (baseVolumeIntensity > 0f) target.volumeIntensity = baseVolumeIntensity;
+            target.intensity = baseIntensity * brightness;
+            if (baseVolumeIntensity > 0f) target.volumeIntensity = baseVolumeIntensity * brightness;
         }
     }
 }

@@ -9,7 +9,9 @@ namespace RuralRumble.Core
         Navigate,
         Confirm,
         Back,
-        Start
+        Start,
+        /// <summary>Start screen logo lands (body thud). Appended; keep the order (values may be stored as ints).</summary>
+        LogoSlam
     }
 
     /// <summary>

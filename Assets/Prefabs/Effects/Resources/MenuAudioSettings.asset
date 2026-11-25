@@ -24,3 +24,6 @@ MonoBehaviour:
   start:
     clip: {fileID: 8300000, guid: c1e21bcc1f226024eb6f1b1ad512d3b9, type: 3}
     volume: 0.35
+  logoSlam:
+    clip: {fileID: 8300000, guid: 045652424f9b57a44b8e18cae04fa4f3, type: 3}
+    volume: 1

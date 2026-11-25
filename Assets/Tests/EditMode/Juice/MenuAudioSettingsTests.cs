@@ -12,6 +12,7 @@ namespace RuralRumble.Tests.EditMode
         [TestCase(UiSound.Confirm, "confirm", 0.2f)]
         [TestCase(UiSound.Back, "back", 0.3f)]
         [TestCase(UiSound.Start, "start", 0.4f)]
+        [TestCase(UiSound.LogoSlam, "logoSlam", 0.5f)]
         public void SlotFor_ReturnsMatchingSlot(UiSound sound, string field, float volume)
         {
             var settings = ScriptableObject.CreateInstance<MenuAudioSettings>();
@@ -22,6 +23,7 @@ namespace RuralRumble.Tests.EditMode
                 so.FindProperty("confirm.volume").floatValue = 0.2f;
                 so.FindProperty("back.volume").floatValue = 0.3f;
                 so.FindProperty("start.volume").floatValue = 0.4f;
+                so.FindProperty("logoSlam.volume").floatValue = 0.5f;
                 so.ApplyModifiedPropertiesWithoutUndo();
 
                 Assert.AreEqual(volume, settings.SlotFor(sound).volume, 1e-6f, field);

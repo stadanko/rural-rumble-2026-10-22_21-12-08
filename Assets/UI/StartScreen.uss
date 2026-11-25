@@ -2,9 +2,7 @@
     flex-grow: 1;
     align-items: center;
     justify-content: center;
-    background-color: #10151A;
-    background-image: url("project://database/Assets/Art/Arena/arena_backdrop.png");
-    -unity-background-scale-mode: scale-and-crop;
+    /* Transparent: the Start scene camera draws the live, drifting yard behind this (Start screen upgrade). */
 }
 
 .title-block {
@@ -14,6 +12,9 @@
     background-color: rgba(16, 21, 26, 0.55);
     border-width: 6px;
     border-color: #795037;
+    /* Squash pivots on the bottom edge so the landing reads as hitting the ground. StartScreenController drives
+       translate and scale from code (not USS transitions) so a skip snaps reliably. */
+    transform-origin: center bottom;
 }
 
 .title {
